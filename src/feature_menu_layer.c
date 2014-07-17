@@ -83,6 +83,8 @@ enum {
     REQUEST_LOGIN = 16,
     REQUEST_DISTANCE = 17,
     REQUEST_PROGRESS = 18,
+    RESPONSE_TYPE = 200,
+    RESPONSE_LENGTH = 201,
     RESPONSE_USERS = 21,
     RESPONSE_BEACONS_IN_RANGE = 22,
     RESPONSE_BEACONS_OUT_OF_RANGE = 23,
@@ -93,11 +95,11 @@ enum {
     RESPONSE_PROGRESS = 28
 };
 
-static void send_request(int8_t req) {
+static void send_request(int8_t request) {
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
 
-    Tuplet value = TupletInteger(REQUEST,REQUEST_USERS);
+    Tuplet value = TupletInteger(REQUEST,request);
     dict_write_tuplet(iter,&value);
     dict_write_end(iter);
     
@@ -112,18 +114,28 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
     // outgoing message failed
 }
 
-void in_received_handler(DictionaryIterator *received, void *context) {
-    // Check for fields you expect to receive
-    Tuple *text_tuple = dict_find(received,RESPONSE_USERS);
-
-    // Act on the found fields received
-    if (text_tuple) {
-        text_layer_set_text(login_text_layer,text_tuple->value->cstring);
+void in_received_handler(DictionaryIterator *iter, void *context) {
+    Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
+    Tuple *receiving_amount = dict_find(iter,RESPONSE_LENGTH);
+    
+    if(receiving_type&&receiving_amount) {
+        int amount = 0;
+        amount = receiving_amount->value->data[0];
+    /*
+        if(user) {
+            text_layer_set_text(login_text_layer,user->value->cstring);
+        }*/
+        static char text_buffer[30];
+        snprintf(text_buffer,30,"Received beacons:\n%i",amount);
+        text_layer_set_text(login_text_layer,text_buffer);
+    }
+    else {
+        text_layer_set_text(login_text_layer,"receiving error");
     }
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    // incoming message dropped
+    text_layer_set_text(login_text_layer,"Error! Receiving buffer is too small.");
 }
 /////////////////////////////////////
 
@@ -396,13 +408,13 @@ static void init() {
     app_message_register_outbox_sent(out_sent_handler);
     app_message_register_outbox_failed(out_failed_handler);
     
-    const int inbound_size = 64;
-    const int outbound_size = 64;
+    const int inbound_size = 128;
+    const int outbound_size = 128;
     app_message_open(inbound_size, outbound_size);
     
     window_stack_push(login_window, true);
     
-    send_request(REQUEST_USERS);
+    send_request(REQUEST_BEACONS_IN_RANGE);
 }
 
 static void deinit() {
