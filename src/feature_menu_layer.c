@@ -11,21 +11,26 @@ static Window *beacons_window;
 static Window *beacon_details_window;
 static Window *games_window;
 static Window *game_details_window;
+static Window *waiting_window;
 static MenuLayer *login_menu_layer;
 static MenuLayer *beacons_menu_layer;
 static MenuLayer *games_menu_layer;
-static TextLayer *login_text_layer;
 static TextLayer *beacons_textbar_layer;
+static TextLayer *login_text_layer;
 static TextLayer *beacon_details_textbar_layer;
 static TextLayer *beacon_details_uppertext_layer;
+static TextLayer *waiting_textbar_layer;
+static TextLayer *waiting_text_layer;
 static InverterLayer *beacons_textbar_inverter_layer;
 static InverterLayer *beacon_details_textbar_inverter_layer;
+static InverterLayer *waiting_textbar_inverter_layer;
 static Layer *beacon_details_distance_layer;
 
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
 static float current_beacon_distance;
+static int waiting_for_info;
 /////////////////////////////////////
 
 ///////////////////////////////////// USERS INITIALISING
@@ -51,7 +56,6 @@ static uint16_t get_num_users(struct MenuLayer* menu_layer, uint16_t section_ind
 typedef struct {
     char *name;
     //uint16_t uuid;
-    //bool in_range;
 } Beacon;
 
 Beacon *beacons_in_range;
@@ -78,7 +82,7 @@ static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_i
 /////////////////////////////////////
 
 ///////////////////////////////////// COMMUNICATION
-enum {
+enum { // actualise, not every position is needed
     REQUEST = 1,
     REQUEST_USERS = 11,
     REQUEST_BEACONS_IN_RANGE = 12,
@@ -166,8 +170,15 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
             beacons_out_of_range_amount = amount;
             window_stack_push(beacons_window, true);
+            window_stack_remove(waiting_window, false);
         }
-        //text_layer_set_text(beacons_textbar_layer,current_user_name); // change it, there must be a better solution for redrawing menu...
+        else if(receiving_type->value->data[0]==RESPONSE_DISTANCE) {
+            Tuple *tuple = dict_find(iter,0);
+            current_beacon_distance = (float)tuple->value->data[0]/100.0;
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %f",current_beacon_distance);
+            window_stack_push(beacon_details_window, true);
+            window_stack_remove(waiting_window, false);
+        }
     }
     else {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error.");
@@ -176,7 +187,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error. Reason number: %u", reason);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason number: %u", reason);
 }
 /////////////////////////////////////
 
@@ -193,7 +204,8 @@ static void user_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_inde
     
     send_request(REQUEST_BEACONS_IN_RANGE);
     
-    //window_stack_push(beacons_window, true);
+    waiting_for_info = 1;
+    window_stack_push(waiting_window, false);
 }
 
 MenuLayerCallbacks login_menu_callbacks = {
@@ -258,7 +270,6 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
 }
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-    static int i;
     switch (cell_index->section) {
         case 0:
             if(beacons_in_range!=NULL)
@@ -279,7 +290,10 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
     else 
         current_beacon_name = "NO BEACON";
    
-    window_stack_push(beacon_details_window, true);
+    send_request(REQUEST_DISTANCE);
+    
+    waiting_for_info = 2;
+    window_stack_push(waiting_window, false);
 }
 
 MenuLayerCallbacks beacons_menu_callbacks = {
@@ -381,6 +395,51 @@ static void beacon_details_window_unload(Window *window) {
 }
 /////////////////////////////////////
 
+///////////////////////////////////// WAITING WINDOW
+static void waiting_window_load(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    int textbar_height = 18;
+    
+    GRect textbar_bounds = layer_get_bounds(window_layer);
+    textbar_bounds.size.h = textbar_height;
+    waiting_textbar_layer = text_layer_create(textbar_bounds);
+    static char text_buffer[30];
+    if(waiting_for_info==1)
+        snprintf(text_buffer,30,"%s",current_user_name);
+    else if(waiting_for_info==2)
+        snprintf(text_buffer,30,"%s",current_beacon_name);
+    text_layer_set_text(waiting_textbar_layer,text_buffer);
+    text_layer_set_font(waiting_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(waiting_textbar_layer, GTextAlignmentCenter);
+    
+    waiting_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    
+    GRect text_bounds = layer_get_bounds(window_layer);
+    text_bounds.size.h -= textbar_height;
+    text_bounds.origin.y += textbar_height;
+    waiting_text_layer = text_layer_create(text_bounds);
+    static char text_buffer2[60];
+    if(waiting_for_info==1)
+        snprintf(text_buffer2,60,"\nPlease wait, beacons list is being transmitted...");
+    else if(waiting_for_info==2)
+        snprintf(text_buffer2,60,"\nPlease wait, beacon details are being transmitted...");
+    text_layer_set_text(waiting_text_layer,text_buffer2);
+    text_layer_set_font(waiting_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(waiting_text_layer, GTextAlignmentCenter);
+    
+    layer_add_child(window_layer, text_layer_get_layer(waiting_textbar_layer));
+    layer_add_child(window_layer, inverter_layer_get_layer(waiting_textbar_inverter_layer));
+    layer_add_child(window_layer, text_layer_get_layer(waiting_text_layer));
+}
+
+static void waiting_window_unload(Window *window) {
+    text_layer_destroy(waiting_textbar_layer);
+    inverter_layer_destroy(waiting_textbar_inverter_layer);
+    text_layer_destroy(waiting_text_layer);
+}
+
+/////////////////////////////////////
+
 /////////////////////////////////////
 static WindowHandlers login_window_handlers = {
     .load = login_window_load,
@@ -402,6 +461,10 @@ static WindowHandlers game_details_window_handlers = {
     .load = NULL,
     .unload = NULL
 };
+static WindowHandlers waiting_window_handlers = {
+    .load = waiting_window_load,
+    .unload = waiting_window_unload
+};
 /////////////////////////////////////
 
 /////////////////////////////////////
@@ -414,6 +477,7 @@ static void init() {
     current_beacon_name = "NO BEACON";
     current_game_name = "NO GAME";
     current_beacon_distance = 0.4;
+    waiting_for_info = 0;
     
     login_window = window_create();
     window_set_fullscreen(login_window, true);
@@ -435,6 +499,10 @@ static void init() {
     window_set_fullscreen(game_details_window, true);
     window_set_window_handlers(game_details_window, game_details_window_handlers);
     
+    waiting_window = window_create();
+    window_set_fullscreen(waiting_window, true);
+    window_set_window_handlers(waiting_window, waiting_window_handlers);
+    
     app_message_register_inbox_received(in_received_handler);
     app_message_register_inbox_dropped(in_dropped_handler);
     app_message_register_outbox_sent(out_sent_handler);
@@ -453,6 +521,8 @@ static void deinit() {
     window_destroy(beacon_details_window);
     window_destroy(games_window);
     window_destroy(game_details_window);
+    window_destroy(waiting_window);
+    
     if(beacons_in_range!=NULL) {
         int i;
         for(i=0; i<beacons_in_range_amount; ++i)
