@@ -1,4 +1,9 @@
+///    @author: Pawel Palka
+///    @email: ppalka@sosoftware.pl    // company
+///    @email: fractalord@gmail.com    // private
+
 #include "pebble.h"
+#include <string.h>
 
 /////////////////////////////////////
 static Window *login_window;
@@ -45,30 +50,30 @@ static uint16_t get_num_users(struct MenuLayer* menu_layer, uint16_t section_ind
 ///////////////////////////////////// BEACONS INITIALISING
 typedef struct {
     char *name;
-    uint16_t uuid;
-    bool in_range;
+    //uint16_t uuid;
+    //bool in_range;
 } Beacon;
 
-Beacon beacons[] = {
-    { .name = "Kitchen 1", .uuid = 1001, .in_range = true},
-    { .name = "Kitchen 2", .uuid = 1002, .in_range = false},
-    { .name = "Kitchen 3", .uuid = 1003, .in_range = false},
-    { .name = "Conf. Room 1", .uuid = 1004, .in_range = false},
-    { .name = "Conf. Room 2", .uuid = 1005, .in_range = true},
-    { .name = "Boss Room", .uuid = 1006, .in_range = false}
-};
-#define NUM_BEACONS sizeof(beacons) / sizeof(Beacon)
+Beacon *beacons_in_range;
+Beacon *beacons_out_of_range;
+int beacons_in_range_amount = 0;
+int beacons_out_of_range_amount = 0;
+
+static uint16_t get_num_beacons_in_range(void) {
+    return beacons_in_range_amount;
+}
+
+static uint16_t get_num_beacons_out_of_range(void) {
+    return beacons_out_of_range_amount;
+}
 
 static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
-    int in_range_amount = 0;
-    uint16_t i;
-    for(i=0; i<NUM_BEACONS; ++i)
-        if(beacons[i].in_range)
-            in_range_amount++;
-    if(section_index == 0)
-        return in_range_amount;
-    else
-        return NUM_BEACONS-in_range_amount;
+    uint16_t num = 0;
+    if(section_index==0)
+        num = get_num_beacons_in_range();
+    else if(section_index==1)
+        num = get_num_beacons_out_of_range();
+    return num;
 }
 /////////////////////////////////////
 
@@ -96,6 +101,7 @@ enum {
 };
 
 static void send_request(int8_t request) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function...");
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
 
@@ -107,35 +113,70 @@ static void send_request(int8_t request) {
 }
 
 void out_sent_handler(DictionaryIterator *sent, void *context) {
-    // outgoing message was delivered
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary sent.");
 }
 
 void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-    // outgoing message failed
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary not sent! Reason number: %u", reason);
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving in progress...");
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     Tuple *receiving_amount = dict_find(iter,RESPONSE_LENGTH);
     
     if(receiving_type&&receiving_amount) {
         int amount = 0;
         amount = receiving_amount->value->data[0];
-    /*
-        if(user) {
-            text_layer_set_text(login_text_layer,user->value->cstring);
-        }*/
-        static char text_buffer[30];
-        snprintf(text_buffer,30,"Received beacons:\n%i",amount);
-        text_layer_set_text(login_text_layer,text_buffer);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Response Type: %u",receiving_type->value->data[0]);
+        if(receiving_type->value->data[0]==RESPONSE_BEACONS_IN_RANGE) {
+            if(beacons_in_range!=NULL) {
+                int i;
+                for(i=0; i<beacons_in_range_amount; ++i)
+                    free(beacons_in_range[i].name);
+                free(beacons_in_range);
+            }
+            beacons_in_range = (Beacon*)calloc(amount,sizeof(Beacon));
+            int i;
+            for(i=0; i<amount; ++i) {
+                Tuple *tuple = dict_find(iter,i);
+                char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+                strcpy(new,tuple->value->cstring);
+                beacons_in_range[i].name = new;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new beacon in range: %u - %s",i,beacons_in_range[i].name);
+            }
+            beacons_in_range_amount = amount;
+            send_request(REQUEST_BEACONS_OUT_OF_RANGE);
+        }
+        else if(receiving_type->value->data[0]==RESPONSE_BEACONS_OUT_OF_RANGE) {
+            if(beacons_out_of_range!=NULL) {
+                int i;
+                for(i=0; i<beacons_out_of_range_amount; ++i)
+                    free(beacons_out_of_range[i].name);
+                free(beacons_out_of_range);
+            }
+            beacons_out_of_range = (Beacon*)calloc(amount,sizeof(Beacon));
+            int i;
+            for(i=0; i<amount; ++i) {
+                Tuple *tuple = dict_find(iter,i);
+                char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+                strcpy(new,tuple->value->cstring);
+                beacons_out_of_range[i].name = new;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new beacon out of range: %u - %s",i,beacons_out_of_range[i].name);
+            }
+            beacons_out_of_range_amount = amount;
+            window_stack_push(beacons_window, true);
+        }
+        //text_layer_set_text(beacons_textbar_layer,current_user_name); // change it, there must be a better solution for redrawing menu...
     }
     else {
-        text_layer_set_text(login_text_layer,"receiving error");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error.");
     }
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving done.");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    text_layer_set_text(login_text_layer,"Error! Receiving buffer is too small.");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error. Reason number: %u", reason);
 }
 /////////////////////////////////////
 
@@ -150,9 +191,9 @@ static void draw_user_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
 static void user_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
     current_user_name = users[cell_index->row].name;
     
-    window_stack_push(beacons_window, true);
-    
     send_request(REQUEST_BEACONS_IN_RANGE);
+    
+    //window_stack_push(beacons_window, true);
 }
 
 MenuLayerCallbacks login_menu_callbacks = {
@@ -207,50 +248,37 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
         case 0:
             menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
             break;
-            
         case 1:
             menu_cell_basic_header_draw(ctx, cell_layer, "Beacons out of range");
+            break;
+        default:
+            menu_cell_basic_header_draw(ctx, cell_layer, "UNKNOWN HEADER");
             break;
     }
 }
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-    Beacon *beacons = (Beacon*) callback_context;
-    Beacon *beacon;
-    int i = -1, j;
-    
+    static int i;
     switch (cell_index->section) {
         case 0:
-            for(j=0; i!=cell_index->row; ++j)
-                if(beacons[j].in_range)
-                    i++;
-            beacon = &beacons[j-1];
-            menu_cell_basic_draw(ctx, cell_layer, beacon->name, NULL, NULL);
+            if(beacons_in_range!=NULL)
+                menu_cell_basic_draw(ctx, cell_layer, beacons_in_range[cell_index->row].name, NULL, NULL);
             break;
         case 1:
-            for(j=0; i!=cell_index->row; ++j)
-                if(!(beacons[j].in_range))
-                    i++;
-            beacon = &beacons[j-1];
-            menu_cell_basic_draw(ctx, cell_layer, beacon->name, NULL, NULL);
+            if(beacons_out_of_range!=NULL)
+                menu_cell_basic_draw(ctx, cell_layer, beacons_out_of_range[cell_index->row].name, NULL, NULL);
             break;
     }
 }
 
 static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-    int i = -1, j = 0;
-    if(cell_index->section==0) {
-        for(j=0; i!=cell_index->row; ++j)
-            if(beacons[j].in_range)
-                i++;
-    }
-    else if(cell_index->section==1) {
-        for(j=0; i!=cell_index->row; ++j)
-            if(!(beacons[j].in_range))
-                i++;
-    }
-    current_beacon_name = beacons[j-1].name;
-    
+    if(cell_index->section==0 && beacons_in_range!=NULL)
+        current_beacon_name = beacons_in_range[cell_index->row].name;
+    else if(cell_index->section==1 && beacons_out_of_range!=NULL)
+        current_beacon_name = beacons_out_of_range[cell_index->row].name;
+    else 
+        current_beacon_name = "NO BEACON";
+   
     window_stack_push(beacon_details_window, true);
 }
 
@@ -283,7 +311,7 @@ static void beacons_window_load(Window *window) {
     menu_bounds.size.h -= textbar_height;
     menu_bounds.origin.y += textbar_height;
     beacons_menu_layer = menu_layer_create(menu_bounds);
-    menu_layer_set_callbacks(beacons_menu_layer, beacons, beacons_menu_callbacks);
+    menu_layer_set_callbacks(beacons_menu_layer, NULL, beacons_menu_callbacks);
     menu_layer_set_click_config_onto_window(beacons_menu_layer, window);
 
     layer_add_child(window_layer, text_layer_get_layer(beacons_textbar_layer));
@@ -378,6 +406,10 @@ static WindowHandlers game_details_window_handlers = {
 
 /////////////////////////////////////
 static void init() {
+    beacons_in_range = NULL;
+    beacons_out_of_range = NULL;
+    beacons_in_range_amount = 0;
+    beacons_out_of_range_amount = 0;
     current_user_name = "NO USER";
     current_beacon_name = "NO BEACON";
     current_game_name = "NO GAME";
@@ -408,13 +440,11 @@ static void init() {
     app_message_register_outbox_sent(out_sent_handler);
     app_message_register_outbox_failed(out_failed_handler);
     
-    const int inbound_size = 128;
-    const int outbound_size = 128;
-    app_message_open(inbound_size, outbound_size);
+    const int inbound_size = APP_MESSAGE_INBOX_SIZE_MINIMUM;
+    const int outbound_size = APP_MESSAGE_OUTBOX_SIZE_MINIMUM;
+    app_message_open(inbound_size,outbound_size);
     
     window_stack_push(login_window, true);
-    
-    send_request(REQUEST_BEACONS_IN_RANGE);
 }
 
 static void deinit() {
@@ -423,6 +453,18 @@ static void deinit() {
     window_destroy(beacon_details_window);
     window_destroy(games_window);
     window_destroy(game_details_window);
+    if(beacons_in_range!=NULL) {
+        int i;
+        for(i=0; i<beacons_in_range_amount; ++i)
+            free(beacons_in_range[i].name);
+        free(beacons_in_range);
+    }
+    if(beacons_out_of_range!=NULL) {
+        int i;
+        for(i=0; i<beacons_out_of_range_amount; ++i)
+            free(beacons_out_of_range[i].name);
+        free(beacons_out_of_range);
+    }
 }
 /////////////////////////////////////
 
