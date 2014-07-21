@@ -26,6 +26,7 @@ static InverterLayer *beacon_details_textbar_inverter_layer;
 static InverterLayer *waiting_textbar_inverter_layer;
 static Layer *beacon_details_distance_layer;
 
+static AppTimer *timer;
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
@@ -217,11 +218,11 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 /////////////////////////////////////
 
 ///////////////////////////////////// LOGIN WINDOW
-static void login_request_sending(struct tm *tick_time, TimeUnits units_changed) {
-    if(current_user_name==NULL)
+static void login_request_sending(void *data) {
+    if(current_user_name==NULL) {
         send_simple_request(REQUEST_LOGIN);
-    else
-        tick_timer_service_unsubscribe();
+        timer = app_timer_register(1000,login_request_sending,NULL);
+    }
 }
 
 
@@ -229,7 +230,7 @@ static void login_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     int uppertext_height = 80;
     
-    tick_timer_service_subscribe(SECOND_UNIT,login_request_sending);
+    timer = app_timer_register(1000,login_request_sending,NULL);
     send_simple_request(REQUEST_LOGIN);
     
     GRect uppertext_bounds = layer_get_bounds(window_layer);
@@ -492,6 +493,7 @@ static WindowHandlers waiting_window_handlers = {
 
 /////////////////////////////////////
 static void init() {
+    timer = NULL;
     beacons_in_range = NULL;
     beacons_out_of_range = NULL;
     beacons_in_range_amount = 0;
