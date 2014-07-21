@@ -21,6 +21,7 @@ static TextLayer *beacon_details_uppertext_layer;
 static TextLayer *beacon_details_lowertext_layer;
 static TextLayer *games_textbar_layer;
 static TextLayer *game_details_textbar_layer;
+static TextLayer *game_details_text_layer;
 static TextLayer *waiting_textbar_layer;
 static TextLayer *waiting_text_layer;
 static InverterLayer *beacons_textbar_inverter_layer;
@@ -34,6 +35,7 @@ static AppTimer *timer;
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
+static char *current_game_description;
 static uint8_t current_beacon_distance;
 static uint8_t current_beacon_active_games;
 static uint8_t current_beacon_completed_games;
@@ -276,6 +278,21 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
             games_completed_amount = amount;
             window_stack_push(games_window, true);
+            window_stack_remove(waiting_window, false);
+        }
+        else if(receiving_type->value->data[0]==RESPONSE_GAME_DETAILS) {
+            /*
+            if(current_game_description!=NULL)
+                free(current_game_description);
+            Tuple *tuple = dict_find(iter,0);
+            char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+            strcpy(new,tuple->value->cstring);
+            current_game_description = new;
+            */
+            Tuple *tuple = dict_find(iter,0);
+            current_game_description = tuple->value->cstring;
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving game description: %s",current_game_description);
+            window_stack_push(game_details_window, true);
             window_stack_remove(waiting_window, false);
         }
     }
@@ -601,6 +618,42 @@ static void games_window_unload(Window *window) {
 }
 /////////////////////////////////////
 
+///////////////////////////////////// GAME DETAILS WINDOW
+static void game_details_window_load(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    int textbar_height = 18;
+        
+    GRect textbar_bounds = layer_get_bounds(window_layer);
+    textbar_bounds.size.h = textbar_height;
+    game_details_textbar_layer = text_layer_create(textbar_bounds);
+    static char text_buffer1[30];
+    snprintf(text_buffer1,30,"%s",current_game_name);
+    text_layer_set_text(game_details_textbar_layer,text_buffer1);
+    text_layer_set_font(game_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(game_details_textbar_layer, GTextAlignmentCenter);
+    
+    game_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    
+    GRect text_bounds = layer_get_bounds(window_layer);
+    text_bounds.size.h -= textbar_height;
+    text_bounds.origin.y = textbar_height;
+    game_details_text_layer = text_layer_create(text_bounds);
+    text_layer_set_text(game_details_text_layer,current_game_description);
+    text_layer_set_font(game_details_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(game_details_text_layer, GTextAlignmentCenter);
+    
+    layer_add_child(window_layer, text_layer_get_layer(game_details_textbar_layer));
+    layer_add_child(window_layer, inverter_layer_get_layer(game_details_textbar_inverter_layer));
+    layer_add_child(window_layer, text_layer_get_layer(game_details_text_layer));
+}
+
+static void game_details_window_unload(Window *window) {
+    text_layer_destroy(game_details_textbar_layer);
+    inverter_layer_destroy(game_details_textbar_inverter_layer);
+    text_layer_destroy(game_details_text_layer);
+}
+/////////////////////////////////////
+
 ///////////////////////////////////// WAITING WINDOW
 static void waiting_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
@@ -614,6 +667,8 @@ static void waiting_window_load(Window *window) {
         snprintf(text_buffer1,30,"%s",current_beacon_name);
     else if(waiting_for_info==3)
         snprintf(text_buffer1,30,"%s",current_beacon_name);
+    else if(waiting_for_info==4)
+        snprintf(text_buffer1,30,"%s",current_game_name);
     text_layer_set_text(waiting_textbar_layer,text_buffer1);
     text_layer_set_font(waiting_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(waiting_textbar_layer, GTextAlignmentCenter);
@@ -629,6 +684,8 @@ static void waiting_window_load(Window *window) {
         snprintf(text_buffer2,60,"\nPlease wait, beacon details are being transmitted...");
     else if(waiting_for_info==3)
         snprintf(text_buffer2,60,"\nPlease wait, games list is being transmitted...");
+    else if(waiting_for_info==4)
+        snprintf(text_buffer2,60,"\nPlease wait, game details are being transmitted...");
     text_layer_set_text(waiting_text_layer,text_buffer2);
     text_layer_set_font(waiting_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(waiting_text_layer, GTextAlignmentCenter);
@@ -664,8 +721,8 @@ static WindowHandlers games_window_handlers = {
     .unload = games_window_unload
 };
 static WindowHandlers game_details_window_handlers = {
-    .load = NULL,
-    .unload = NULL
+    .load = game_details_window_load,
+    .unload = game_details_window_unload
 };
 static WindowHandlers waiting_window_handlers = {
     .load = waiting_window_load,
@@ -681,11 +738,12 @@ static void init() {
     beacons_in_range_amount = 0;
     beacons_out_of_range_amount = 0;
     current_user_name = NULL;
-    current_beacon_name = "NO BEACON";
-    current_game_name = "NO GAME";
+    current_beacon_name = NULL;
+    current_game_name = NULL;
     current_beacon_distance = 0;
     current_beacon_active_games = 0;
     current_beacon_completed_games = 0;
+    current_game_description = NULL;
     waiting_for_info = 0;
     
     login_window = window_create();
@@ -734,6 +792,9 @@ static void deinit() {
     window_destroy(waiting_window);
 
     free(current_user_name);
+    //free(current_beacon_name);
+    //free(current_game_name);
+    //free(current_game_description);
     if(beacons_in_range!=NULL) {
         int i;
         for(i=0; i<beacons_in_range_amount; ++i)
