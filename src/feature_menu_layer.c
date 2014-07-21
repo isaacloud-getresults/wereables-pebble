@@ -190,6 +190,10 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         else if(receiving_type->value->data[0]==RESPONSE_DISTANCE) {
             Tuple *tuple = dict_find(iter,0);
             current_beacon_distance = tuple->value->data[0];
+            if(current_beacon_distance>100)
+                current_beacon_distance = 100;
+            else if(current_beacon_distance<0)
+                current_beacon_distance = 0;
             APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %u",current_beacon_distance);
             window_stack_push(beacon_details_window, true);
             window_stack_remove(waiting_window, false);
@@ -267,7 +271,7 @@ static int16_t beacons_get_header_height(MenuLayer *menu_layer, uint16_t section
 }
 
 static int16_t beacons_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-    return 30;
+    return 26;
 }
 
 static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
@@ -288,11 +292,11 @@ static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *c
     switch (cell_index->section) {
         case 0:
             if(beacons_in_range!=NULL)
-                menu_cell_title_draw(ctx, cell_layer, beacons_in_range[cell_index->row].name);
+                menu_cell_basic_draw(ctx, cell_layer, beacons_in_range[cell_index->row].name, NULL, NULL);
             break;
         case 1:
             if(beacons_out_of_range!=NULL)
-                menu_cell_title_draw(ctx, cell_layer, beacons_out_of_range[cell_index->row].name);
+                menu_cell_basic_draw(ctx, cell_layer, beacons_out_of_range[cell_index->row].name, NULL, NULL);
             break;
     }
 }
@@ -363,9 +367,9 @@ static void dinstance_layer_update(Layer *layer, GContext *ctx) {
     graphics_draw_round_rect(ctx,GRect(4,3,width,height),8);
     graphics_context_set_fill_color(ctx, GColorBlack);
     if(current_beacon_distance<96)
-        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,(GCornerTopLeft|GCornerBottomLeft));
+        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,GCornersLeft);
     else if(current_beacon_distance>=96)
-        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,(GCornerTopLeft|GCornerBottomLeft|GCornerTopRight|GCornerBottomRight));
+        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,GCornersAll);
 }
 
 static void beacon_details_window_load(Window *window) {
