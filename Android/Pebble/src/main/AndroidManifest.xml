@@ -16,7 +16,7 @@
         android:theme="@android:style/Theme.Holo.Light">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".Activities.MainActivity"
             android:label="GetResults"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -26,7 +26,7 @@
         </activity>
 
         <activity
-            android:name="com.sointeractive.getresults.pebble.PebbleCommunicationActivity"
+            android:name=".Activities.PebbleActivity"
             android:label="PebbleCommunication"
             android:screenOrientation="portrait" />
 

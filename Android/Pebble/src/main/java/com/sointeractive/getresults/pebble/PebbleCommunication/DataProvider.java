@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble;
+package com.sointeractive.getresults.pebble.PebbleCommunication;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-public class ResponseDataProvider {
+public class DataProvider {
     /*
     * ResponseDataProvider mock-up -- will be replaced by communication with IsaaCloud.
     */
@@ -141,6 +141,6 @@ public class ResponseDataProvider {
     }
 
     public static String getLogin() {
-        return "Jon Tester";
+        return "Janusz Tester";
     }
 }

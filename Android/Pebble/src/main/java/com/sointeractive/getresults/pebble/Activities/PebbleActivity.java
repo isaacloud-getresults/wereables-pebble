@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble;
+package com.sointeractive.getresults.pebble.Activities;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -20,6 +20,9 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.PebbleCommunication.Request;
+import com.sointeractive.getresults.pebble.PebbleCommunication.Response;
+import com.sointeractive.getresults.pebble.R;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -30,10 +33,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class PebbleCommunicationActivity extends Activity {
+public class PebbleActivity extends Activity {
     private static final UUID PEBBLE_APP_UUID = UUID.fromString("51b19145-0542-474f-8b62-c8c34ae4b87b");
     private static final String APP_NAME = "GetResults!";
-    private static final String TAG = PebbleCommunicationActivity.class.getSimpleName();
+    private static final String TAG = PebbleActivity.class.getSimpleName();
 
     private final PebbleKit.PebbleDataReceiver receivedDataHandler = new PebbleKit.PebbleDataReceiver(PEBBLE_APP_UUID) {
         @Override
