@@ -63,12 +63,16 @@ public class PebbleCommunicationActivity extends Activity {
     private void receivedDataAction(PebbleDictionary data) {
         Request request = Request.getByData(data);
         Log.d(TAG, request.getLogMessage());
-        sendResponse(request.getResponse());
+        if (request != Request.REQUEST_UNKNOWN) {
+            sendResponse(request.getResponse());
+        }
     }
 
     private void sendResponse(Response response) {
         Log.d(TAG, response.getLogMessage());
-        sendDataToPebble(response.getDataToSend());
+        if (response != Response.RESPONSE_UNKNOWN) {
+            sendDataToPebble(response.getDataToSend());
+        }
     }
 
     private void sendDataToPebble(PebbleDictionary data) {
@@ -110,7 +114,7 @@ public class PebbleCommunicationActivity extends Activity {
             PebbleKit.startAppOnPebble(context, PEBBLE_APP_UUID);
             onConnectAction();
             if (areAppMessagesSupported()) {
-                showInfo("Everything OK");
+                showInfo("Connection to Pebble OK");
             } else {
                 showInfo("Sorry, AppMessages are not supported");
             }

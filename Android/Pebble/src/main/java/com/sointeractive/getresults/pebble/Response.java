@@ -5,13 +5,15 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import java.util.List;
 
 public enum Response {
+    RESPONSE_UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
     RESPONSE_BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
     RESPONSE_BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
     RESPONSE_GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
     RESPONSE_GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
     RESPONSE_LOGIN(26, "Response: Sending login", new SendLogin()),
     RESPONSE_BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
-    RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress());
+    RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress()),
+    RESPONSE_GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
 
     private final int id;
     private final String logMessage;
@@ -95,12 +97,21 @@ public enum Response {
         }
     }
 
+    private static class SendGameDetails implements ResponseAction {
+        @Override
+        public PebbleDictionary execute(int id, String query) {
+            final String gameDetails = ResponseDataProvider.getGameDetails(query);
+            return ResponseFactory.makeSingleValueResponse(id, gameDetails);
+        }
+    }
+
     private static class SendLogin implements ResponseAction {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final String login = ResponseDataProvider.getLogin();
             return ResponseFactory.makeSingleValueResponse(id, login);
         }
+
     }
 
 }

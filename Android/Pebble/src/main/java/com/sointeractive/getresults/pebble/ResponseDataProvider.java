@@ -7,6 +7,10 @@ import java.util.Map;
 import java.util.Random;
 
 public class ResponseDataProvider {
+    /*
+    * ResponseDataProvider mock-up -- will be replaced by communication with IsaaCloud.
+    */
+
     private static final int PERCENT_RANGE = 101;
 
     private static final List<String> beaconsInRange;
@@ -44,6 +48,18 @@ public class ResponseDataProvider {
         completedGames.add("5 visits");
         completedGames.add("25 visits");
         completedGames.add("50 visits");
+    }
+
+    private static final Map<String, String> gameDetails;
+
+    static {
+        gameDetails = new HashMap<String, String>();
+        gameDetails.put("5 visits", "Visit room 5 times.");
+        gameDetails.put("25 visits", "Visit room 25 times.");
+        gameDetails.put("50 visits", "Visit room 50 times.");
+        gameDetails.put("150 visits", "Visit room 150 times.");
+        gameDetails.put("300 visits", "Visit room 300 times.");
+        gameDetails.put("Without queue", "Enter empty room.");
     }
 
     private static final Map<String, Integer> distances;
@@ -85,6 +101,7 @@ public class ResponseDataProvider {
         completedGamesCount.put("Games Room 2", 0);
     }
 
+
     private static final Random random = new Random();
 
     public static List<String> getBeaconsInRange() {
@@ -117,6 +134,10 @@ public class ResponseDataProvider {
 
     public static int getProgress(String game) {
         return random.nextInt(PERCENT_RANGE);
+    }
+
+    public static String getGameDetails(String game) {
+        return gameDetails.get(game);
     }
 
     public static String getLogin() {
