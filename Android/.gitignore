@@ -1,0 +1,6 @@
+PEBBLE_KIT/build/*
+Pebble/build/*
+build/*
+*.iml
+.idea
+local.properties
