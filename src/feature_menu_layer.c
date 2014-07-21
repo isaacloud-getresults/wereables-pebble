@@ -18,6 +18,7 @@ static TextLayer *login_lowertext_layer;
 static TextLayer *beacons_textbar_layer;
 static TextLayer *beacon_details_textbar_layer;
 static TextLayer *beacon_details_uppertext_layer;
+static TextLayer *beacon_details_lowertext_layer;
 static TextLayer *waiting_textbar_layer;
 static TextLayer *waiting_text_layer;
 static InverterLayer *beacons_textbar_inverter_layer;
@@ -28,8 +29,10 @@ static Layer *beacon_details_distance_layer;
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
-static int current_beacon_distance;
-static int waiting_for_info;
+static uint8_t current_beacon_distance;
+static uint8_t current_beacon_active_games;
+static uint8_t current_beacon_completed_games;
+static uint8_t waiting_for_info;
 /////////////////////////////////////
 
 ///////////////////////////////////// USERS INITIALISING
@@ -78,7 +81,7 @@ enum { // actualise, not every position is needed
     REQUEST_GAMES_ACTIVE = 14,
     REQUEST_GAMES_COMPLETED = 15,
     REQUEST_LOGIN = 16,
-    REQUEST_DISTANCE = 17,
+    REQUEST_BEACON_DETAILS = 17,
     REQUEST_PROGRESS = 18,
     RESPONSE_TYPE = 200,
     RESPONSE_LENGTH = 201,
@@ -88,7 +91,7 @@ enum { // actualise, not every position is needed
     RESPONSE_GAMES_ACTIVE = 24,
     RESPONSE_GAMES_COMPLETED = 25,
     RESPONSE_LOGIN = 26,
-    RESPONSE_DISTANCE = 27,
+    RESPONSE_BEACON_DETAILS = 27,
     RESPONSE_PROGRESS = 28
 };
 
@@ -119,7 +122,7 @@ static void send_query_request(int8_t request, char *query) {
 }
 
 void out_sent_handler(DictionaryIterator *sent, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary sent.");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Dictionary sent");
 }
 
 void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
@@ -175,14 +178,18 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             window_stack_remove(waiting_window, false);
             window_stack_remove(login_window, false);
         }
-        else if(receiving_type->value->data[0]==RESPONSE_DISTANCE) {
-            Tuple *tuple = dict_find(iter,0);
-            current_beacon_distance = tuple->value->data[0];
+        else if(receiving_type->value->data[0]==RESPONSE_BEACON_DETAILS) {
+            Tuple *tuple1 = dict_find(iter,0);
+            current_beacon_distance = tuple1->value->data[0];
             if(current_beacon_distance>100)
                 current_beacon_distance = 100;
-            else if(current_beacon_distance<0)
-                current_beacon_distance = 0;
             APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %u",current_beacon_distance);
+            Tuple *tuple2 = dict_find(iter,1);
+            current_beacon_active_games = tuple2->value->data[0];
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon active games: %u",current_beacon_active_games);
+            Tuple *tuple3 = dict_find(iter,2);
+            current_beacon_completed_games = tuple3->value->data[0];
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon completed games: %u",current_beacon_completed_games);
             window_stack_push(beacon_details_window, true);
             window_stack_remove(waiting_window, false);
         }
@@ -196,8 +203,6 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             snprintf(text_buffer,40,"Welcome %s\ndownloading data...",current_user_name);
             text_layer_set_text(login_lowertext_layer,text_buffer);
             send_simple_request(REQUEST_BEACONS_IN_RANGE);
-            //uint16_t timestamp = time_ms(NULL,NULL);
-            //while((time_ms(NULL,NULL)-timestamp)<1000) ;
         }
     }
     else {
@@ -295,9 +300,9 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
     else if(cell_index->section==1 && beacons_out_of_range!=NULL)
         current_beacon_name = beacons_out_of_range[cell_index->row].name;
     else 
-        current_beacon_name = "NO BEACON";
+        current_beacon_name = NULL;
    
-    send_query_request(REQUEST_DISTANCE,current_beacon_name);
+    send_query_request(REQUEST_BEACON_DETAILS,current_beacon_name);
     
     waiting_for_info = 2;
     window_stack_push(waiting_window, false);
@@ -369,9 +374,9 @@ static void beacon_details_window_load(Window *window) {
     GRect textbar_bounds = layer_get_bounds(window_layer);
     textbar_bounds.size.h = textbar_height;
     beacon_details_textbar_layer = text_layer_create(textbar_bounds);
-    static char text_buffer[30];
-    snprintf(text_buffer,30,"%s",current_beacon_name);
-    text_layer_set_text(beacon_details_textbar_layer,text_buffer);
+    static char text_buffer1[30];
+    snprintf(text_buffer1,30,"%s",current_beacon_name);
+    text_layer_set_text(beacon_details_textbar_layer,text_buffer1);
     text_layer_set_font(beacon_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(beacon_details_textbar_layer, GTextAlignmentCenter);
     
@@ -391,10 +396,21 @@ static void beacon_details_window_load(Window *window) {
     beacon_details_distance_layer = layer_create(distance_layer_bounds);
     layer_set_update_proc(beacon_details_distance_layer, dinstance_layer_update);
     
+    GRect lowertext_bounds = layer_get_bounds(window_layer);
+    lowertext_bounds.size.h -= textbar_height + uppertext_layer_height + distance_layer_height;
+    lowertext_bounds.origin.y = textbar_height + uppertext_layer_height + distance_layer_height;
+    beacon_details_lowertext_layer = text_layer_create(lowertext_bounds);
+    static char text_buffer2[70];
+    snprintf(text_buffer2,70,"Active games: %u\nCompleted games: %u\n\nclick select for more...",current_beacon_active_games,current_beacon_completed_games);
+    text_layer_set_text(beacon_details_lowertext_layer,text_buffer2);
+    text_layer_set_font(beacon_details_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(beacon_details_lowertext_layer, GTextAlignmentLeft);
+    
     layer_add_child(window_layer, text_layer_get_layer(beacon_details_textbar_layer));
     layer_add_child(window_layer, inverter_layer_get_layer(beacon_details_textbar_inverter_layer));
     layer_add_child(window_layer, text_layer_get_layer(beacon_details_uppertext_layer));
     layer_add_child(window_layer, beacon_details_distance_layer);
+    layer_add_child(window_layer, text_layer_get_layer(beacon_details_lowertext_layer));
 }
 
 static void beacon_details_window_unload(Window *window) {
@@ -402,6 +418,7 @@ static void beacon_details_window_unload(Window *window) {
     inverter_layer_destroy(beacon_details_textbar_inverter_layer);
     text_layer_destroy(beacon_details_uppertext_layer);
     layer_destroy(beacon_details_distance_layer);
+    text_layer_destroy(beacon_details_lowertext_layer);
 }
 /////////////////////////////////////
 
@@ -483,6 +500,8 @@ static void init() {
     current_beacon_name = "NO BEACON";
     current_game_name = "NO GAME";
     current_beacon_distance = 0;
+    current_beacon_active_games = 0;
+    current_beacon_completed_games = 0;
     waiting_for_info = 0;
     
     login_window = window_create();
