@@ -3,7 +3,6 @@
 ///    @email: fractalord@gmail.com    // private
 
 #include "pebble.h"
-#include <string.h>
 
 /////////////////////////////////////
 static Window *login_window;
@@ -12,7 +11,6 @@ static Window *beacon_details_window;
 static Window *games_window;
 static Window *game_details_window;
 static Window *waiting_window;
-//static MenuLayer *login_menu_layer;
 static MenuLayer *beacons_menu_layer;
 static MenuLayer *games_menu_layer;
 static TextLayer *login_uppertext_layer;
@@ -39,19 +37,6 @@ typedef struct {
     char *name;
     //uint16_t id;
 } User;
-/*
-User users[] = {
-    { .name = "ppalka", .id = 1001},
-    { .name = "mwarchol", .id = 1002},
-    { .name = "new user", .id = 0}
-};
-
-#define NUM_USERS sizeof(users) / sizeof(User)
-
-static uint16_t get_num_users(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
-    return NUM_USERS;
-}
-*/
 /////////////////////////////////////
 
 ///////////////////////////////////// BEACONS INITIALISING
@@ -108,7 +93,7 @@ enum { // actualise, not every position is needed
 };
 
 static void send_simple_request(int8_t request) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function without a parameter");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function without a parameter. Request: %u",request);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
 
@@ -120,7 +105,7 @@ static void send_simple_request(int8_t request) {
 }
 
 static void send_query_request(int8_t request, char *query) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function with a parameter");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function with a parameter. Request: %u Query: %s",request,query);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
 
@@ -227,34 +212,19 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 /////////////////////////////////////
 
 ///////////////////////////////////// LOGIN WINDOW
-/*
-static void draw_user_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-    User *users = (User*) callback_context;
-    User *user = &users[cell_index->row];
-    
-    menu_cell_basic_draw(ctx, cell_layer, user->name, NULL, NULL);
+static void login_request_sending(struct tm *tick_time, TimeUnits units_changed) {
+    if(current_user_name==NULL)
+        send_simple_request(REQUEST_LOGIN);
+    else
+        tick_timer_service_unsubscribe();
 }
 
-static void user_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-    current_user_name = users[cell_index->row].name;
-    
-    send_simple_request(REQUEST_BEACONS_IN_RANGE);
-    
-    waiting_for_info = 1;
-    window_stack_push(waiting_window, false);
-}
-
-MenuLayerCallbacks login_menu_callbacks = {
-    .get_num_rows = get_num_users,
-    .draw_row = draw_user_row,
-    .select_click = user_select_click
-};
-*/
 
 static void login_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     int uppertext_height = 80;
     
+    tick_timer_service_subscribe(SECOND_UNIT,login_request_sending);
     send_simple_request(REQUEST_LOGIN);
     
     GRect uppertext_bounds = layer_get_bounds(window_layer);
@@ -271,24 +241,14 @@ static void login_window_load(Window *window) {
     text_layer_set_text(login_lowertext_layer,"connecting with your smartphone...");
     text_layer_set_font(login_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
     text_layer_set_text_alignment(login_lowertext_layer, GTextAlignmentCenter);
-    /*
-    GRect menu_bounds = layer_get_bounds(window_layer);
-    menu_bounds.size.h -= textfield_height;
-    menu_bounds.origin.y += textfield_height;
-    login_menu_layer = menu_layer_create(menu_bounds);
-    menu_layer_set_callbacks(login_menu_layer, users, login_menu_callbacks);
-    menu_layer_set_click_config_onto_window(login_menu_layer, window);
-    */
     
     layer_add_child(window_layer, text_layer_get_layer(login_uppertext_layer));
     layer_add_child(window_layer, text_layer_get_layer(login_lowertext_layer));
-    //layer_add_child(window_layer, menu_layer_get_layer(login_menu_layer));
 }
 
 static void login_window_unload(Window *window) {
     text_layer_destroy(login_uppertext_layer);
     text_layer_destroy(login_lowertext_layer);
-    //menu_layer_destroy(login_menu_layer);
 }
 /////////////////////////////////////
 
@@ -312,9 +272,6 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
             break;
         case 1:
             menu_cell_basic_header_draw(ctx, cell_layer, "Beacons out of range");
-            break;
-        default:
-            menu_cell_basic_header_draw(ctx, cell_layer, "UNKNOWN HEADER");
             break;
     }
 }
@@ -457,9 +414,7 @@ static void waiting_window_load(Window *window) {
     textbar_bounds.size.h = textbar_height;
     waiting_textbar_layer = text_layer_create(textbar_bounds);
     static char text_buffer[30];
-    if(waiting_for_info==1)
-        snprintf(text_buffer,30,"%s",current_user_name);
-    else if(waiting_for_info==2)
+    if(waiting_for_info==2)
         snprintf(text_buffer,30,"%s",current_beacon_name);
     text_layer_set_text(waiting_textbar_layer,text_buffer);
     text_layer_set_font(waiting_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
@@ -472,9 +427,7 @@ static void waiting_window_load(Window *window) {
     text_bounds.origin.y += textbar_height;
     waiting_text_layer = text_layer_create(text_bounds);
     static char text_buffer2[60];
-    if(waiting_for_info==1)
-        snprintf(text_buffer2,60,"\nPlease wait, beacons list is being transmitted...");
-    else if(waiting_for_info==2)
+    if(waiting_for_info==2)
         snprintf(text_buffer2,60,"\nPlease wait, beacon details are being transmitted...");
     text_layer_set_text(waiting_text_layer,text_buffer2);
     text_layer_set_font(waiting_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
