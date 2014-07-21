@@ -29,7 +29,7 @@ static Layer *beacon_details_distance_layer;
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
-static float current_beacon_distance;
+static int current_beacon_distance;
 static int waiting_for_info;
 /////////////////////////////////////
 
@@ -60,8 +60,8 @@ typedef struct {
 
 Beacon *beacons_in_range;
 Beacon *beacons_out_of_range;
-int beacons_in_range_amount = 0;
-int beacons_out_of_range_amount = 0;
+static int beacons_in_range_amount = 0;
+static int beacons_out_of_range_amount = 0;
 
 static uint16_t get_num_beacons_in_range(void) {
     return beacons_in_range_amount;
@@ -84,6 +84,7 @@ static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_i
 ///////////////////////////////////// COMMUNICATION
 enum { // actualise, not every position is needed
     REQUEST = 1,
+    REQUEST_QUERY = 2,
     REQUEST_USERS = 11,
     REQUEST_BEACONS_IN_RANGE = 12,
     REQUEST_BEACONS_OUT_OF_RANGE = 13,
@@ -104,13 +105,27 @@ enum { // actualise, not every position is needed
     RESPONSE_PROGRESS = 28
 };
 
-static void send_request(int8_t request) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function...");
+static void send_simple_request(int8_t request) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function without a parameter");
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
 
     Tuplet value = TupletInteger(REQUEST,request);
     dict_write_tuplet(iter,&value);
+    dict_write_end(iter);
+    
+    app_message_outbox_send();
+}
+
+static void send_query_request(int8_t request, char *query) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Sending function with a parameter");
+    DictionaryIterator *iter;
+    app_message_outbox_begin(&iter);
+
+    Tuplet value = TupletInteger(REQUEST,request);
+    Tuplet value2 = TupletCString(REQUEST_QUERY,query);
+    dict_write_tuplet(iter,&value);
+    dict_write_tuplet(iter,&value2);
     dict_write_end(iter);
     
     app_message_outbox_send();
@@ -150,7 +165,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new beacon in range: %u - %s",i,beacons_in_range[i].name);
             }
             beacons_in_range_amount = amount;
-            send_request(REQUEST_BEACONS_OUT_OF_RANGE);
+            send_simple_request(REQUEST_BEACONS_OUT_OF_RANGE);
         }
         else if(receiving_type->value->data[0]==RESPONSE_BEACONS_OUT_OF_RANGE) {
             if(beacons_out_of_range!=NULL) {
@@ -174,8 +189,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
         else if(receiving_type->value->data[0]==RESPONSE_DISTANCE) {
             Tuple *tuple = dict_find(iter,0);
-            current_beacon_distance = (float)tuple->value->data[0]/100.0;
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %f",current_beacon_distance);
+            current_beacon_distance = tuple->value->data[0];
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %u",current_beacon_distance);
             window_stack_push(beacon_details_window, true);
             window_stack_remove(waiting_window, false);
         }
@@ -202,7 +217,7 @@ static void draw_user_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
 static void user_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
     current_user_name = users[cell_index->row].name;
     
-    send_request(REQUEST_BEACONS_IN_RANGE);
+    send_simple_request(REQUEST_BEACONS_IN_RANGE);
     
     waiting_for_info = 1;
     window_stack_push(waiting_window, false);
@@ -273,11 +288,11 @@ static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *c
     switch (cell_index->section) {
         case 0:
             if(beacons_in_range!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, beacons_in_range[cell_index->row].name, NULL, NULL);
+                menu_cell_title_draw(ctx, cell_layer, beacons_in_range[cell_index->row].name);
             break;
         case 1:
             if(beacons_out_of_range!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, beacons_out_of_range[cell_index->row].name, NULL, NULL);
+                menu_cell_title_draw(ctx, cell_layer, beacons_out_of_range[cell_index->row].name);
             break;
     }
 }
@@ -290,7 +305,7 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
     else 
         current_beacon_name = "NO BEACON";
    
-    send_request(REQUEST_DISTANCE);
+    send_query_request(REQUEST_DISTANCE,current_beacon_name);
     
     waiting_for_info = 2;
     window_stack_push(waiting_window, false);
@@ -347,7 +362,10 @@ static void dinstance_layer_update(Layer *layer, GContext *ctx) {
     graphics_context_set_stroke_color(ctx, GColorBlack);
     graphics_draw_round_rect(ctx,GRect(4,3,width,height),8);
     graphics_context_set_fill_color(ctx, GColorBlack);
-    graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance,height),8,(GCornerTopLeft|GCornerBottomLeft));
+    if(current_beacon_distance<96)
+        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,(GCornerTopLeft|GCornerBottomLeft));
+    else if(current_beacon_distance>=96)
+        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,(GCornerTopLeft|GCornerBottomLeft|GCornerTopRight|GCornerBottomRight));
 }
 
 static void beacon_details_window_load(Window *window) {
@@ -476,7 +494,7 @@ static void init() {
     current_user_name = "NO USER";
     current_beacon_name = "NO BEACON";
     current_game_name = "NO GAME";
-    current_beacon_distance = 0.4;
+    current_beacon_distance = 0;
     waiting_for_info = 0;
     
     login_window = window_create();
