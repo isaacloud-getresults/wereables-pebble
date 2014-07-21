@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Pebble</string>
+    <string name="send_notification_button">Send notification</string>
+    <string name="pebble_communication_activity">Pebble Communication</string>
+
+</resources>
