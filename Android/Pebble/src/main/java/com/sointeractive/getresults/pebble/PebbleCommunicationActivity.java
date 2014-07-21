@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble;
 import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -35,20 +34,7 @@ public class PebbleCommunicationActivity extends Activity {
     private static final UUID PEBBLE_APP_UUID = UUID.fromString("51b19145-0542-474f-8b62-c8c34ae4b87b");
     private static final String APP_NAME = "GetResults!";
     private static final String TAG = PebbleCommunicationActivity.class.getSimpleName();
-    private final BroadcastReceiver pebbleConnectedReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Event: Pebble connected");
-            onConnectAction();
-        }
-    };
-    private final BroadcastReceiver pebbleDisconnectedReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "Event: Pebble disconnected");
-            onDisconnectAction();
-        }
-    };
+
     private final PebbleKit.PebbleDataReceiver receivedDataHandler = new PebbleKit.PebbleDataReceiver(PEBBLE_APP_UUID) {
         @Override
         public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
@@ -64,6 +50,7 @@ public class PebbleCommunicationActivity extends Activity {
             });
         }
     };
+
     private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
     private static final int REQUEST_ENABLE_BT = 1234;
     private final Handler handler = new Handler();
@@ -250,18 +237,7 @@ public class PebbleCommunicationActivity extends Activity {
         Log.d(TAG, "Event: onResume");
         super.onResume();
 
-        registerPebbleHandlers();
-    }
-
-    private void registerPebbleHandlers() {
-        registerConnectionHandlers();
         registerMessageHandlers();
-    }
-
-    private void registerConnectionHandlers() {
-        Log.d(TAG, "Handlers: Registering connection state changed handlers");
-        PebbleKit.registerPebbleConnectedReceiver(context, pebbleConnectedReceiver);
-        PebbleKit.registerPebbleDisconnectedReceiver(context, pebbleDisconnectedReceiver);
     }
 
     private void registerMessageHandlers() {
@@ -290,26 +266,12 @@ public class PebbleCommunicationActivity extends Activity {
     @Override
     protected void onPause() {
         Log.d(TAG, "Event: onPause");
-        unregisterPebbleHandlers();
+        unregisterMessageHandler();
 
         super.onPause();
     }
 
-    private void unregisterPebbleHandlers() {
-        unregisterConnectionHandlers();
-        unregisterMessageHandlers();
-    }
-
-    private void unregisterConnectionHandlers() {
-//        TODO: Check what is going on
-//        "To avoid leaking memory, activities registering BroadcastReceivers must unregister them in the Activity's android.app.Activity#onPause() method."
-//        Not working though
-//        Log.d(TAG, "Handlers: Unregistering connection state changed handlers");
-//        unregisterReceiver(pebbleConnectedReceiver);
-//        unregisterReceiver(pebbleDisconnectedReceiver);
-    }
-
-    private void unregisterMessageHandlers() {
+    private void unregisterMessageHandler() {
         Log.d(TAG, "Handlers: Unregistering received data handler");
         unregisterReceiver(receivedDataHandler);
     }
