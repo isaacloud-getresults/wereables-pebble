@@ -19,10 +19,14 @@ static TextLayer *beacons_textbar_layer;
 static TextLayer *beacon_details_textbar_layer;
 static TextLayer *beacon_details_uppertext_layer;
 static TextLayer *beacon_details_lowertext_layer;
+static TextLayer *games_textbar_layer;
+static TextLayer *game_details_textbar_layer;
 static TextLayer *waiting_textbar_layer;
 static TextLayer *waiting_text_layer;
 static InverterLayer *beacons_textbar_inverter_layer;
 static InverterLayer *beacon_details_textbar_inverter_layer;
+static InverterLayer *games_textbar_inverter_layer;
+static InverterLayer *game_details_textbar_inverter_layer;
 static InverterLayer *waiting_textbar_inverter_layer;
 static Layer *beacon_details_distance_layer;
 
@@ -65,9 +69,38 @@ static uint16_t get_num_beacons_out_of_range(void) {
 static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     uint16_t num = 0;
     if(section_index==0)
-        num = get_num_beacons_in_range();
+        num = get_num_beacons_in_range(); // simplify it! directly to the value, not through functions, then delete these functions
     else if(section_index==1)
-        num = get_num_beacons_out_of_range();
+        num = get_num_beacons_out_of_range(); // as above
+    return num;
+}
+/////////////////////////////////////
+
+///////////////////////////////////// GAMES INITIALISING
+typedef struct {
+    char *name;
+    //uint16_t uuid;
+} Game;
+
+Game *games_active;
+Game *games_completed;
+static int games_active_amount = 0;
+static int games_completed_amount = 0;
+
+static uint16_t get_num_games_active(void) {
+    return games_active_amount;
+}
+
+static uint16_t get_num_games_completed(void) {
+    return games_completed_amount;
+}
+
+static uint16_t get_num_games(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
+    uint16_t num = 0;
+    if(section_index==0)
+        num = get_num_games_active(); // same as in beacons!
+    else if(section_index==1)
+        num = get_num_games_completed(); // same...
     return num;
 }
 /////////////////////////////////////
@@ -84,6 +117,7 @@ enum { // actualise, not every position is needed
     REQUEST_LOGIN = 16,
     REQUEST_BEACON_DETAILS = 17,
     REQUEST_PROGRESS = 18,
+    REQUEST_GAME_DETAILS = 19,
     RESPONSE_TYPE = 200,
     RESPONSE_LENGTH = 201,
     RESPONSE_USERS = 21,
@@ -93,7 +127,8 @@ enum { // actualise, not every position is needed
     RESPONSE_GAMES_COMPLETED = 25,
     RESPONSE_LOGIN = 26,
     RESPONSE_BEACON_DETAILS = 27,
-    RESPONSE_PROGRESS = 28
+    RESPONSE_PROGRESS = 28,
+    RESPONSE_GAME_DETAILS = 29
 };
 
 static void send_simple_request(int8_t request) {
@@ -176,7 +211,6 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
             beacons_out_of_range_amount = amount;
             window_stack_push(beacons_window, true);
-            window_stack_remove(waiting_window, false);
             window_stack_remove(login_window, false);
         }
         else if(receiving_type->value->data[0]==RESPONSE_BEACON_DETAILS) {
@@ -205,6 +239,45 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             text_layer_set_text(login_lowertext_layer,text_buffer);
             send_simple_request(REQUEST_BEACONS_IN_RANGE);
         }
+        else if(receiving_type->value->data[0]==RESPONSE_GAMES_ACTIVE) {
+            if(games_active!=NULL) {
+                int i;
+                for(i=0; i<games_active_amount; ++i)
+                    free(games_active[i].name);
+                free(games_active);
+            }
+            games_active = (Game*)calloc(amount,sizeof(Game));
+            int i;
+            for(i=0; i<amount; ++i) {
+                Tuple *tuple = dict_find(iter,i);
+                char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+                strcpy(new,tuple->value->cstring);
+                games_active[i].name = new;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new active game: %u - %s",i,games_active[i].name);
+            }
+            games_active_amount = amount;
+            send_simple_request(REQUEST_GAMES_COMPLETED);
+        }
+        else if(receiving_type->value->data[0]==RESPONSE_GAMES_COMPLETED) {
+            if(games_completed!=NULL) {
+                int i;
+                for(i=0; i<games_completed_amount; ++i)
+                    free(games_completed[i].name);
+                free(games_completed);
+            }
+            games_completed = (Game*)calloc(amount,sizeof(Game));
+            int i;
+            for(i=0; i<amount; ++i) {
+                Tuple *tuple = dict_find(iter,i);
+                char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+                strcpy(new,tuple->value->cstring);
+                games_completed[i].name = new;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new completed game: %u - %s",i,games_completed[i].name);
+            }
+            games_completed_amount = amount;
+            window_stack_push(games_window, true);
+            window_stack_remove(waiting_window, false);
+        }
     }
     else {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error.");
@@ -224,7 +297,6 @@ static void login_request_sending(void *data) {
         timer = app_timer_register(1000,login_request_sending,NULL);
     }
 }
-
 
 static void login_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
@@ -263,11 +335,11 @@ static uint16_t get_num_sections_beacons(MenuLayer *menu_layer, void *data) {
     return 2;
 }
 
-static int16_t beacons_get_header_height(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+static int16_t get_header_height_beacons(MenuLayer *menu_layer, uint16_t section_index, void *data) {
     return MENU_CELL_BASIC_HEADER_HEIGHT;
 }
 
-static int16_t beacons_get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+static int16_t get_cell_height_beacons(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
     return 26;
 }
 
@@ -312,14 +384,15 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
 MenuLayerCallbacks beacons_menu_callbacks = {
     .get_num_sections = get_num_sections_beacons,
     .get_num_rows = get_num_beacons,
-    .get_header_height = beacons_get_header_height,
-    .get_cell_height = beacons_get_cell_height, 
+    .get_header_height = get_header_height_beacons,
+    .get_cell_height = get_cell_height_beacons, 
     .draw_header = draw_beacon_header,
     .draw_row = draw_beacon_row,
     .select_click = beacon_select_click
 };
 
 static void beacons_window_load(Window *window) {
+    //vibes_short_pulse();
     Layer *window_layer = window_get_root_layer(window);
     int textbar_height = 18;
     
@@ -364,6 +437,16 @@ static void dinstance_layer_update(Layer *layer, GContext *ctx) {
         graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,GCornersLeft);
     else if(current_beacon_distance>=96)
         graphics_fill_rect(ctx,GRect(4,3,width*current_beacon_distance/100.0,height),8,GCornersAll);
+}
+
+static void games_list_select_handler(ClickRecognizerRef recognizer, void *context) {
+    send_simple_request(REQUEST_GAMES_ACTIVE);
+    waiting_for_info = 3;
+    window_stack_push(waiting_window, false);
+}
+
+static void beacon_details_click_config_provider(void *context) {
+    window_single_click_subscribe(BUTTON_ID_SELECT,(ClickHandler)games_list_select_handler);
 }
 
 static void beacon_details_window_load(Window *window) {
@@ -423,6 +506,101 @@ static void beacon_details_window_unload(Window *window) {
 }
 /////////////////////////////////////
 
+///////////////////////////////////// GAMES WINDOW
+static uint16_t get_num_sections_games(MenuLayer *menu_layer, void *data) {
+    return 2;
+}
+
+static int16_t get_header_height_games(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
+static int16_t get_cell_height_games(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+    return 26;
+}
+
+static void draw_game_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+    switch (section_index) {
+        case 0:
+            menu_cell_basic_header_draw(ctx, cell_layer, "Active games");
+            break;
+        case 1:
+            menu_cell_basic_header_draw(ctx, cell_layer, "Completed games");
+            break;
+    }
+}
+
+static void draw_game_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
+    switch (cell_index->section) {
+        case 0:
+            if(games_active!=NULL)
+                menu_cell_basic_draw(ctx, cell_layer, games_active[cell_index->row].name, NULL, NULL);
+            break;
+        case 1:
+            if(games_completed!=NULL)
+                menu_cell_basic_draw(ctx, cell_layer, games_completed[cell_index->row].name, NULL, NULL);
+            break;
+    }
+}
+
+static void game_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
+    if(cell_index->section==0 && games_active!=NULL)
+        current_game_name = games_active[cell_index->row].name;
+    else if(cell_index->section==1 && games_completed!=NULL)
+        current_game_name = games_completed[cell_index->row].name;
+    else 
+        current_game_name = NULL;
+   
+    send_query_request(REQUEST_GAME_DETAILS,current_game_name);
+    
+    waiting_for_info = 4;
+    window_stack_push(waiting_window, false);
+}
+
+MenuLayerCallbacks games_menu_callbacks = {
+    .get_num_sections = get_num_sections_games,
+    .get_num_rows = get_num_games,
+    .get_header_height = get_header_height_games,
+    .get_cell_height = get_cell_height_games, 
+    .draw_header = draw_game_header,
+    .draw_row = draw_game_row,
+    .select_click = game_select_click
+};
+
+static void games_window_load(Window *window) {
+    Layer *window_layer = window_get_root_layer(window);
+    int textbar_height = 18;
+    
+    GRect textbar_bounds = layer_get_bounds(window_layer);
+    textbar_bounds.size.h = textbar_height;
+    games_textbar_layer = text_layer_create(textbar_bounds);
+    static char text_buffer[30];
+    snprintf(text_buffer,30,"%s",current_beacon_name);
+    text_layer_set_text(games_textbar_layer,text_buffer);
+    text_layer_set_font(games_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text_alignment(games_textbar_layer, GTextAlignmentCenter);
+    
+    games_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    
+    GRect menu_bounds = layer_get_bounds(window_layer);
+    menu_bounds.size.h -= textbar_height;
+    menu_bounds.origin.y += textbar_height;
+    games_menu_layer = menu_layer_create(menu_bounds);
+    menu_layer_set_callbacks(games_menu_layer, NULL, games_menu_callbacks);
+    menu_layer_set_click_config_onto_window(games_menu_layer, window);
+
+    layer_add_child(window_layer, text_layer_get_layer(games_textbar_layer));
+    layer_add_child(window_layer, inverter_layer_get_layer(games_textbar_inverter_layer));
+    layer_add_child(window_layer, menu_layer_get_layer(games_menu_layer));
+}
+
+static void games_window_unload(Window *window) {
+    text_layer_destroy(games_textbar_layer);
+    inverter_layer_destroy(games_textbar_inverter_layer);
+    menu_layer_destroy(games_menu_layer);
+}
+/////////////////////////////////////
+
 ///////////////////////////////////// WAITING WINDOW
 static void waiting_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
@@ -431,10 +609,12 @@ static void waiting_window_load(Window *window) {
     GRect textbar_bounds = layer_get_bounds(window_layer);
     textbar_bounds.size.h = textbar_height;
     waiting_textbar_layer = text_layer_create(textbar_bounds);
-    static char text_buffer[30];
+    static char text_buffer1[30];
     if(waiting_for_info==2)
-        snprintf(text_buffer,30,"%s",current_beacon_name);
-    text_layer_set_text(waiting_textbar_layer,text_buffer);
+        snprintf(text_buffer1,30,"%s",current_beacon_name);
+    else if(waiting_for_info==3)
+        snprintf(text_buffer1,30,"%s",current_beacon_name);
+    text_layer_set_text(waiting_textbar_layer,text_buffer1);
     text_layer_set_font(waiting_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(waiting_textbar_layer, GTextAlignmentCenter);
     
@@ -447,6 +627,8 @@ static void waiting_window_load(Window *window) {
     static char text_buffer2[60];
     if(waiting_for_info==2)
         snprintf(text_buffer2,60,"\nPlease wait, beacon details are being transmitted...");
+    else if(waiting_for_info==3)
+        snprintf(text_buffer2,60,"\nPlease wait, games list is being transmitted...");
     text_layer_set_text(waiting_text_layer,text_buffer2);
     text_layer_set_font(waiting_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(waiting_text_layer, GTextAlignmentCenter);
@@ -478,8 +660,8 @@ static WindowHandlers beacon_details_window_handlers = {
     .unload = beacon_details_window_unload
 };
 static WindowHandlers games_window_handlers = {
-    .load = NULL,
-    .unload = NULL
+    .load = games_window_load,
+    .unload = games_window_unload
 };
 static WindowHandlers game_details_window_handlers = {
     .load = NULL,
@@ -517,6 +699,7 @@ static void init() {
     beacon_details_window = window_create();
     window_set_fullscreen(beacon_details_window, true);
     window_set_window_handlers(beacon_details_window, beacon_details_window_handlers);
+    window_set_click_config_provider(beacon_details_window, beacon_details_click_config_provider);
     
     games_window = window_create();
     window_set_fullscreen(games_window, true);
@@ -549,7 +732,8 @@ static void deinit() {
     window_destroy(games_window);
     window_destroy(game_details_window);
     window_destroy(waiting_window);
-    
+
+    free(current_user_name);
     if(beacons_in_range!=NULL) {
         int i;
         for(i=0; i<beacons_in_range_amount; ++i)
@@ -562,7 +746,19 @@ static void deinit() {
             free(beacons_out_of_range[i].name);
         free(beacons_out_of_range);
     }
-    free(current_user_name);
+    if(games_active!=NULL) {
+        int i;
+        for(i=0; i<games_active_amount; ++i)
+            free(games_active[i].name);
+        free(games_active);
+    }
+    if(games_completed!=NULL) {
+        int i;
+        for(i=0; i<games_completed_amount; ++i)
+            free(games_completed[i].name);
+        free(games_completed);
+    }
+
 }
 /////////////////////////////////////
 
