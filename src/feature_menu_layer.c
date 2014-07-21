@@ -60,20 +60,12 @@ Beacon *beacons_out_of_range;
 static int beacons_in_range_amount = 0;
 static int beacons_out_of_range_amount = 0;
 
-static uint16_t get_num_beacons_in_range(void) {
-    return beacons_in_range_amount;
-}
-
-static uint16_t get_num_beacons_out_of_range(void) {
-    return beacons_out_of_range_amount;
-}
-
 static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     uint16_t num = 0;
     if(section_index==0)
-        num = get_num_beacons_in_range(); // simplify it! directly to the value, not through functions, then delete these functions
+        num = beacons_in_range_amount;
     else if(section_index==1)
-        num = get_num_beacons_out_of_range(); // as above
+        num = beacons_out_of_range_amount;
     return num;
 }
 /////////////////////////////////////
@@ -89,20 +81,12 @@ Game *games_completed;
 static int games_active_amount = 0;
 static int games_completed_amount = 0;
 
-static uint16_t get_num_games_active(void) {
-    return games_active_amount;
-}
-
-static uint16_t get_num_games_completed(void) {
-    return games_completed_amount;
-}
-
 static uint16_t get_num_games(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     uint16_t num = 0;
     if(section_index==0)
-        num = get_num_games_active(); // same as in beacons!
+        num = games_active_amount;
     else if(section_index==1)
-        num = get_num_games_completed(); // same...
+        num = games_completed_amount;
     return num;
 }
 /////////////////////////////////////
@@ -281,14 +265,6 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             window_stack_remove(waiting_window, false);
         }
         else if(receiving_type->value->data[0]==RESPONSE_GAME_DETAILS) {
-            /*
-            if(current_game_description!=NULL)
-                free(current_game_description);
-            Tuple *tuple = dict_find(iter,0);
-            char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
-            strcpy(new,tuple->value->cstring);
-            current_game_description = new;
-            */
             Tuple *tuple = dict_find(iter,0);
             current_game_description = tuple->value->cstring;
             APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving game description: %s",current_game_description);
@@ -792,9 +768,6 @@ static void deinit() {
     window_destroy(waiting_window);
 
     free(current_user_name);
-    //free(current_beacon_name);
-    //free(current_game_name);
-    //free(current_game_description);
     if(beacons_in_range!=NULL) {
         int i;
         for(i=0; i<beacons_in_range_amount; ++i)
