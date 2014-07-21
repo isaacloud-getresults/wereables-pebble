@@ -12,11 +12,12 @@ static Window *beacon_details_window;
 static Window *games_window;
 static Window *game_details_window;
 static Window *waiting_window;
-static MenuLayer *login_menu_layer;
+//static MenuLayer *login_menu_layer;
 static MenuLayer *beacons_menu_layer;
 static MenuLayer *games_menu_layer;
+static TextLayer *login_uppertext_layer;
+static TextLayer *login_lowertext_layer;
 static TextLayer *beacons_textbar_layer;
-static TextLayer *login_text_layer;
 static TextLayer *beacon_details_textbar_layer;
 static TextLayer *beacon_details_uppertext_layer;
 static TextLayer *waiting_textbar_layer;
@@ -36,9 +37,9 @@ static int waiting_for_info;
 ///////////////////////////////////// USERS INITIALISING
 typedef struct {
     char *name;
-    uint16_t id;
+    //uint16_t id;
 } User;
-
+/*
 User users[] = {
     { .name = "ppalka", .id = 1001},
     { .name = "mwarchol", .id = 1002},
@@ -50,6 +51,7 @@ User users[] = {
 static uint16_t get_num_users(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     return NUM_USERS;
 }
+*/
 /////////////////////////////////////
 
 ///////////////////////////////////// BEACONS INITIALISING
@@ -186,6 +188,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             beacons_out_of_range_amount = amount;
             window_stack_push(beacons_window, true);
             window_stack_remove(waiting_window, false);
+            window_stack_remove(login_window, false);
         }
         else if(receiving_type->value->data[0]==RESPONSE_DISTANCE) {
             Tuple *tuple = dict_find(iter,0);
@@ -197,6 +200,19 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving beacon distance: %u",current_beacon_distance);
             window_stack_push(beacon_details_window, true);
             window_stack_remove(waiting_window, false);
+        }
+        else if(receiving_type->value->data[0]==RESPONSE_LOGIN && current_user_name==NULL) {
+            Tuple *tuple = dict_find(iter,0);
+            char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
+            strcpy(new,tuple->value->cstring);
+            current_user_name = new;
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "User received: %s",current_user_name);
+            static char text_buffer[40];
+            snprintf(text_buffer,40,"Welcome %s\ndownloading data...",current_user_name);
+            text_layer_set_text(login_lowertext_layer,text_buffer);
+            send_simple_request(REQUEST_BEACONS_IN_RANGE);
+            //uint16_t timestamp = time_ms(NULL,NULL);
+            //while((time_ms(NULL,NULL)-timestamp)<1000) ;
         }
     }
     else {
@@ -211,6 +227,7 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 /////////////////////////////////////
 
 ///////////////////////////////////// LOGIN WINDOW
+/*
 static void draw_user_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
     User *users = (User*) callback_context;
     User *user = &users[cell_index->row];
@@ -232,32 +249,46 @@ MenuLayerCallbacks login_menu_callbacks = {
     .draw_row = draw_user_row,
     .select_click = user_select_click
 };
+*/
 
 static void login_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
-    int textfield_height = 60;
+    int uppertext_height = 80;
     
-    GRect text_bounds = layer_get_bounds(window_layer);
-    text_bounds.size.h = textfield_height;
-    login_text_layer = text_layer_create(text_bounds);
-    text_layer_set_text(login_text_layer,"SoI Beacons\nlogin as:");
-    text_layer_set_font(login_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(login_text_layer, GTextAlignmentCenter);
+    send_simple_request(REQUEST_LOGIN);
     
+    GRect uppertext_bounds = layer_get_bounds(window_layer);
+    uppertext_bounds.size.h = uppertext_height;
+    login_uppertext_layer = text_layer_create(uppertext_bounds);
+    text_layer_set_text(login_uppertext_layer,"SoI Beacons");
+    text_layer_set_font(login_uppertext_layer,fonts_get_system_font(FONT_KEY_BITHAM_30_BLACK));
+    text_layer_set_text_alignment(login_uppertext_layer, GTextAlignmentCenter);
+    
+    GRect lowertext_bounds = layer_get_bounds(window_layer);
+    lowertext_bounds.size.h -= uppertext_height;
+    lowertext_bounds.origin.y += uppertext_height;
+    login_lowertext_layer = text_layer_create(lowertext_bounds);
+    text_layer_set_text(login_lowertext_layer,"connecting with your smartphone...");
+    text_layer_set_font(login_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(login_lowertext_layer, GTextAlignmentCenter);
+    /*
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textfield_height;
     menu_bounds.origin.y += textfield_height;
     login_menu_layer = menu_layer_create(menu_bounds);
     menu_layer_set_callbacks(login_menu_layer, users, login_menu_callbacks);
     menu_layer_set_click_config_onto_window(login_menu_layer, window);
+    */
     
-    layer_add_child(window_layer, text_layer_get_layer(login_text_layer));
-    layer_add_child(window_layer, menu_layer_get_layer(login_menu_layer));
+    layer_add_child(window_layer, text_layer_get_layer(login_uppertext_layer));
+    layer_add_child(window_layer, text_layer_get_layer(login_lowertext_layer));
+    //layer_add_child(window_layer, menu_layer_get_layer(login_menu_layer));
 }
 
 static void login_window_unload(Window *window) {
-    text_layer_destroy(login_text_layer);
-    menu_layer_destroy(login_menu_layer);
+    text_layer_destroy(login_uppertext_layer);
+    text_layer_destroy(login_lowertext_layer);
+    //menu_layer_destroy(login_menu_layer);
 }
 /////////////////////////////////////
 
@@ -495,7 +526,7 @@ static void init() {
     beacons_out_of_range = NULL;
     beacons_in_range_amount = 0;
     beacons_out_of_range_amount = 0;
-    current_user_name = "NO USER";
+    current_user_name = NULL;
     current_beacon_name = "NO BEACON";
     current_game_name = "NO GAME";
     current_beacon_distance = 0;
@@ -557,6 +588,7 @@ static void deinit() {
             free(beacons_out_of_range[i].name);
         free(beacons_out_of_range);
     }
+    free(current_user_name);
 }
 /////////////////////////////////////
 
