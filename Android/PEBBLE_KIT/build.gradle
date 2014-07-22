@@ -18,5 +18,5 @@ android {
 }
 
 dependencies {
-    compile files('libs/guava-14.0.1.jar')
+    compile group: 'com.google.guava', name: 'guava', version: '14.0.1'
 }

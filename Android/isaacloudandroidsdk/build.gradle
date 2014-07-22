@@ -1,13 +1,13 @@
 apply plugin: 'android-library'
 
 android {
-    compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    compileSdkVersion 15
+    buildToolsVersion "20.0.0"
 
     defaultConfig {
         applicationId "pl.sointeractive.isaacloud"
-        minSdkVersion 8
-        targetSdkVersion 19
+        minSdkVersion 15
+        targetSdkVersion 15
     }
 
     buildTypes {
@@ -19,5 +19,5 @@ android {
 }
 
 dependencies {
-    compile files('libs/google-collections-1.0-rc2.jar')
+    compile group: 'com.google.guava', name: 'guava', version: '14.0.1'
 }
