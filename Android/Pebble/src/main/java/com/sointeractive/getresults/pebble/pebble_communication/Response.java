@@ -6,15 +6,15 @@ import com.sointeractive.getresults.pebble.utils.PebbleDictionaryBuilder;
 import java.util.List;
 
 public enum Response {
-    RESPONSE_UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
-    RESPONSE_BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
-    RESPONSE_BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
-    RESPONSE_GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
-    RESPONSE_GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
-    RESPONSE_USER(26, "Response: Sending user info", new SendUser()),
-    RESPONSE_BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
-    RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress()),
-    RESPONSE_GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
+    UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
+    BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
+    BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
+    GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
+    GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
+    USER_INFO(26, "Response: Sending user info", new SendUser()),
+    BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
+    GAME_PROGRESS(28, "Response: Sending progress", new SendProgress()),
+    GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
 
     public static final int RESPONSE_TYPE = 200;
     public static final int RESPONSE_LENGTH = 201;

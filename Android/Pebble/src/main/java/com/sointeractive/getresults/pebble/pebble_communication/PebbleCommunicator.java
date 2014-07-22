@@ -84,14 +84,14 @@ public class PebbleCommunicator extends Observable {
     private void receivedDataAction(PebbleDictionary data) {
         Request request = Request.getByData(data);
         Log.d(TAG, request.getLogMessage());
-        if (request != Request.REQUEST_UNKNOWN) {
+        if (request != Request.UNKNOWN) {
             sendResponse(request.getResponse());
         }
     }
 
     private void sendResponse(Response response) {
         Log.d(TAG, response.getLogMessage());
-        if (response != Response.RESPONSE_UNKNOWN) {
+        if (response != Response.UNKNOWN) {
             sendDataToPebble(response.getDataToSend());
         }
     }
