@@ -1,7 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble_communication;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.utils2.PebbleDictionaryBuilder;
+import com.sointeractive.getresults.pebble.utils.PebbleDictionaryBuilder;
 
 import java.util.List;
 

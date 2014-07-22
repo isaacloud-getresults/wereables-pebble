@@ -15,7 +15,7 @@
         android:label="@string/app_name">
 
         <activity
-            android:name=".activities2.MainActivity"
+            android:name=".activities.MainActivity"
             android:label="GetResults"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -25,7 +25,7 @@
         </activity>
 
         <activity
-            android:name=".activities2.PebbleActivity"
+            android:name=".activities.PebbleActivity"
             android:label="PebbleCommunication"
             android:screenOrientation="portrait" />
 
