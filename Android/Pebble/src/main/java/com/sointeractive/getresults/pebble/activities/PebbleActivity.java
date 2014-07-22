@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.MenuItem;
@@ -19,67 +18,29 @@ import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.android.kit.PebbleKit;
-import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble_communication.Request;
-import com.sointeractive.getresults.pebble.pebble_communication.Response;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.sointeractive.getresults.pebble.pebble_communication.PebbleCommunicator;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Observable;
+import java.util.Observer;
 
-public class PebbleActivity extends Activity {
+public class PebbleActivity extends Activity implements Observer {
     private static final String TAG = PebbleActivity.class.getSimpleName();
 
-    private final PebbleKit.PebbleDataReceiver receivedDataHandler = new PebbleKit.PebbleDataReceiver(Settings.PEBBLE_APP_UUID) {
-        @Override
-        public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
-            Log.d(TAG, "Event: message received, value: " + data.toJsonString());
-            handler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
-                    PebbleKit.sendAckToPebble(context, transactionId);
-
-                    receivedDataAction(data);
-                }
-            });
-        }
-    };
-
     private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
-    private final Handler handler = new Handler();
     public List<Beacon> beacons = new ArrayList<Beacon>();
     private Context context;
     private CheckBox checkBox;
     private Button notification_send_button;
     private BeaconManager beaconManager;
+    private PebbleCommunicator pebbleCommunicator;
 
-    private void receivedDataAction(PebbleDictionary data) {
-        Request request = Request.getByData(data);
-        Log.d(TAG, request.getLogMessage());
-        if (request != Request.REQUEST_UNKNOWN) {
-            sendResponse(request.getResponse());
-        }
-    }
-
-    private void sendResponse(Response response) {
-        Log.d(TAG, response.getLogMessage());
-        if (response != Response.RESPONSE_UNKNOWN) {
-            sendDataToPebble(response.getDataToSend());
-        }
-    }
-
-    private void sendDataToPebble(PebbleDictionary data) {
-        if (isPebbleConnected()) {
-            Log.d(TAG, "Action: sending response: " + data.toJsonString());
-            PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
-        }
+    private void showInfo(String msg) {
+        Log.d(TAG, "Info: Showing info: " + msg);
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -88,32 +49,34 @@ public class PebbleActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         initInstance();
-        addActionBarBack();
-        initPebble();
-        registerButtonHandlers();
+        addActionBarBackButton();
+        registerPebbleCommunicator();
+        checkPebbleConnection();
         setBeaconManager();
         checkBluetooth();
+        registerButtonHandlers();
     }
 
     private void initInstance() {
+        Log.d(TAG, "Init: Initializing instance");
         setContentView(R.layout.pebble_communication);
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
     }
 
-    private void addActionBarBack() {
+    private void addActionBarBackButton() {
+        Log.d(TAG, "Init: Adding action bar back button");
         ActionBar ab = getActionBar();
         if (ab != null) {
             ab.setDisplayHomeAsUpEnabled(true);
         }
     }
 
-    private void initPebble() {
-        if (isPebbleConnected()) {
-            PebbleKit.startAppOnPebble(context, Settings.PEBBLE_APP_UUID);
-            onConnectAction();
-            if (areAppMessagesSupported()) {
+    private void checkPebbleConnection() {
+        Log.d(TAG, "Init: Checking Pebble connection");
+        if (pebbleCommunicator.isPebbleConnected()) {
+            if (pebbleCommunicator.areAppMessagesSupported()) {
                 showInfo("Connection to Pebble OK");
             } else {
                 showInfo("Sorry, AppMessages are not supported");
@@ -123,23 +86,14 @@ public class PebbleActivity extends Activity {
         }
     }
 
-    private void registerButtonHandlers() {
-        Log.d(TAG, "Handlers: Registering button click handlers");
-
-        notification_send_button.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                PebbleKit.startAppOnPebble(context, Settings.PEBBLE_APP_UUID);
-                Response response = Response.RESPONSE_BEACON_DETAILS;
-                response.setQuery("Boss Room");
-                sendDataToPebble(response.getDataToSend());
-                sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
-            }
-        });
+    private void registerPebbleCommunicator() {
+        Log.d(TAG, "Init: Registering PebbleCommunicator");
+        pebbleCommunicator = new PebbleCommunicator(this, context);
+        pebbleCommunicator.addObserver(this);
     }
 
     private void setBeaconManager() {
-        Log.d(TAG, "Action: Setting new beacon manager");
+        Log.d(TAG, "Init: Setting beacon manager");
         beaconManager = new BeaconManager(this);
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
@@ -195,6 +149,7 @@ public class PebbleActivity extends Activity {
     }
 
     private void connectToService() {
+        Log.d(TAG, "Action: Connecting to beacon scan service");
         beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
             @Override
             public void onServiceReady() {
@@ -208,80 +163,15 @@ public class PebbleActivity extends Activity {
         });
     }
 
-    private boolean isPebbleConnected() {
-        boolean connected = PebbleKit.isWatchConnected(context);
-        Log.d(TAG, "Check: Pebble is " + (connected ? "connected" : "not connected"));
+    private void registerButtonHandlers() {
+        Log.d(TAG, "Init: Registering button click handlers");
 
-        if (connected) {
-            onConnectAction();
-        } else {
-            onDisconnectAction();
-        }
-
-        return connected;
-    }
-
-    private void onConnectAction() {
-        checkBox.setChecked(true);
-    }
-
-    private void onDisconnectAction() {
-        checkBox.setChecked(false);
-    }
-
-    private boolean areAppMessagesSupported() {
-        boolean appMessagesSupported = PebbleKit.areAppMessagesSupported(context);
-        Log.d(TAG, "Check: AppMessages " + (appMessagesSupported ? "are supported" : "are not supported"));
-        return appMessagesSupported;
-    }
-
-    private void showInfo(String msg) {
-        Log.d(TAG, "Info: Showing info: " + msg);
-        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.d(TAG, "Event: onResume");
-        super.onResume();
-
-        registerMessageHandlers();
-    }
-
-    private void registerMessageHandlers() {
-        Log.d(TAG, "Handlers: Registering received data handler");
-        PebbleKit.registerReceivedDataHandler(this, receivedDataHandler);
-    }
-
-    private void sendNotification(String title, String body) {
-        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
-
-        final Map<String, String> data = new HashMap<String, String>();
-        data.put("title", title);
-        data.put("body", body);
-
-        final JSONObject jsonData = new JSONObject(data);
-        final String notificationData = new JSONArray().put(jsonData).toString();
-
-        i.putExtra("messageType", "PEBBLE_ALERT");
-        i.putExtra("sender", Settings.APP_NAME);
-        i.putExtra("notificationData", notificationData);
-
-        Log.d(TAG, "Notification: sending: " + notificationData);
-        sendBroadcast(i);
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "Event: onPause");
-        unregisterMessageHandler();
-
-        super.onPause();
-    }
-
-    private void unregisterMessageHandler() {
-        Log.d(TAG, "Handlers: Unregistering received data handler");
-        unregisterReceiver(receivedDataHandler);
+        notification_send_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                pebbleCommunicator.sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
+            }
+        });
     }
 
     @Override
@@ -314,6 +204,48 @@ public class PebbleActivity extends Activity {
     private void closeAppOnPebble() {
         Log.d(TAG, "Action: Closing app on Pebble");
         PebbleKit.closeAppOnPebble(context, Settings.PEBBLE_APP_UUID);
+    }
+
+    @Override
+    protected void onResume() {
+        Log.d(TAG, "Event: onResume");
+        super.onResume();
+
+        pebbleCommunicator.startListeningPebble();
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d(TAG, "Event: onPause");
+        pebbleCommunicator.stopListeningPebble();
+
+        super.onPause();
+    }
+
+    @Override
+    public void update(Observable observable, Object o) {
+        Log.d(TAG, "Event: Observable value has changed");
+        if (observable == pebbleCommunicator) {
+            onConnectionStateChanged();
+        }
+    }
+
+    private void onConnectionStateChanged() {
+        if (pebbleCommunicator.connectionState) {
+            onPebbleConnected();
+        } else {
+            onPebbleDisconnected();
+        }
+    }
+
+    private void onPebbleConnected() {
+        Log.d(TAG, "Event: Pebble connected");
+        checkBox.setChecked(true);
+    }
+
+    private void onPebbleDisconnected() {
+        Log.d(TAG, "Event: Pebble disconnected");
+        checkBox.setChecked(false);
     }
 
     @Override
