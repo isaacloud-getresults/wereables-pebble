@@ -11,7 +11,7 @@ public enum Response {
     RESPONSE_BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
     RESPONSE_GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
     RESPONSE_GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
-    RESPONSE_LOGIN(26, "Response: Sending login", new SendLogin()),
+    RESPONSE_USER(26, "Response: Sending user info", new SendUser()),
     RESPONSE_BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
     RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress()),
     RESPONSE_GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
@@ -109,11 +109,15 @@ public enum Response {
         }
     }
 
-    private static class SendLogin implements ResponseAction {
+    private static class SendUser implements ResponseAction {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final String login = DataProvider.getLogin();
-            return ResponseFactory.makeSingleValueResponse(id, login);
+            final int points = DataProvider.getPoints();
+            return new PebbleDictionaryBuilder(id)
+                    .addString(login)
+                    .addInt(points)
+                    .build();
         }
 
     }

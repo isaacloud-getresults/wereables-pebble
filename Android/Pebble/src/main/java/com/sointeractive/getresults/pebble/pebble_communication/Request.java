@@ -8,7 +8,7 @@ public enum Request {
     REQUEST_BEACONS_OUT_OF_RANGE(13, "Request: Beacons out of range list", Response.RESPONSE_BEACONS_OUT_OF_RANGE),
     REQUEST_GAMES_ACTIVE(14, "Request: Active games list", Response.RESPONSE_GAMES_ACTIVE),
     REQUEST_GAMES_COMPLETED(15, "Request: Completed games list", Response.RESPONSE_GAMES_COMPLETED),
-    REQUEST_LOGIN(16, "Request: Login", Response.RESPONSE_LOGIN),
+    REQUEST_USER(16, "Request: Login", Response.RESPONSE_USER),
     REQUEST_BEACON_DETAILS(17, "Request: Beacon details", Response.RESPONSE_BEACON_DETAILS),
     REQUEST_PROGRESS(18, "Request: Game progress", Response.RESPONSE_PROGRESS),
     REQUEST_GAME_DETAILS(19, "Request: Game details", Response.RESPONSE_GAME_DETAILS);

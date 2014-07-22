@@ -143,4 +143,8 @@ public class DataProvider {
     public static String getLogin() {
         return "Janusz Tester";
     }
+
+    public static int getPoints() {
+        return 58008;
+    }
 }
