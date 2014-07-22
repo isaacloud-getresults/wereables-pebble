@@ -13,8 +13,8 @@ public enum Request {
     REQUEST_PROGRESS(18, "Request: Game progress", Response.RESPONSE_PROGRESS),
     REQUEST_GAME_DETAILS(19, "Request: Game details", Response.RESPONSE_GAME_DETAILS);
 
-    private static final int REQUEST = 1;
-    private static final int QUERY = 2;
+    private static final int REQUEST_TYPE = 1;
+    private static final int REQUEST_QUERY = 2;
 
     private final int id;
     private final Response response;
@@ -36,7 +36,7 @@ public enum Request {
     }
 
     private static int getRequestID(PebbleDictionary data) {
-        Long requestID = data.getInteger(REQUEST);
+        Long requestID = data.getInteger(REQUEST_TYPE);
         return requestID.intValue();
     }
 
@@ -59,8 +59,8 @@ public enum Request {
     }
 
     private String getRequestQuery() {
-        if (data.contains(QUERY)) {
-            return data.getString(QUERY);
+        if (data.contains(REQUEST_QUERY)) {
+            return data.getString(REQUEST_QUERY);
         } else {
             return "";
         }

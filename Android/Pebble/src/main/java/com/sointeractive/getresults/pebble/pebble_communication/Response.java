@@ -16,6 +16,9 @@ public enum Response {
     RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress()),
     RESPONSE_GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
 
+    public static final int RESPONSE_TYPE = 200;
+    public static final int RESPONSE_LENGTH = 201;
+
     private final int id;
     private final String logMessage;
     private final ResponseAction responseAction;

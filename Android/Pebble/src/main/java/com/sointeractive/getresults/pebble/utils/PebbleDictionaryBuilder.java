@@ -1,16 +1,15 @@
 package com.sointeractive.getresults.pebble.utils;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.pebble_communication.Response;
 
 public class PebbleDictionaryBuilder {
-    private static final int RESPONSE_TYPE = 200;
-    private static final int RESPONSE_LENGTH = 201;
 
     private final PebbleDictionary data = new PebbleDictionary();
     private int currentIndex = 0;
 
     public PebbleDictionaryBuilder(int responseType) {
-        data.addInt32(RESPONSE_TYPE, responseType);
+        data.addInt32(Response.RESPONSE_TYPE, responseType);
     }
 
     public PebbleDictionaryBuilder addString(String value) {
@@ -26,7 +25,7 @@ public class PebbleDictionaryBuilder {
     }
 
     public PebbleDictionary build() {
-        data.addInt32(RESPONSE_LENGTH, currentIndex);
+        data.addInt32(Response.RESPONSE_LENGTH, currentIndex);
         return data;
     }
 }

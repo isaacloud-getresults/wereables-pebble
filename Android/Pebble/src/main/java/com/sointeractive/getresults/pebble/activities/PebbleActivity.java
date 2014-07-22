@@ -21,6 +21,7 @@ import com.estimote.sdk.Region;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.R;
+import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.pebble_communication.Request;
 import com.sointeractive.getresults.pebble.pebble_communication.Response;
 
@@ -31,14 +32,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 public class PebbleActivity extends Activity {
-    private static final UUID PEBBLE_APP_UUID = UUID.fromString("51b19145-0542-474f-8b62-c8c34ae4b87b");
-    private static final String APP_NAME = "GetResults!";
     private static final String TAG = PebbleActivity.class.getSimpleName();
 
-    private final PebbleKit.PebbleDataReceiver receivedDataHandler = new PebbleKit.PebbleDataReceiver(PEBBLE_APP_UUID) {
+    private final PebbleKit.PebbleDataReceiver receivedDataHandler = new PebbleKit.PebbleDataReceiver(Settings.PEBBLE_APP_UUID) {
         @Override
         public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
             Log.d(TAG, "Event: message received, value: " + data.toJsonString());
@@ -55,7 +53,6 @@ public class PebbleActivity extends Activity {
     };
 
     private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
-    private static final int REQUEST_ENABLE_BT = 1234;
     private final Handler handler = new Handler();
     public List<Beacon> beacons = new ArrayList<Beacon>();
     private Context context;
@@ -81,7 +78,7 @@ public class PebbleActivity extends Activity {
     private void sendDataToPebble(PebbleDictionary data) {
         if (isPebbleConnected()) {
             Log.d(TAG, "Action: sending response: " + data.toJsonString());
-            PebbleKit.sendDataToPebble(context, PEBBLE_APP_UUID, data);
+            PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
         }
     }
 
@@ -114,7 +111,7 @@ public class PebbleActivity extends Activity {
 
     private void initPebble() {
         if (isPebbleConnected()) {
-            PebbleKit.startAppOnPebble(context, PEBBLE_APP_UUID);
+            PebbleKit.startAppOnPebble(context, Settings.PEBBLE_APP_UUID);
             onConnectAction();
             if (areAppMessagesSupported()) {
                 showInfo("Connection to Pebble OK");
@@ -132,7 +129,7 @@ public class PebbleActivity extends Activity {
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                PebbleKit.startAppOnPebble(context, PEBBLE_APP_UUID);
+                PebbleKit.startAppOnPebble(context, Settings.PEBBLE_APP_UUID);
                 Response response = Response.RESPONSE_BEACON_DETAILS;
                 response.setQuery("Boss Room");
                 sendDataToPebble(response.getDataToSend());
@@ -178,13 +175,13 @@ public class PebbleActivity extends Activity {
         } else {
             Log.d(TAG, "Action: Trying to enable bluetooth by enableBtIntent");
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            startActivityForResult(enableBtIntent, Settings.REQUEST_ENABLE_BT);
         }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_ENABLE_BT) {
+        if (requestCode == Settings.REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.d(TAG, "Event: Success on enabling bluetooth by enableBtIntent");
                 connectToService();
@@ -267,7 +264,7 @@ public class PebbleActivity extends Activity {
         final String notificationData = new JSONArray().put(jsonData).toString();
 
         i.putExtra("messageType", "PEBBLE_ALERT");
-        i.putExtra("sender", APP_NAME);
+        i.putExtra("sender", Settings.APP_NAME);
         i.putExtra("notificationData", notificationData);
 
         Log.d(TAG, "Notification: sending: " + notificationData);
@@ -316,7 +313,7 @@ public class PebbleActivity extends Activity {
 
     private void closeAppOnPebble() {
         Log.d(TAG, "Action: Closing app on Pebble");
-        PebbleKit.closeAppOnPebble(context, PEBBLE_APP_UUID);
+        PebbleKit.closeAppOnPebble(context, Settings.PEBBLE_APP_UUID);
     }
 
     @Override
