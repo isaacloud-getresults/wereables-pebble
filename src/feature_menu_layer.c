@@ -32,6 +32,7 @@ static InverterLayer *waiting_textbar_inverter_layer;
 static Layer *beacon_details_distance_layer;
 
 static AppTimer *timer;
+static bool logged_on;
 static char *current_user_name;
 static char *current_beacon_name;
 static char *current_game_name;
@@ -40,13 +41,16 @@ static uint8_t current_beacon_distance;
 static uint8_t current_beacon_active_games;
 static uint8_t current_beacon_completed_games;
 static uint8_t waiting_for_info;
+static uint16_t current_user_points;
 /////////////////////////////////////
 
 ///////////////////////////////////// USERS INITIALISING
+/*
 typedef struct {
     char *name;
-    //uint16_t id;
+    uint16_t points;
 } User;
+*/
 /////////////////////////////////////
 
 ///////////////////////////////////// BEACONS INITIALISING
@@ -100,7 +104,7 @@ enum { // actualise, not every position is needed
     REQUEST_BEACONS_OUT_OF_RANGE = 13,
     REQUEST_GAMES_ACTIVE = 14,
     REQUEST_GAMES_COMPLETED = 15,
-    REQUEST_LOGIN = 16,
+    REQUEST_USER = 16,
     REQUEST_BEACON_DETAILS = 17,
     REQUEST_PROGRESS = 18,
     REQUEST_GAME_DETAILS = 19,
@@ -111,7 +115,7 @@ enum { // actualise, not every position is needed
     RESPONSE_BEACONS_OUT_OF_RANGE = 23,
     RESPONSE_GAMES_ACTIVE = 24,
     RESPONSE_GAMES_COMPLETED = 25,
-    RESPONSE_LOGIN = 26,
+    RESPONSE_USER = 26,
     RESPONSE_BEACON_DETAILS = 27,
     RESPONSE_PROGRESS = 28,
     RESPONSE_GAME_DETAILS = 29
@@ -196,8 +200,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Adding new beacon out of range: %u - %s",i,beacons_out_of_range[i].name);
             }
             beacons_out_of_range_amount = amount;
-            window_stack_push(beacons_window, true);
-            window_stack_remove(login_window, false);
+            logged_on = true;
         }
         else if(receiving_type->value->data[0]==RESPONSE_BEACON_DETAILS) {
             Tuple *tuple1 = dict_find(iter,0);
@@ -214,12 +217,15 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             window_stack_push(beacon_details_window, true);
             window_stack_remove(waiting_window, false);
         }
-        else if(receiving_type->value->data[0]==RESPONSE_LOGIN && current_user_name==NULL) {
+        else if(receiving_type->value->data[0]==RESPONSE_USER && current_user_name==NULL) {
             Tuple *tuple = dict_find(iter,0);
             char *new = (char*)calloc(strlen(tuple->value->cstring),sizeof(char));
             strcpy(new,tuple->value->cstring);
             current_user_name = new;
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "User received: %s",current_user_name);
+            tuple = dict_find(iter,1);
+            if(tuple)
+                current_user_points = tuple->value->data[0];
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "User received: %s | %u",current_user_name,current_user_points);
             static char text_buffer[40];
             snprintf(text_buffer,40,"Welcome %s\ndownloading data...",current_user_name);
             text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -284,10 +290,23 @@ void in_dropped_handler(AppMessageResult reason, void *context) {
 /////////////////////////////////////
 
 ///////////////////////////////////// LOGIN WINDOW
+static void login_going_on(void *data) {
+    if(logged_on) {
+        window_stack_push(beacons_window, true);
+        window_stack_remove(login_window, false);
+    }
+    else {
+        timer = app_timer_register(200,login_going_on,NULL);
+    }
+}
+
 static void login_request_sending(void *data) {
     if(current_user_name==NULL) {
-        send_simple_request(REQUEST_LOGIN);
-        timer = app_timer_register(1000,login_request_sending,NULL);
+        send_simple_request(REQUEST_USER);
+        timer = app_timer_register(2000,login_request_sending,NULL);
+    }
+    else {
+        timer = app_timer_register(1000,login_going_on,NULL);
     }
 }
 
@@ -296,7 +315,7 @@ static void login_window_load(Window *window) {
     int uppertext_height = 80;
     
     timer = app_timer_register(1000,login_request_sending,NULL);
-    send_simple_request(REQUEST_LOGIN);
+    send_simple_request(REQUEST_USER);
     
     GRect uppertext_bounds = layer_get_bounds(window_layer);
     uppertext_bounds.size.h = uppertext_height;
@@ -393,7 +412,7 @@ static void beacons_window_load(Window *window) {
     textbar_bounds.size.h = textbar_height;
     beacons_textbar_layer = text_layer_create(textbar_bounds);
     static char text_buffer[30];
-    snprintf(text_buffer,30,"%s",current_user_name);
+    snprintf(text_buffer,30,"%s (%u)",current_user_name,current_user_points);
     text_layer_set_text(beacons_textbar_layer,text_buffer);
     text_layer_set_font(beacons_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
     text_layer_set_text_alignment(beacons_textbar_layer, GTextAlignmentCenter);
@@ -709,6 +728,7 @@ static WindowHandlers waiting_window_handlers = {
 /////////////////////////////////////
 static void init() {
     timer = NULL;
+    logged_on = false;
     beacons_in_range = NULL;
     beacons_out_of_range = NULL;
     beacons_in_range_amount = 0;
@@ -721,6 +741,7 @@ static void init() {
     current_beacon_completed_games = 0;
     current_game_description = NULL;
     waiting_for_info = 0;
+    current_user_points = 0;
     
     login_window = window_create();
     window_set_fullscreen(login_window, true);
