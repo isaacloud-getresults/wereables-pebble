@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.sointeractive.getresults.pebble"
-    android:versionCode="1"
-    android:versionName="1.0">
+    package="com.sointeractive.getresults.pebble">
 
     <!-- Needed permissions in order to scan for beacons. -->
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -12,11 +10,12 @@
     <!-- <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/> -->
 
     <application
-        android:label="@string/app_name"
-        android:theme="@android:style/Theme.Holo.Light">
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name">
 
         <activity
-            android:name=".Activities.MainActivity"
+            android:name=".activities.MainActivity"
             android:label="GetResults"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -26,7 +25,7 @@
         </activity>
 
         <activity
-            android:name=".Activities.PebbleActivity"
+            android:name=".activities.PebbleActivity"
             android:label="PebbleCommunication"
             android:screenOrientation="portrait" />
 
