@@ -7,6 +7,7 @@ import java.util.List;
 
 public enum Response {
     UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
+    USER_DETAILS(21, "Response: User details", new SendUserDetails()),
     BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
     BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
     GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
@@ -113,7 +114,7 @@ public enum Response {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final String login = DataProvider.getLogin();
-            final int points = DataProvider.getPoints();
+            final int points = DataProvider.getPoints(login);
             return new PebbleDictionaryBuilder(id)
                     .addString(login)
                     .addInt(points)
@@ -122,5 +123,17 @@ public enum Response {
 
     }
 
+    private static class SendUserDetails implements ResponseAction {
+        @Override
+        public PebbleDictionary execute(int id, String query) {
+            final int rank = DataProvider.getRank(query);
+            final int points = DataProvider.getPoints(query);
+            List<String> achievements = DataProvider.getAchievements(query);
+            return new PebbleDictionaryBuilder(id)
+                    .addInt(rank)
+                    .addInt(points)
+                    .addList(achievements)
+                    .build();
+        }
+    }
 }
-

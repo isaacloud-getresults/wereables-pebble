@@ -3,6 +3,8 @@ package com.sointeractive.getresults.pebble.utils;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble_communication.Response;
 
+import java.util.List;
+
 public class PebbleDictionaryBuilder {
 
     private final PebbleDictionary data = new PebbleDictionary();
@@ -21,6 +23,13 @@ public class PebbleDictionaryBuilder {
     public PebbleDictionaryBuilder addInt(int value) {
         data.addInt32(currentIndex, value);
         currentIndex += 1;
+        return this;
+    }
+
+    public PebbleDictionaryBuilder addList(List<String> list) {
+        for (String item : list) {
+            addString(item);
+        }
         return this;
     }
 

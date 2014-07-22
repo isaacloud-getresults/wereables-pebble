@@ -101,6 +101,14 @@ public class DataProvider {
         completedGamesCount.put("Games Room 2", 0);
     }
 
+    private static final List<String> achievements;
+
+    static {
+        achievements = new LinkedList<String>();
+        achievements.add("Employee of the month");
+        achievements.add("Quick eater");
+        achievements.add("Swimmer");
+    }
 
     private static final Random random = new Random();
 
@@ -144,7 +152,15 @@ public class DataProvider {
         return "Janusz Tester";
     }
 
-    public static int getPoints() {
+    public static int getPoints(String user) {
         return 58008;
+    }
+
+    public static List<String> getAchievements(String user) {
+        return achievements;
+    }
+
+    public static int getRank(String user) {
+        return 15;
     }
 }

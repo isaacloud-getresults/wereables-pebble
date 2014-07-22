@@ -4,6 +4,7 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 
 public enum Request {
     UNKNOWN(0, "Request: UNKNOWN REQUEST", Response.UNKNOWN),
+    USER_DETAILS(11, "Request: User details", Response.USER_DETAILS),
     BEACONS_IN_RANGE(12, "Request: Beacons in range list", Response.BEACONS_IN_RANGE),
     BEACONS_OUT_OF_RANGE(13, "Request: Beacons out of range list", Response.BEACONS_OUT_OF_RANGE),
     GAMES_ACTIVE(14, "Request: Active games list", Response.GAMES_ACTIVE),

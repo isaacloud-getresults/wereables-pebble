@@ -20,9 +20,7 @@ public class ResponseFactory {
 
     public static PebbleDictionary makeListResponse(int id, List<String> list) {
         PebbleDictionaryBuilder builder = new PebbleDictionaryBuilder(id);
-        for (String item : list) {
-            builder.addString(item);
-        }
+        builder.addList(list);
         return builder.build();
     }
 }
