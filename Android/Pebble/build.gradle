@@ -8,6 +8,8 @@ android {
         applicationId "com.sointeractive.getresults.pebble"
         minSdkVersion 15
         targetSdkVersion 15
+        versionCode 1
+        versionName "1.0"
     }
 
     buildTypes {
@@ -20,5 +22,6 @@ android {
 
 dependencies {
     compile project(':PEBBLE_KIT')
+    compile project(':isaacloudandroidsdk')
     compile files('libs/estimote-sdk-preview.jar')
 }
