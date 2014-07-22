@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.Activities;
+package com.sointeractive.getresults.pebble.activities2;
 
 import android.app.ActionBar;
 import android.app.Activity;
@@ -20,9 +20,9 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.PebbleCommunication.Request;
-import com.sointeractive.getresults.pebble.PebbleCommunication.Response;
 import com.sointeractive.getresults.pebble.R;
+import com.sointeractive.getresults.pebble.pebble_communication.Request;
+import com.sointeractive.getresults.pebble.pebble_communication.Response;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -132,6 +132,10 @@ public class PebbleActivity extends Activity {
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                PebbleKit.startAppOnPebble(context, PEBBLE_APP_UUID);
+                Response response = Response.RESPONSE_BEACON_DETAILS;
+                response.setQuery("Boss Room");
+                sendDataToPebble(response.getDataToSend());
                 sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
             }
         });

@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.Activities;
+package com.sointeractive.getresults.pebble.activities2;
 
 import android.app.Activity;
 import android.content.Intent;

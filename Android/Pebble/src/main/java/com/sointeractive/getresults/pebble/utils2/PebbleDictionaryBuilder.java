@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.Utils;
+package com.sointeractive.getresults.pebble.utils2;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 
