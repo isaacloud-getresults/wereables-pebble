@@ -88,7 +88,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void registerPebbleCommunicator() {
         Log.d(TAG, "Init: Registering PebbleCommunicator");
-        pebbleCommunicator = new PebbleCommunicator(this, context);
+        pebbleCommunicator = new PebbleCommunicator(context);
         pebbleCommunicator.addObserver(this);
     }
 
@@ -210,15 +210,11 @@ public class PebbleActivity extends Activity implements Observer {
     protected void onResume() {
         Log.d(TAG, "Event: onResume");
         super.onResume();
-
-        pebbleCommunicator.startListeningPebble();
     }
 
     @Override
     protected void onPause() {
         Log.d(TAG, "Event: onPause");
-        pebbleCommunicator.stopListeningPebble();
-
         super.onPause();
     }
 

@@ -29,10 +29,16 @@
             android:label="PebbleCommunication"
             android:screenOrientation="portrait" />
 
-        <!-- Estimote service responsible for scanning beacons. -->
         <service
             android:name="com.estimote.sdk.service.BeaconService"
             android:exported="false" />
+
+        <receiver android:name=".pebble_communication.PebbleDataReceiver">
+            <intent-filter>
+                <action android:name="com.getpebble.action.app.RECEIVE" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>
