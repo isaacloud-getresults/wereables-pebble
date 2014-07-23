@@ -15,4 +15,7 @@ public class Settings {
 
     // Instance requests
     public static final int REQUEST_ENABLE_BT = 1234;
+
+    // Notification ID
+    public static final int NOTIFICATION_ID = 1234;
 }
