@@ -15,8 +15,8 @@
         android:label="@string/app_name">
 
         <activity
-            android:name=".activities.MainActivity"
-            android:label="GetResults"
+            android:name=".activities.PebbleActivity"
+            android:label="PebbleCommunication"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,29 +24,24 @@
             </intent-filter>
         </activity>
 
-        <activity
-            android:name=".activities.PebbleActivity"
-            android:label="PebbleCommunication"
-            android:screenOrientation="portrait" />
-
         <service
             android:name="com.estimote.sdk.service.BeaconService"
             android:exported="false" />
 
         <receiver android:name=".pebble.receivers.PebbleDataReceiver">
-        <intent-filter>
+            <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE" />
             </intent-filter>
         </receiver>
 
         <receiver android:name=".pebble.receivers.PebbleConnectedReceiver">
-        <intent-filter>
+            <intent-filter>
                 <action android:name="com.getpebble.action.PEBBLE_CONNECTED" />
             </intent-filter>
         </receiver>
 
         <receiver android:name=".pebble.receivers.PebbleDisconnectedReceiver">
-        <intent-filter>
+            <intent-filter>
                 <action android:name="com.getpebble.action.PEBBLE_DISCONNECTED" />
             </intent-filter>
         </receiver>

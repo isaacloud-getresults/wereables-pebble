@@ -19,8 +19,8 @@ public class DataProvider {
         beaconsInRange = new LinkedList<String>();
         beaconsInRange.add("Kitchen 1");
         beaconsInRange.add("Meeting Room");
-        beaconsInRange.add("Meeting Room 2");
-        beaconsInRange.add("Boss Room");
+//        beaconsInRange.add("Meeting Room 2");
+//        beaconsInRange.add("Boss Room");
     }
 
     private static final List<String> beaconsOutOfRange;
@@ -29,7 +29,7 @@ public class DataProvider {
         beaconsOutOfRange = new LinkedList<String>();
         beaconsOutOfRange.add("Kitchen 2");
         beaconsOutOfRange.add("Games Room");
-        beaconsOutOfRange.add("Games Room 2");
+//        beaconsOutOfRange.add("Games Room 2");
     }
 
     private static final List<String> activeGames;
@@ -37,7 +37,7 @@ public class DataProvider {
     static {
         activeGames = new LinkedList<String>();
         activeGames.add("150 visits");
-        activeGames.add("300 visits");
+//        activeGames.add("300 visits");
         activeGames.add("Without queue");
     }
 
@@ -47,7 +47,7 @@ public class DataProvider {
         completedGames = new LinkedList<String>();
         completedGames.add("5 visits");
         completedGames.add("25 visits");
-        completedGames.add("50 visits");
+//        completedGames.add("50 visits");
     }
 
     private static final Map<String, String> gameDetails;

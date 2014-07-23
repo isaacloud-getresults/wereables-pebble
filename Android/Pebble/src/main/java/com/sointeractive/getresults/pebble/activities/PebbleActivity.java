@@ -61,7 +61,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void initInstance() {
         Log.d(TAG, "Init: Initializing instance");
-        setContentView(R.layout.pebble_communication);
+        setContentView(R.layout.pebble_activity);
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
