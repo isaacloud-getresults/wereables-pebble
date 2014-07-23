@@ -1,20 +1,24 @@
-package com.sointeractive.getresults.pebble.PebbleCommunication;
+package com.sointeractive.getresults.pebble.pebble_communication;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.Utils.PebbleDictionaryBuilder;
+import com.sointeractive.getresults.pebble.utils.PebbleDictionaryBuilder;
 
 import java.util.List;
 
 public enum Response {
-    RESPONSE_UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
-    RESPONSE_BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
-    RESPONSE_BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
-    RESPONSE_GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
-    RESPONSE_GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
-    RESPONSE_LOGIN(26, "Response: Sending login", new SendLogin()),
-    RESPONSE_BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
-    RESPONSE_PROGRESS(28, "Response: Sending progress", new SendProgress()),
-    RESPONSE_GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
+    UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
+    USER_DETAILS(21, "Response: User details", new SendUserDetails()),
+    BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
+    BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
+    GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
+    GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
+    USER_INFO(26, "Response: Sending user info", new SendUser()),
+    BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
+    GAME_PROGRESS(28, "Response: Sending progress", new SendProgress()),
+    GAME_DETAILS(29, "Response: Game details", new SendGameDetails());
+
+    public static final int RESPONSE_TYPE = 200;
+    public static final int RESPONSE_LENGTH = 201;
 
     private final int id;
     private final String logMessage;
@@ -106,14 +110,30 @@ public enum Response {
         }
     }
 
-    private static class SendLogin implements ResponseAction {
+    private static class SendUser implements ResponseAction {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final String login = DataProvider.getLogin();
-            return ResponseFactory.makeSingleValueResponse(id, login);
+            final int points = DataProvider.getPoints(login);
+            return new PebbleDictionaryBuilder(id)
+                    .addString(login)
+                    .addInt(points)
+                    .build();
         }
 
     }
 
+    private static class SendUserDetails implements ResponseAction {
+        @Override
+        public PebbleDictionary execute(int id, String query) {
+            final int rank = DataProvider.getRank(query);
+            final int points = DataProvider.getPoints(query);
+            List<String> achievements = DataProvider.getAchievements(query);
+            return new PebbleDictionaryBuilder(id)
+                    .addInt(rank)
+                    .addInt(points)
+                    .addList(achievements)
+                    .build();
+        }
+    }
 }
-

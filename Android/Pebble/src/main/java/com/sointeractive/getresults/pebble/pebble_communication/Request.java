@@ -1,20 +1,21 @@
-package com.sointeractive.getresults.pebble.PebbleCommunication;
+package com.sointeractive.getresults.pebble.pebble_communication;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 
 public enum Request {
-    REQUEST_UNKNOWN(0, "Request: UNKNOWN REQUEST", Response.RESPONSE_UNKNOWN),
-    REQUEST_BEACONS_IN_RANGE(12, "Request: Beacons in range list", Response.RESPONSE_BEACONS_IN_RANGE),
-    REQUEST_BEACONS_OUT_OF_RANGE(13, "Request: Beacons out of range list", Response.RESPONSE_BEACONS_OUT_OF_RANGE),
-    REQUEST_GAMES_ACTIVE(14, "Request: Active games list", Response.RESPONSE_GAMES_ACTIVE),
-    REQUEST_GAMES_COMPLETED(15, "Request: Completed games list", Response.RESPONSE_GAMES_COMPLETED),
-    REQUEST_LOGIN(16, "Request: Login", Response.RESPONSE_LOGIN),
-    REQUEST_BEACON_DETAILS(17, "Request: Beacon details", Response.RESPONSE_BEACON_DETAILS),
-    REQUEST_PROGRESS(18, "Request: Game progress", Response.RESPONSE_PROGRESS),
-    REQUEST_GAME_DETAILS(19, "Request: Game details", Response.RESPONSE_GAME_DETAILS);
+    UNKNOWN(0, "Request: UNKNOWN REQUEST", Response.UNKNOWN),
+    USER_DETAILS(11, "Request: User details", Response.USER_DETAILS),
+    BEACONS_IN_RANGE(12, "Request: Beacons in range list", Response.BEACONS_IN_RANGE),
+    BEACONS_OUT_OF_RANGE(13, "Request: Beacons out of range list", Response.BEACONS_OUT_OF_RANGE),
+    GAMES_ACTIVE(14, "Request: Active games list", Response.GAMES_ACTIVE),
+    GAMES_COMPLETED(15, "Request: Completed games list", Response.GAMES_COMPLETED),
+    USER_INFO(16, "Request: User info", Response.USER_INFO),
+    BEACON_DETAILS(17, "Request: Beacon details", Response.BEACON_DETAILS),
+    PROGRESS(18, "Request: Game progress", Response.GAME_PROGRESS),
+    GAME_DETAILS(19, "Request: Game details", Response.GAME_DETAILS);
 
-    private static final int REQUEST = 1;
-    private static final int QUERY = 2;
+    private static final int REQUEST_TYPE = 1;
+    private static final int REQUEST_QUERY = 2;
 
     private final int id;
     private final Response response;
@@ -36,7 +37,7 @@ public enum Request {
     }
 
     private static int getRequestID(PebbleDictionary data) {
-        Long requestID = data.getInteger(REQUEST);
+        Long requestID = data.getInteger(REQUEST_TYPE);
         return requestID.intValue();
     }
 
@@ -45,7 +46,7 @@ public enum Request {
             if (e.id == id)
                 return e;
         }
-        return REQUEST_UNKNOWN;
+        return UNKNOWN;
     }
 
     public String getLogMessage() {
@@ -59,8 +60,8 @@ public enum Request {
     }
 
     private String getRequestQuery() {
-        if (data.contains(QUERY)) {
-            return data.getString(QUERY);
+        if (data.contains(REQUEST_QUERY)) {
+            return data.getString(REQUEST_QUERY);
         } else {
             return "";
         }

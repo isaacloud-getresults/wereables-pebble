@@ -1,0 +1,11 @@
+<resources>
+
+    <string name="app_name">isaacloud-android-sdk</string>
+
+
+    <!-- alert dialog -->
+    <string name="alert_dialog_title">Internet connection alert</string>
+    <string name="alert_dialog_text">No internet connection detected. The application will now exit. Please connect to the internet and run the application again.</string>
+    <string name="alert_dialog_ok">OK</string>
+
+</resources>

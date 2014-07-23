@@ -5,8 +5,9 @@ android {
     buildToolsVersion "20.0.0"
 
     defaultConfig {
-        applicationId "com.getpebble.android.kit"
+        applicationId "pl.sointeractive.isaacloud"
         minSdkVersion 15
+        targetSdkVersion 15
     }
 
     buildTypes {
