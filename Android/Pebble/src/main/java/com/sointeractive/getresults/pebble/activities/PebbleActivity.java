@@ -17,7 +17,6 @@ import android.widget.Toast;
 import com.estimote.sdk.Beacon;
 import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
-import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.pebble_communication.PebbleCommunicator;
@@ -195,15 +194,9 @@ public class PebbleActivity extends Activity implements Observer {
     protected void onDestroy() {
         Log.d(TAG, "Event: onDestroy");
 
-        closeAppOnPebble();
         beaconManager.disconnect();
 
         super.onDestroy();
-    }
-
-    private void closeAppOnPebble() {
-        Log.d(TAG, "Action: Closing app on Pebble");
-        PebbleKit.closeAppOnPebble(context, Settings.PEBBLE_APP_UUID);
     }
 
     @Override

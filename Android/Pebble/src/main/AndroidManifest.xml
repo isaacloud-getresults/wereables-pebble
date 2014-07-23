@@ -33,9 +33,21 @@
             android:name="com.estimote.sdk.service.BeaconService"
             android:exported="false" />
 
-        <receiver android:name=".pebble_communication.PebbleDataReceiver">
+        <receiver android:name=".pebble_communication.receivers.PebbleDataReceiver">
             <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".pebble_communication.receivers.PebbleConnectedReceiver">
+            <intent-filter>
+                <action android:name="com.getpebble.action.PEBBLE_CONNECTED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".pebble_communication.receivers.PebbleDisconnectedReceiver">
+            <intent-filter>
+                <action android:name="com.getpebble.action.PEBBLE_DISCONNECTED" />
             </intent-filter>
         </receiver>
 
