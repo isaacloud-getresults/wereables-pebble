@@ -1,6 +1,5 @@
 package com.sointeractive.getresults.pebble.activities;
 
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -10,7 +9,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -50,13 +48,12 @@ public class PebbleActivity extends Activity implements Observer {
         super.onCreate(savedInstanceState);
 
         initInstance();
-        addActionBarBackButton();
         registerPebbleCommunicator();
         checkPebbleConnection();
         setBeaconManager();
         checkBluetooth();
         registerButtonHandlers();
-        setAndroidNotification("You entered a new beacon range!", "Kitchen", "Distance: 15m");
+        setAndroidNotification("You entered a new beacon range!", "Kitchen", 15.0);
     }
 
     private void initInstance() {
@@ -65,14 +62,6 @@ public class PebbleActivity extends Activity implements Observer {
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
-    }
-
-    private void addActionBarBackButton() {
-        Log.d(TAG, "Init: Adding action bar back button");
-        ActionBar ab = getActionBar();
-        if (ab != null) {
-            ab.setDisplayHomeAsUpEnabled(true);
-        }
     }
 
     private void checkPebbleConnection() {
@@ -176,11 +165,11 @@ public class PebbleActivity extends Activity implements Observer {
         });
     }
 
-    private void setAndroidNotification(String ticker, String title, String text) {
+    private void setAndroidNotification(String ticker, String title, double distance) {
         Notification notification = new Notification.Builder(context)
                 .setTicker(ticker)
                 .setContentTitle(title)
-                .setContentText(text)
+                .setContentText("Distance: " + String.format("%.2fm", distance))
                 .setSmallIcon(R.drawable.ic_launcher)
                 .setOngoing(true)
                 .getNotification();
@@ -253,9 +242,4 @@ public class PebbleActivity extends Activity implements Observer {
         checkBox.setChecked(false);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Log.d(TAG, "Event: Menu item selected");
-        return super.onOptionsItemSelected(item);
-    }
 }
