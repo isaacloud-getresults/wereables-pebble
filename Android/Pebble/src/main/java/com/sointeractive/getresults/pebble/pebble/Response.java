@@ -8,10 +8,8 @@ import java.util.List;
 public enum Response {
     UNKNOWN(0, "Response: UNKNOWN RESPONSE", null),
     USER_DETAILS(21, "Response: User details", new SendUserDetails()),
-    BEACONS_IN_RANGE(22, "Response: Sending beacons in range list", new SendBeaconsInRangeList()),
-    BEACONS_OUT_OF_RANGE(23, "Response: Sending beacons out of range list", new SendBeaconsOutOfRangeList()),
-    GAMES_ACTIVE(24, "Response: Sending active games list", new SendActiveGamesList()),
-    GAMES_COMPLETED(25, "Response: Sending completed games list", new SendCompletedGamesList()),
+    BEACONS(22, "Response: Sending beacons list", new SendBeaconsList()),
+    GAMES(24, "Response: Sending games list", new SendGamesList()),
     USER_INFO(26, "Response: Sending user info", new SendUser()),
     BEACON_DETAILS(27, "Response: Sending beacon details", new SendBeaconDetails()),
     GAME_PROGRESS(28, "Response: Sending progress", new SendProgress()),
@@ -47,35 +45,31 @@ public enum Response {
         public PebbleDictionary execute(int id, String query);
     }
 
-    private static class SendBeaconsInRangeList implements ResponseAction {
+    private static class SendBeaconsList implements ResponseAction {
         @Override
         public PebbleDictionary execute(int id, String query) {
             List<String> beaconsInRange = DataProvider.getBeaconsInRange();
-            return ResponseFactory.makeListResponse(id, beaconsInRange);
+            List<String> beaconsOutOfRange = DataProvider.getBeaconsOutOfRange();
+            return new PebbleDictionaryBuilder(id)
+                    .addInt(beaconsInRange.size())
+                    .addInt(beaconsOutOfRange.size())
+                    .addList(beaconsInRange)
+                    .addList(beaconsOutOfRange)
+                    .build();
         }
     }
 
-    private static class SendBeaconsOutOfRangeList implements ResponseAction {
+    private static class SendGamesList implements ResponseAction {
         @Override
         public PebbleDictionary execute(int id, String query) {
-            List<String> beaconsOutOfRangeList = DataProvider.getBeaconsOutOfRange();
-            return ResponseFactory.makeListResponse(id, beaconsOutOfRangeList);
-        }
-    }
-
-    private static class SendActiveGamesList implements ResponseAction {
-        @Override
-        public PebbleDictionary execute(int id, String query) {
-            List<String> activeGameList = DataProvider.getActiveGames();
-            return ResponseFactory.makeListResponse(id, activeGameList);
-        }
-    }
-
-    private static class SendCompletedGamesList implements ResponseAction {
-        @Override
-        public PebbleDictionary execute(int id, String query) {
-            List<String> completedGameList = DataProvider.getCompletedGames();
-            return ResponseFactory.makeListResponse(id, completedGameList);
+            List<String> activeGames = DataProvider.getActiveGames();
+            List<String> completedGames = DataProvider.getCompletedGames();
+            return new PebbleDictionaryBuilder(id)
+                    .addInt(activeGames.size())
+                    .addInt(completedGames.size())
+                    .addList(activeGames)
+                    .addList(completedGames)
+                    .build();
         }
     }
 
@@ -98,7 +92,9 @@ public enum Response {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final int progress = DataProvider.getProgress(query);
-            return ResponseFactory.makeSingleValueResponse(id, progress);
+            return new PebbleDictionaryBuilder(id)
+                    .addInt(progress)
+                    .build();
         }
     }
 
@@ -106,7 +102,9 @@ public enum Response {
         @Override
         public PebbleDictionary execute(int id, String query) {
             final String gameDetails = DataProvider.getGameDetails(query);
-            return ResponseFactory.makeSingleValueResponse(id, gameDetails);
+            return new PebbleDictionaryBuilder(id)
+                    .addString(gameDetails)
+                    .build();
         }
     }
 
