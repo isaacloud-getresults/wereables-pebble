@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble_communication;
+package com.sointeractive.getresults.pebble.pebble;
 
 import java.util.HashMap;
 import java.util.LinkedList;

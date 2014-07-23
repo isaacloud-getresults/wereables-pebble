@@ -19,7 +19,7 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble_communication.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.PebbleCommunicator;
 
 import java.util.ArrayList;
 import java.util.List;

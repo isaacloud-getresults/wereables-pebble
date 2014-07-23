@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble_communication.receivers;
+package com.sointeractive.getresults.pebble.pebble.receivers;
 
 import android.content.Context;
 import android.os.Handler;
@@ -7,8 +7,8 @@ import android.util.Log;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble_communication.PebbleCommunicator;
-import com.sointeractive.getresults.pebble.pebble_communication.Request;
+import com.sointeractive.getresults.pebble.pebble.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.Request;
 
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private static final String TAG = PebbleDataReceiver.class.getSimpleName();
