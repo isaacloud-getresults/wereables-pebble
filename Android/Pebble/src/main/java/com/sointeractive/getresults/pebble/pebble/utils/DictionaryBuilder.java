@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.pebble.Request;
 public class DictionaryBuilder {
 
     private final PebbleDictionary dictionary = new PebbleDictionary();
-    private int currentIndex = 0;
+    private int currentIndex = 2;
 
     public DictionaryBuilder(int responseType) {
         dictionary.addInt32(Request.RESPONSE_TYPE, responseType);
