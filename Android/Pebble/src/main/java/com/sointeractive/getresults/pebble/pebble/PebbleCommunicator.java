@@ -12,40 +12,47 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Observable;
 
 public class PebbleCommunicator extends Observable {
     private static final String TAG = PebbleCommunicator.class.getSimpleName();
     private static volatile PebbleCommunicator instance = null;
+    private final LinkedList<PebbleDictionary> sendingQueue = new LinkedList<PebbleDictionary>();
     public boolean connectionState;
-    private Context context;    public boolean connectionState;
+    private Context context;
 
     private PebbleCommunicator() {
     }
 
-    public static PebbleCommunicator getCommunicator(Context context) {
+    public synchronized static PebbleCommunicator getCommunicator(Context context) {
         if (instance == null) {
-            synchronized (PebbleCommunicator.class) {
-                if (instance == null) {
-                    instance = new PebbleCommunicator();
-                    instance.connectionState = false;
-                }
+            if (instance == null) {
+                instance = new PebbleCommunicator();
+                instance.connectionState = false;
             }
         }
         instance.context = context;
         return instance;
     }
 
-    public void sendResponse(Response response) {
-        Log.d(TAG, response.getLogMessage());
-        if (response != Response.UNKNOWN) {
-            sendDataToPebble(response.getDataToSend());
+    public synchronized void sendDataToPebble(List<PebbleDictionary> data) {
+        if (isPebbleConnected()) {
+            boolean wasEmpty = sendingQueue.isEmpty();
+            sendingQueue.addAll(data);
+            if (wasEmpty) {
+                sendNext();
+            }
         }
     }
 
-    private void sendDataToPebble(PebbleDictionary data) {
-        if (isPebbleConnected()) {
+    public synchronized void sendNext() {
+        if (sendingQueue.isEmpty()) {
+            Log.d(TAG, "Event: Nothing to send, empty sendingQueue");
+        } else {
+            PebbleDictionary data = sendingQueue.poll();
             Log.d(TAG, "Action: sending response: " + data.toJsonString());
             PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
         }

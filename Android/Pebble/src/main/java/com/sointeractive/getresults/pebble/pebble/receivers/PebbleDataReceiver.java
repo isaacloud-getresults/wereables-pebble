@@ -13,7 +13,6 @@ import com.sointeractive.getresults.pebble.pebble.Request;
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private static final String TAG = PebbleDataReceiver.class.getSimpleName();
     private final Handler handler = new Handler();
-    private PebbleCommunicator pebbleCommunicator;
 
     public PebbleDataReceiver() {
         super(Settings.PEBBLE_APP_UUID);
@@ -21,25 +20,20 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
 
     @Override
     public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
-        Log.d(TAG, "Event: message received, value: " + data.toJsonString());
+        Log.d(TAG, "Event: Message received, value: " + data.toJsonString());
         handler.post(new Runnable() {
             @Override
             public void run() {
                 Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
                 PebbleKit.sendAckToPebble(context, transactionId);
 
-                pebbleCommunicator = PebbleCommunicator.getCommunicator(context);
-                receivedDataAction(data);
+                Request request = Request.getByData(data);
+                Log.d(TAG, "Request: " + request.getLogMessage());
+                if (request != Request.UNKNOWN) {
+                    PebbleCommunicator communicator = PebbleCommunicator.getCommunicator(context);
+                    communicator.sendDataToPebble(request.getDataToSend());
+                }
             }
         });
-
-    }
-
-    public void receivedDataAction(PebbleDictionary data) {
-        Request request = Request.getByData(data);
-        Log.d(TAG, request.getLogMessage());
-        if (request != Request.UNKNOWN) {
-            pebbleCommunicator.sendResponse(request.getResponse());
-        }
     }
 }

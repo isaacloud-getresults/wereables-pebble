@@ -1,166 +1,76 @@
 package com.sointeractive.getresults.pebble.pebble;
 
-import java.util.HashMap;
+import com.sointeractive.getresults.pebble.pebble.data.Achievement;
+import com.sointeractive.getresults.pebble.pebble.data.Beacon;
+import com.sointeractive.getresults.pebble.pebble.data.Game;
+import com.sointeractive.getresults.pebble.pebble.data.Sendable;
+import com.sointeractive.getresults.pebble.pebble.data.User;
+
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Random;
 
 public class DataProvider {
     /*
-    * ResponseDataProvider mock-up -- will be replaced by communication with IsaaCloud.
+    * ResponseDataProvider mock-up -- will be replaced by data from IsaaCloud.
     */
 
-    private static final int PERCENT_RANGE = 101;
-
-    private static final List<String> beaconsInRange;
+    private static final List<Sendable> user = new LinkedList<Sendable>();
 
     static {
-        beaconsInRange = new LinkedList<String>();
-        beaconsInRange.add("Kitchen 1");
-        beaconsInRange.add("Meeting Room");
-//        beaconsInRange.add("Meeting Room 2");
-//        beaconsInRange.add("Boss Room");
+        user.add(new User("Janusz Tester", 58008, 74));
     }
 
-    private static final List<String> beaconsOutOfRange;
+    private static final List<Sendable> beacons = new LinkedList<Sendable>();
 
     static {
-        beaconsOutOfRange = new LinkedList<String>();
-        beaconsOutOfRange.add("Kitchen 2");
-        beaconsOutOfRange.add("Games Room");
-//        beaconsOutOfRange.add("Games Room 2");
+        // In range
+        beacons.add(new Beacon("Kitchen 1", 1, 0, 6));
+        beacons.add(new Beacon("Meeting Room", 2, 1, 5));
+        beacons.add(new Beacon("Meeting Room 2", 4, 2, 4));
+        beacons.add(new Beacon("Boss Room", 8, 3, 3));
+
+        // Out of range
+        beacons.add(new Beacon("Kitchen 2", 0, 4, 2));
+        beacons.add(new Beacon("Games Room", 0, 5, 1));
+        beacons.add(new Beacon("Games Room 2", 0, 6, 0));
     }
 
-    private static final List<String> activeGames;
+    private static final List<Sendable> games = new LinkedList<Sendable>();
 
     static {
-        activeGames = new LinkedList<String>();
-        activeGames.add("150 visits");
-//        activeGames.add("300 visits");
-        activeGames.add("Without queue");
+        // Active
+        games.add(new Game("100 visits", "Visit room 100 times.", 75, 100));
+        games.add(new Game("150 visits", "Visit room 150 times.", 75, 150));
+        games.add(new Game("300 visits", "Visit room 300 times.", 75, 300));
+        games.add(new Game("Without queue", "Enter empty room.", 0, 1));
+
+        // Completed
+        games.add(new Game("5 visits", "Visit room 5 times.", 5, 5));
+        games.add(new Game("25 visits", "Visit room 25 times.", 25, 25));
+        games.add(new Game("50 visits", "Visit room 50 times.", 50, 50));
     }
 
-    private static final List<String> completedGames;
+    private static final List<Sendable> achievements = new LinkedList<Sendable>();
 
     static {
-        completedGames = new LinkedList<String>();
-        completedGames.add("5 visits");
-        completedGames.add("25 visits");
-//        completedGames.add("50 visits");
+        achievements.add(new Achievement("Employee of the month", "You were the best employee in month."));
+        achievements.add(new Achievement("Quick eater", "You ate whole lunch very fast."));
+        achievements.add(new Achievement("Swimmer", "You have swam more than 10km."));
     }
 
-    private static final Map<String, String> gameDetails;
-
-    static {
-        gameDetails = new HashMap<String, String>();
-        gameDetails.put("5 visits", "Visit room 5 times.");
-        gameDetails.put("25 visits", "Visit room 25 times.");
-        gameDetails.put("50 visits", "Visit room 50 times.");
-        gameDetails.put("150 visits", "Visit room 150 times.");
-        gameDetails.put("300 visits", "Visit room 300 times.");
-        gameDetails.put("Without queue", "Enter empty room.");
+    public static List<Sendable> getUser() {
+        return user;
     }
 
-    private static final Map<String, Integer> distances;
-
-    static {
-        distances = new HashMap<String, Integer>();
-        distances.put("Kitchen 1", 100);
-        distances.put("Meeting Room", 90);
-        distances.put("Meeting Room 2", 75);
-        distances.put("Boss Room", 50);
-        distances.put("Kitchen 2", 25);
-        distances.put("Games Room", 0);
-        distances.put("Games Room 2", 0);
+    public static List<Sendable> getBeacons() {
+        return beacons;
     }
 
-    private static final Map<String, Integer> activeGamesCount;
-
-    static {
-        activeGamesCount = new HashMap<String, Integer>();
-        activeGamesCount.put("Kitchen 1", 0);
-        activeGamesCount.put("Meeting Room", 1);
-        activeGamesCount.put("Meeting Room 2", 2);
-        activeGamesCount.put("Boss Room", 3);
-        activeGamesCount.put("Kitchen 2", 4);
-        activeGamesCount.put("Games Room", 5);
-        activeGamesCount.put("Games Room 2", 6);
+    public static List<Sendable> getGames() {
+        return games;
     }
 
-    private static final Map<String, Integer> completedGamesCount;
-
-    static {
-        completedGamesCount = new HashMap<String, Integer>();
-        completedGamesCount.put("Kitchen 1", 6);
-        completedGamesCount.put("Meeting Room", 5);
-        completedGamesCount.put("Meeting Room 2", 4);
-        completedGamesCount.put("Boss Room", 3);
-        completedGamesCount.put("Kitchen 2", 2);
-        completedGamesCount.put("Games Room", 1);
-        completedGamesCount.put("Games Room 2", 0);
-    }
-
-    private static final List<String> achievements;
-
-    static {
-        achievements = new LinkedList<String>();
-        achievements.add("Employee of the month");
-        achievements.add("Quick eater");
-        achievements.add("Swimmer");
-    }
-
-    private static final Random random = new Random();
-
-    public static List<String> getBeaconsInRange() {
-        return beaconsInRange;
-    }
-
-    public static List<String> getBeaconsOutOfRange() {
-        return beaconsOutOfRange;
-    }
-
-    public static List<String> getActiveGames() {
-        return activeGames;
-    }
-
-    public static List<String> getCompletedGames() {
-        return completedGames;
-    }
-
-    public static int getDistance(String beacon) {
-        return distances.get(beacon);
-    }
-
-    public static int getActiveGamesCount(String beacon) {
-        return activeGamesCount.get(beacon);
-    }
-
-    public static int getCompletedGamesCount(String beacon) {
-        return completedGamesCount.get(beacon);
-    }
-
-    public static int getProgress(String game) {
-        return random.nextInt(PERCENT_RANGE);
-    }
-
-    public static String getGameDetails(String game) {
-        return gameDetails.get(game);
-    }
-
-    public static String getLogin() {
-        return "Janusz Tester";
-    }
-
-    public static int getPoints(String user) {
-        return 58008;
-    }
-
-    public static List<String> getAchievements(String user) {
+    public static List<Sendable> getAchievements() {
         return achievements;
-    }
-
-    public static int getRank(String user) {
-        return 15;
     }
 }
