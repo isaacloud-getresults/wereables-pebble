@@ -34,6 +34,18 @@
             </intent-filter>
         </receiver>
 
+        <receiver android:name=".pebble.receivers.PebbleAckReceiver">
+            <intent-filter>
+                <action android:name="com.getpebble.action.app.RECEIVE_ACK" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name=".pebble.receivers.PebbleNackReceiver">
+            <intent-filter>
+                <action android:name="com.getpebble.action.app.RECEIVE_NACK" />
+            </intent-filter>
+        </receiver>
+
         <receiver android:name=".pebble.receivers.PebbleConnectedReceiver">
             <intent-filter>
                 <action android:name="com.getpebble.action.PEBBLE_CONNECTED" />

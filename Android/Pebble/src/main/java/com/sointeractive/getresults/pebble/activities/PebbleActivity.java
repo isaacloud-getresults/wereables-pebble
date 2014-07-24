@@ -35,11 +35,14 @@ public class PebbleActivity extends Activity implements Observer {
     private CheckBox checkBox;
     private Button notification_send_button;
     private BeaconManager beaconManager;
-    private PebbleCommunicator pebbleCommunicator;
 
     private void showInfo(String msg) {
         Log.d(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+    }
+
+    private PebbleCommunicator getPebbleCommunicator() {
+        return PebbleCommunicator.getCommunicator(context);
     }
 
     @Override
@@ -66,8 +69,8 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void checkPebbleConnection() {
         Log.d(TAG, "Init: Checking Pebble connection");
-        if (pebbleCommunicator.isPebbleConnected()) {
-            if (pebbleCommunicator.areAppMessagesSupported()) {
+        if (getPebbleCommunicator().isPebbleConnected()) {
+            if (getPebbleCommunicator().areAppMessagesSupported()) {
                 showInfo("Connection to Pebble OK");
             } else {
                 showInfo("Sorry, AppMessages are not supported");
@@ -79,8 +82,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void registerPebbleCommunicator() {
         Log.d(TAG, "Init: Registering PebbleCommunicator");
-        pebbleCommunicator = new PebbleCommunicator(context);
-        pebbleCommunicator.addObserver(this);
+        getPebbleCommunicator().addObserver(this);
     }
 
     private void setBeaconManager() {
@@ -160,7 +162,7 @@ public class PebbleActivity extends Activity implements Observer {
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                pebbleCommunicator.sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
+                getPebbleCommunicator().sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
             }
         });
     }
@@ -219,13 +221,13 @@ public class PebbleActivity extends Activity implements Observer {
     @Override
     public void update(Observable observable, Object o) {
         Log.d(TAG, "Event: Observable value has changed");
-        if (observable == pebbleCommunicator) {
+        if (observable == getPebbleCommunicator()) {
             onConnectionStateChanged();
         }
     }
 
     private void onConnectionStateChanged() {
-        if (pebbleCommunicator.connectionState) {
+        if (getPebbleCommunicator().connectionState) {
             onPebbleConnected();
         } else {
             onPebbleDisconnected();

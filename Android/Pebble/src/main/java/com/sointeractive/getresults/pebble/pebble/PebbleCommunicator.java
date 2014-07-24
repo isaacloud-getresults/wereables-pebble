@@ -17,12 +17,24 @@ import java.util.Observable;
 
 public class PebbleCommunicator extends Observable {
     private static final String TAG = PebbleCommunicator.class.getSimpleName();
-    private final Context context;
+    private static volatile PebbleCommunicator instance = null;
     public boolean connectionState;
+    private Context context;    public boolean connectionState;
 
-    public PebbleCommunicator(Context context) {
-        this.context = context;
-        this.connectionState = false;
+    private PebbleCommunicator() {
+    }
+
+    public static PebbleCommunicator getCommunicator(Context context) {
+        if (instance == null) {
+            synchronized (PebbleCommunicator.class) {
+                if (instance == null) {
+                    instance = new PebbleCommunicator();
+                    instance.connectionState = false;
+                }
+            }
+        }
+        instance.context = context;
+        return instance;
     }
 
     public void sendResponse(Response response) {

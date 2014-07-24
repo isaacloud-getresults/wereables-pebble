@@ -28,7 +28,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
                 Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
                 PebbleKit.sendAckToPebble(context, transactionId);
 
-                pebbleCommunicator = new PebbleCommunicator(context);
+                pebbleCommunicator = PebbleCommunicator.getCommunicator(context);
                 receivedDataAction(data);
             }
         });
