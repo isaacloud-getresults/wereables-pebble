@@ -10,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
@@ -32,6 +33,9 @@ public class PebbleActivity extends Activity implements Observer {
     private Context context;
     private CheckBox checkBox;
     private Button notification_send_button;
+    private TextView notification_title_text_view;
+    private TextView notification_body_text_view;
+
     private BeaconManager beaconManager;
 
     private void showInfo(int id) {
@@ -63,6 +67,8 @@ public class PebbleActivity extends Activity implements Observer {
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
+        notification_title_text_view = (TextView) findViewById(R.id.notification_title_text_view);
+        notification_body_text_view = (TextView) findViewById(R.id.notification_body_text_view);
     }
 
     private void registerPebbleCommunicator() {
@@ -161,7 +167,9 @@ public class PebbleActivity extends Activity implements Observer {
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getPebbleCommunicator().sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
+                String title = notification_title_text_view.getText().toString();
+                String body = notification_body_text_view.getText().toString();
+                getPebbleCommunicator().sendNotification(title, body);
             }
         });
     }
