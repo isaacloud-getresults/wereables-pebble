@@ -4,10 +4,10 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
 public class Beacon implements Sendable {
-    public String name;
-    public int distance;
-    public int games_active;
-    public int games_completed;
+    private final String name;
+    private final int distance;
+    private final int games_active;
+    private final int games_completed;
 
     public Beacon(String name, int distance, int games_active, int games_completed) {
         this.name = name;

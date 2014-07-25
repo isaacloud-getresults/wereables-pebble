@@ -40,6 +40,7 @@ public enum Request implements Response {
     };
 
     public static final int RESPONSE_TYPE = 1;
+    public static final int RESPONSE_DATA_INDEX = 2;
 
     private static final int REQUEST_TYPE = 1;
     private static final int REQUEST_QUERY = 2;

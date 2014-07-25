@@ -1,26 +1,22 @@
 package com.sointeractive.getresults.pebble.pebble;
 
 import android.content.Context;
-import android.content.Intent;
 import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.Settings;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Observable;
 
 public class PebbleCommunicator extends Observable {
     private static final String TAG = PebbleCommunicator.class.getSimpleName();
+
     private static volatile PebbleCommunicator instance = null;
     private final LinkedList<PebbleDictionary> sendingQueue = new LinkedList<PebbleDictionary>();
+
     public boolean connectionState;
     private Context context;
 
@@ -58,7 +54,7 @@ public class PebbleCommunicator extends Observable {
         }
     }
 
-    public synchronized void clearQueue() {
+    public synchronized void clearSendingQueue() {
         sendingQueue.clear();
     }
 
@@ -83,20 +79,6 @@ public class PebbleCommunicator extends Observable {
     }
 
     public void sendNotification(String title, String body) {
-        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
-
-        final Map<String, String> data = new HashMap<String, String>();
-        data.put("title", title);
-        data.put("body", body);
-
-        final JSONObject jsonData = new JSONObject(data);
-        final String notificationData = new JSONArray().put(jsonData).toString();
-
-        i.putExtra("messageType", "PEBBLE_ALERT");
-        i.putExtra("sender", Settings.APP_NAME);
-        i.putExtra("notificationData", notificationData);
-
-        Log.d(TAG, "Action: Sending notification: " + notificationData);
-        context.sendBroadcast(i);
+        NotificationSender.send(context, title, body);
     }
 }

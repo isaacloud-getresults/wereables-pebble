@@ -4,10 +4,10 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
 public class Game implements Sendable {
-    public String name;
-    public String description;
-    public int progress;
-    public int goal;
+    private final String name;
+    private final String description;
+    private final int progress;
+    private final int goal;
 
     public Game(String name, String description, int progress, int goal) {
         this.name = name;

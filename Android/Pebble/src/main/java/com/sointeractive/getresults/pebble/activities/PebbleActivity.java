@@ -1,8 +1,6 @@
 package com.sointeractive.getresults.pebble.activities;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
@@ -56,7 +54,6 @@ public class PebbleActivity extends Activity implements Observer {
         setBeaconManager();
         checkBluetooth();
         registerButtonHandlers();
-        setAndroidNotification("You entered a new beacon range!", "Kitchen", 15.0);
     }
 
     private void initInstance() {
@@ -165,19 +162,6 @@ public class PebbleActivity extends Activity implements Observer {
                 getPebbleCommunicator().sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
             }
         });
-    }
-
-    private void setAndroidNotification(String ticker, String title, double distance) {
-        Notification notification = new Notification.Builder(context)
-                .setTicker(ticker)
-                .setContentTitle(title)
-                .setContentText("Distance: " + String.format("%.2fm", distance))
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setOngoing(true)
-                .getNotification();
-
-        NotificationManager notificationManger = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManger.notify(Settings.NOTIFICATION_ID, notification);
     }
 
     @Override

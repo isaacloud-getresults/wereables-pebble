@@ -4,9 +4,9 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
 public class User implements Sendable {
-    public String name;
-    public int points;
-    public int rank;
+    private final String name;
+    private final int points;
+    private final int rank;
 
     public User(String name, int points, int rank) {
         this.name = name;

@@ -4,7 +4,6 @@ package com.sointeractive.getresults.pebble.config;
 import java.util.UUID;
 
 public class Settings {
-
     // IsaaCloud connection
     public static final String instanceId = "157";
     public static final String appSecret = "59f8d59eb77eaec6f7ef9f1023815550";
@@ -15,7 +14,4 @@ public class Settings {
 
     // Instance requests
     public static final int REQUEST_ENABLE_BT = 1234;
-
-    // Notification ID
-    public static final int NOTIFICATION_ID = 1234;
 }

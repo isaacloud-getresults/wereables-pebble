@@ -4,8 +4,8 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
 public class Achievement implements Sendable {
-    public String name;
-    public String description;
+    private final String name;
+    private final String description;
 
     public Achievement(String name, String description) {
         this.name = name;
