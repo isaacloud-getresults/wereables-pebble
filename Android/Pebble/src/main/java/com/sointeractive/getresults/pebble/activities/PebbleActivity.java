@@ -34,7 +34,8 @@ public class PebbleActivity extends Activity implements Observer {
     private Button notification_send_button;
     private BeaconManager beaconManager;
 
-    private void showInfo(String msg) {
+    private void showInfo(int id) {
+        String msg = context.getString(id);
         Log.d(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
@@ -74,12 +75,12 @@ public class PebbleActivity extends Activity implements Observer {
         PebbleCommunicator communicator = getPebbleCommunicator();
         if (communicator.isPebbleConnected()) {
             if (communicator.areAppMessagesSupported()) {
-                showInfo("Connection to Pebble OK");
+                showInfo(R.string.ok_connection_to_pebble);
             } else {
-                showInfo("Sorry, AppMessages are not supported");
+                showInfo(R.string.app_messages_not_supported);
             }
         } else {
-            showInfo("Pebble not connected");
+            showInfo(R.string.pebble_not_connected);
         }
     }
 
@@ -107,7 +108,7 @@ public class PebbleActivity extends Activity implements Observer {
         if (hasBluetoothLE) {
             checkBluetoothEnabled();
         } else {
-            showInfo("Device does not have Bluetooth Low Energy");
+            showInfo(R.string.bluetooth_low_energy_not_supported);
         }
     }
 
@@ -132,7 +133,7 @@ public class PebbleActivity extends Activity implements Observer {
                 connectToService();
             } else {
                 Log.d(TAG, "Event: Failure on enabling bluetooth by enableBtIntent");
-                showInfo("Bluetooth not enabled");
+                showInfo(R.string.bluetooth_not_enabled);
             }
         }
 
@@ -147,7 +148,7 @@ public class PebbleActivity extends Activity implements Observer {
                 try {
                     beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
                 } catch (RemoteException e) {
-                    showInfo("Cannot find beacons");
+                    showInfo(R.string.scan_beacons_error);
                     Log.e(TAG, "Error: Cannot start ranging", e);
                 }
             }
