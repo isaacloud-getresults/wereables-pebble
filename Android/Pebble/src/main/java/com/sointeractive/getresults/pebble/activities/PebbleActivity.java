@@ -64,10 +64,16 @@ public class PebbleActivity extends Activity implements Observer {
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
     }
 
+    private void registerPebbleCommunicator() {
+        Log.d(TAG, "Init: Registering PebbleCommunicator");
+        getPebbleCommunicator().addObserver(this);
+    }
+
     private void checkPebbleConnection() {
         Log.d(TAG, "Init: Checking Pebble connection");
-        if (getPebbleCommunicator().isPebbleConnected()) {
-            if (getPebbleCommunicator().areAppMessagesSupported()) {
+        PebbleCommunicator communicator = getPebbleCommunicator();
+        if (communicator.isPebbleConnected()) {
+            if (communicator.areAppMessagesSupported()) {
                 showInfo("Connection to Pebble OK");
             } else {
                 showInfo("Sorry, AppMessages are not supported");
@@ -75,11 +81,6 @@ public class PebbleActivity extends Activity implements Observer {
         } else {
             showInfo("Pebble not connected");
         }
-    }
-
-    private void registerPebbleCommunicator() {
-        Log.d(TAG, "Init: Registering PebbleCommunicator");
-        getPebbleCommunicator().addObserver(this);
     }
 
     private void setBeaconManager() {
@@ -227,5 +228,4 @@ public class PebbleActivity extends Activity implements Observer {
         Log.d(TAG, "Event: Pebble disconnected");
         checkBox.setChecked(false);
     }
-
 }
