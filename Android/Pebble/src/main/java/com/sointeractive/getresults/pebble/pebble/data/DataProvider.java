@@ -1,10 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble;
-
-import com.sointeractive.getresults.pebble.pebble.data.Achievement;
-import com.sointeractive.getresults.pebble.pebble.data.Beacon;
-import com.sointeractive.getresults.pebble.pebble.data.Game;
-import com.sointeractive.getresults.pebble.pebble.data.Sendable;
-import com.sointeractive.getresults.pebble.pebble.data.User;
+package com.sointeractive.getresults.pebble.pebble.data;
 
 import java.util.LinkedList;
 import java.util.List;

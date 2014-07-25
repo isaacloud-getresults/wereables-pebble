@@ -7,7 +7,7 @@ import android.util.Log;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble.Responder;
+import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private static final String TAG = PebbleDataReceiver.class.getSimpleName();

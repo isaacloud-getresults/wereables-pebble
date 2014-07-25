@@ -1,7 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.utils;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.Request;
+import com.sointeractive.getresults.pebble.pebble.communication.Request;
 
 public class DictionaryBuilder {
 

@@ -1,6 +1,7 @@
-package com.sointeractive.getresults.pebble.pebble;
+package com.sointeractive.getresults.pebble.pebble.communication;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.pebble.data.DataProvider;
 import com.sointeractive.getresults.pebble.pebble.data.Response;
 import com.sointeractive.getresults.pebble.pebble.data.Sendable;
 
