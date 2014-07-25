@@ -1,25 +1,23 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 import java.util.List;
 
 public class Responder {
     private static final String TAG = Responder.class.getSimpleName();
 
-    private final Context context;
     private final PebbleDictionary data;
 
-    private Responder(Context context, PebbleDictionary data) {
-        this.context = context;
+    private Responder(PebbleDictionary data) {
         this.data = data;
     }
 
-    public static void response(Context context, PebbleDictionary data) {
-        Responder responder = new Responder(context, data);
+    public static void response(PebbleDictionary data) {
+        Responder responder = new Responder(data);
         responder.processRequest();
     }
 
@@ -36,9 +34,7 @@ public class Responder {
         return request;
     }
 
-    private void sendResponseToPebble(List<PebbleDictionary> dataToSend) {
-        PebbleCommunicator communicator = PebbleCommunicator.getCommunicator(context);
-        communicator.clearSendingQueue();
-        communicator.sendDataToPebble(dataToSend);
+    private void sendResponseToPebble(List<PebbleDictionary> data) {
+        Application.getPebbleCommunicator().sendNewDataToPebble(data);
     }
 }

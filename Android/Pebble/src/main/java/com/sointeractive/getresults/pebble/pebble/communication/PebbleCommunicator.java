@@ -13,25 +13,17 @@ import java.util.Observable;
 
 public class PebbleCommunicator extends Observable {
     private static final String TAG = PebbleCommunicator.class.getSimpleName();
-
-    private static volatile PebbleCommunicator instance = null;
     private final LinkedList<PebbleDictionary> sendingQueue = new LinkedList<PebbleDictionary>();
-
+    private final Context context;
     public boolean connectionState;
-    private Context context;
 
-    private PebbleCommunicator() {
+    public PebbleCommunicator(Context context) {
+        this.context = context;
     }
 
-    public synchronized static PebbleCommunicator getCommunicator(Context context) {
-        if (instance == null) {
-            if (instance == null) {
-                instance = new PebbleCommunicator();
-                instance.connectionState = false;
-            }
-        }
-        instance.context = context;
-        return instance;
+    public synchronized void sendNewDataToPebble(List<PebbleDictionary> data) {
+        clearSendingQueue();
+        sendDataToPebble(data);
     }
 
     public synchronized void sendDataToPebble(List<PebbleDictionary> data) {
@@ -54,7 +46,7 @@ public class PebbleCommunicator extends Observable {
         }
     }
 
-    public synchronized void clearSendingQueue() {
+    private synchronized void clearSendingQueue() {
         sendingQueue.clear();
     }
 

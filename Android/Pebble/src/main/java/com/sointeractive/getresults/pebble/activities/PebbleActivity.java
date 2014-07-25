@@ -19,6 +19,7 @@ import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,15 +38,12 @@ public class PebbleActivity extends Activity implements Observer {
     private TextView notification_body_text_view;
 
     private BeaconManager beaconManager;
+    private PebbleCommunicator pebbleCommunicator;
 
     private void showInfo(int id) {
         String msg = context.getString(id);
         Log.d(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-    }
-
-    private PebbleCommunicator getPebbleCommunicator() {
-        return PebbleCommunicator.getCommunicator(context);
     }
 
     @Override
@@ -73,14 +71,14 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void registerPebbleCommunicator() {
         Log.d(TAG, "Init: Registering PebbleCommunicator");
-        getPebbleCommunicator().addObserver(this);
+        pebbleCommunicator = Application.getPebbleCommunicator();
+        pebbleCommunicator.addObserver(this);
     }
 
     private void checkPebbleConnection() {
         Log.d(TAG, "Init: Checking Pebble connection");
-        PebbleCommunicator communicator = getPebbleCommunicator();
-        if (communicator.isPebbleConnected()) {
-            if (communicator.areAppMessagesSupported()) {
+        if (pebbleCommunicator.isPebbleConnected()) {
+            if (pebbleCommunicator.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
             } else {
                 showInfo(R.string.app_messages_not_supported);
@@ -169,7 +167,7 @@ public class PebbleActivity extends Activity implements Observer {
             public void onClick(View v) {
                 String title = notification_title_text_view.getText().toString();
                 String body = notification_body_text_view.getText().toString();
-                getPebbleCommunicator().sendNotification(title, body);
+                pebbleCommunicator.sendNotification(title, body);
             }
         });
     }
@@ -215,13 +213,13 @@ public class PebbleActivity extends Activity implements Observer {
     @Override
     public void update(Observable observable, Object o) {
         Log.d(TAG, "Event: Observable value has changed");
-        if (observable == getPebbleCommunicator()) {
+        if (observable == pebbleCommunicator) {
             onConnectionStateChanged();
         }
     }
 
     private void onConnectionStateChanged() {
-        if (getPebbleCommunicator().connectionState) {
+        if (pebbleCommunicator.connectionState) {
             onPebbleConnected();
         } else {
             onPebbleDisconnected();

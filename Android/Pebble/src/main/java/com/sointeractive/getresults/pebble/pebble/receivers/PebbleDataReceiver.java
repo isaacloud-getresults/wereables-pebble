@@ -25,7 +25,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
             @Override
             public void run() {
                 sendAckToPebble(context, transactionId);
-                Responder.response(context, data);
+                Responder.response(data);
             }
         });
     }
