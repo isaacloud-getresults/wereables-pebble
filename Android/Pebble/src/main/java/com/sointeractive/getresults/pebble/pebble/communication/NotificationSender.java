@@ -12,12 +12,12 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class NotificationSender {
+class NotificationSender {
     private static final String TAG = NotificationSender.class.getSimpleName();
 
     private final Context context;
 
-    public NotificationSender(Context context) {
+    private NotificationSender(Context context) {
         this.context = context;
     }
 

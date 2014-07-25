@@ -23,7 +23,7 @@ public class Responder {
         responder.processRequest();
     }
 
-    public void processRequest() {
+    private void processRequest() {
         Request request = getRequest();
         if (request != Request.UNKNOWN) {
             sendResponseToPebble(request.getDataToSend());

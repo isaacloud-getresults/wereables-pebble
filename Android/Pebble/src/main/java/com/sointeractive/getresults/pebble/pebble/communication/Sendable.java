@@ -4,6 +4,6 @@ import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.List;
 
-public interface Sendable {
+interface Sendable {
     public List<ResponseItem> getSendable(String query);
 }

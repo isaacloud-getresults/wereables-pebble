@@ -21,12 +21,15 @@ public class DataProvider {
         beacons.add(new Beacon("Kitchen 1", 1, 0, 6));
         beacons.add(new Beacon("Meeting Room", 2, 1, 5));
         beacons.add(new Beacon("Meeting Room 2", 4, 2, 4));
+        /*
         beacons.add(new Beacon("Boss Room", 8, 3, 3));
+
 
         // Out of range
         beacons.add(new Beacon("Kitchen 2", 0, 4, 2));
         beacons.add(new Beacon("Games Room", 0, 5, 1));
         beacons.add(new Beacon("Games Room 2", 0, 6, 0));
+        */
     }
 
     private static final List<ResponseItem> games = new LinkedList<ResponseItem>();

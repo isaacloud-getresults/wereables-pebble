@@ -28,7 +28,7 @@ public class PebbleActivity extends Activity implements Observer {
     private static final String TAG = PebbleActivity.class.getSimpleName();
 
     private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
-    public List<Beacon> beacons = new ArrayList<Beacon>();
+    private List<Beacon> beacons = new ArrayList<Beacon>();
     private Context context;
     private CheckBox checkBox;
     private Button notification_send_button;

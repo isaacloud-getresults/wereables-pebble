@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.sointeractive.getresults.pebble">
 
     <!-- Needed permissions in order to scan for beacons. -->
@@ -28,32 +29,42 @@
             android:name="com.estimote.sdk.service.BeaconService"
             android:exported="false" />
 
-        <receiver android:name=".pebble.receivers.PebbleDataReceiver">
-            <intent-filter>
+        <receiver
+            android:name=".pebble.receivers.PebbleDataReceiver"
+            tools:ignore="ExportedReceiver">
+        <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".pebble.receivers.PebbleAckReceiver">
-            <intent-filter>
+        <receiver
+            android:name=".pebble.receivers.PebbleAckReceiver"
+            tools:ignore="ExportedReceiver">
+        <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE_ACK" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".pebble.receivers.PebbleNackReceiver">
-            <intent-filter>
+        <receiver
+            android:name=".pebble.receivers.PebbleNackReceiver"
+            tools:ignore="ExportedReceiver">
+        <intent-filter>
                 <action android:name="com.getpebble.action.app.RECEIVE_NACK" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".pebble.receivers.PebbleConnectedReceiver">
-            <intent-filter>
+        <receiver
+            android:name=".pebble.receivers.PebbleConnectedReceiver"
+            tools:ignore="ExportedReceiver">
+        <intent-filter>
                 <action android:name="com.getpebble.action.PEBBLE_CONNECTED" />
             </intent-filter>
         </receiver>
 
-        <receiver android:name=".pebble.receivers.PebbleDisconnectedReceiver">
-            <intent-filter>
+        <receiver
+            android:name=".pebble.receivers.PebbleDisconnectedReceiver"
+            tools:ignore="ExportedReceiver">
+        <intent-filter>
                 <action android:name="com.getpebble.action.PEBBLE_DISCONNECTED" />
             </intent-filter>
         </receiver>

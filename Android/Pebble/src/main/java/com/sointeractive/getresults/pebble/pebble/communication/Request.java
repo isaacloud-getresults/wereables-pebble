@@ -14,24 +14,28 @@ public enum Request implements Sendable {
             return null;
         }
     },
+
     USER(1, "User info") {
         @Override
         public List<ResponseItem> getSendable(String query) {
             return DataProvider.getUser();
         }
     },
+
     BEACONS(2, "Beacons list") {
         @Override
         public List<ResponseItem> getSendable(String query) {
             return DataProvider.getBeacons();
         }
     },
+
     GAMES(3, "Games list") {
         @Override
         public List<ResponseItem> getSendable(String query) {
             return DataProvider.getGames();
         }
     },
+
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
         public List<ResponseItem> getSendable(String query) {
