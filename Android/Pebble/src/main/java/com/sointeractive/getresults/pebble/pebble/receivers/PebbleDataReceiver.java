@@ -31,6 +31,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
                 Log.d(TAG, "Request: " + request.getLogMessage());
                 if (request != Request.UNKNOWN) {
                     PebbleCommunicator communicator = PebbleCommunicator.getCommunicator(context);
+                    communicator.clearQueue();
                     communicator.sendDataToPebble(request.getDataToSend());
                 }
             }

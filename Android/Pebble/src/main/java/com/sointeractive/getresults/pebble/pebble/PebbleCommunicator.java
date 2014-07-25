@@ -58,6 +58,10 @@ public class PebbleCommunicator extends Observable {
         }
     }
 
+    public synchronized void clearQueue() {
+        sendingQueue.clear();
+    }
+
     public boolean isPebbleConnected() {
         boolean currentState = PebbleKit.isWatchConnected(context);
         Log.d(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));

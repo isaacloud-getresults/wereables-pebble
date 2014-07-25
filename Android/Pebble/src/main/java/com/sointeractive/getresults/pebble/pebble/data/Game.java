@@ -1,10 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.data;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.DataProvider;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
-
-import java.util.List;
 
 public class Game implements Sendable {
     public String name;
@@ -27,12 +24,5 @@ public class Game implements Sendable {
                 .addInt(progress)
                 .addInt(goal)
                 .build();
-    }
-
-    public static class GetData implements Response {
-        @Override
-        public List<Sendable> get(String query) {
-            return DataProvider.getGames();
-        }
     }
 }

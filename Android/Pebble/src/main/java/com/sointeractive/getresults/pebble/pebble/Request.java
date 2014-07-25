@@ -1,22 +1,43 @@
 package com.sointeractive.getresults.pebble.pebble;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.data.Achievement;
-import com.sointeractive.getresults.pebble.pebble.data.Beacon;
-import com.sointeractive.getresults.pebble.pebble.data.Game;
 import com.sointeractive.getresults.pebble.pebble.data.Response;
 import com.sointeractive.getresults.pebble.pebble.data.Sendable;
-import com.sointeractive.getresults.pebble.pebble.data.User;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public enum Request {
-    UNKNOWN(0, "UNKNOWN", null),
-    USER(1, "User info", new User.GetData()),
-    BEACONS(2, "Beacons list", new Beacon.GetData()),
-    GAMES(3, "Games list", new Game.GetData()),
-    ACHIEVEMENTS(4, "Achievements info", new Achievement.GetData());
+public enum Request implements Response {
+    UNKNOWN(0, "UNKNOWN") {
+        @Override
+        public List<Sendable> getResponse(String query) {
+            return null;
+        }
+    },
+    USER(1, "User info") {
+        @Override
+        public List<Sendable> getResponse(String query) {
+            return DataProvider.getUser();
+        }
+    },
+    BEACONS(2, "Beacons list") {
+        @Override
+        public List<Sendable> getResponse(String query) {
+            return DataProvider.getBeacons();
+        }
+    },
+    GAMES(3, "Games list") {
+        @Override
+        public List<Sendable> getResponse(String query) {
+            return DataProvider.getGames();
+        }
+    },
+    ACHIEVEMENTS(4, "Achievements info") {
+        @Override
+        public List<Sendable> getResponse(String query) {
+            return DataProvider.getAchievements();
+        }
+    };
 
     public static final int RESPONSE_TYPE = 1;
 
@@ -25,14 +46,12 @@ public enum Request {
 
     private final int id;
     private final String logMessage;
-    private final Response response;
 
     private String query;
 
-    private Request(int id, String logMessage, Response response) {
+    private Request(int id, String logMessage) {
         this.id = id;
         this.logMessage = logMessage;
-        this.response = response;
     }
 
     public static Request getByData(PebbleDictionary data) {
@@ -69,7 +88,7 @@ public enum Request {
 
     public List<PebbleDictionary> getDataToSend() {
         List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
-        for (Sendable sendable : response.get(query)) {
+        for (Sendable sendable : getResponse(query)) {
             list.add(sendable.getDictionary(id));
         }
         return list;
