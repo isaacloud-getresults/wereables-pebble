@@ -1,9 +1,9 @@
-package com.sointeractive.getresults.pebble.pebble.data;
+package com.sointeractive.getresults.pebble.pebble.responses;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
-public class Beacon implements Sendable {
+public class Beacon implements ResponseItem {
     private final String name;
     private final int distance;
     private final int games_active;
@@ -17,7 +17,7 @@ public class Beacon implements Sendable {
     }
 
     @Override
-    public PebbleDictionary getDictionary(int responseType) {
+    public PebbleDictionary getData(int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addInt(distance)

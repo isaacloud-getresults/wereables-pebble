@@ -1,9 +1,9 @@
-package com.sointeractive.getresults.pebble.pebble.data;
+package com.sointeractive.getresults.pebble.pebble.responses;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
-public class User implements Sendable {
+public class User implements ResponseItem {
     private final String name;
     private final int points;
     private final int rank;
@@ -15,7 +15,7 @@ public class User implements Sendable {
     }
 
     @Override
-    public PebbleDictionary getDictionary(int responseType) {
+    public PebbleDictionary getData(int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addInt(points)

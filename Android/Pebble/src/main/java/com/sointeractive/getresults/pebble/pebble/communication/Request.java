@@ -1,41 +1,40 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.data.DataProvider;
-import com.sointeractive.getresults.pebble.pebble.data.Response;
-import com.sointeractive.getresults.pebble.pebble.data.Sendable;
+import com.sointeractive.getresults.pebble.pebble.responses.DataProvider;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public enum Request implements Response {
+public enum Request implements Sendable {
     UNKNOWN(0, "UNKNOWN") {
         @Override
-        public List<Sendable> getResponse(String query) {
+        public List<ResponseItem> getSendable(String query) {
             return null;
         }
     },
     USER(1, "User info") {
         @Override
-        public List<Sendable> getResponse(String query) {
+        public List<ResponseItem> getSendable(String query) {
             return DataProvider.getUser();
         }
     },
     BEACONS(2, "Beacons list") {
         @Override
-        public List<Sendable> getResponse(String query) {
+        public List<ResponseItem> getSendable(String query) {
             return DataProvider.getBeacons();
         }
     },
     GAMES(3, "Games list") {
         @Override
-        public List<Sendable> getResponse(String query) {
+        public List<ResponseItem> getSendable(String query) {
             return DataProvider.getGames();
         }
     },
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
-        public List<Sendable> getResponse(String query) {
+        public List<ResponseItem> getSendable(String query) {
             return DataProvider.getAchievements();
         }
     };
@@ -90,8 +89,8 @@ public enum Request implements Response {
 
     public List<PebbleDictionary> getDataToSend() {
         List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
-        for (Sendable sendable : getResponse(query)) {
-            list.add(sendable.getDictionary(id));
+        for (ResponseItem responseItem : getSendable(query)) {
+            list.add(responseItem.getData(id));
         }
         return list;
     }

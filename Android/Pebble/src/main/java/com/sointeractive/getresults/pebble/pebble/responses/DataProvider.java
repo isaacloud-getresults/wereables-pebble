@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble.data;
+package com.sointeractive.getresults.pebble.pebble.responses;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -8,13 +8,13 @@ public class DataProvider {
     * ResponseDataProvider mock-up -- will be replaced by data from IsaaCloud.
     */
 
-    private static final List<Sendable> user = new LinkedList<Sendable>();
+    private static final List<ResponseItem> user = new LinkedList<ResponseItem>();
 
     static {
         user.add(new User("Janusz Tester", 58008, 74));
     }
 
-    private static final List<Sendable> beacons = new LinkedList<Sendable>();
+    private static final List<ResponseItem> beacons = new LinkedList<ResponseItem>();
 
     static {
         // In range
@@ -29,7 +29,7 @@ public class DataProvider {
         beacons.add(new Beacon("Games Room 2", 0, 6, 0));
     }
 
-    private static final List<Sendable> games = new LinkedList<Sendable>();
+    private static final List<ResponseItem> games = new LinkedList<ResponseItem>();
 
     static {
         // Active
@@ -44,7 +44,7 @@ public class DataProvider {
         games.add(new Game("50 visits", "Visit room 50 times.", 50, 50));
     }
 
-    private static final List<Sendable> achievements = new LinkedList<Sendable>();
+    private static final List<ResponseItem> achievements = new LinkedList<ResponseItem>();
 
     static {
         achievements.add(new Achievement("Employee of the month", "You were the best employee in month."));
@@ -52,19 +52,19 @@ public class DataProvider {
         achievements.add(new Achievement("Swimmer", "You have swam more than 10km."));
     }
 
-    public static List<Sendable> getUser() {
+    public static List<ResponseItem> getUser() {
         return user;
     }
 
-    public static List<Sendable> getBeacons() {
+    public static List<ResponseItem> getBeacons() {
         return beacons;
     }
 
-    public static List<Sendable> getGames() {
+    public static List<ResponseItem> getGames() {
         return games;
     }
 
-    public static List<Sendable> getAchievements() {
+    public static List<ResponseItem> getAchievements() {
         return achievements;
     }
 }

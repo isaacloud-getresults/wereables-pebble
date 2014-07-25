@@ -1,9 +1,9 @@
-package com.sointeractive.getresults.pebble.pebble.data;
+package com.sointeractive.getresults.pebble.pebble.responses;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
-public class Game implements Sendable {
+public class Game implements ResponseItem {
     private final String name;
     private final String description;
     private final int progress;
@@ -17,7 +17,7 @@ public class Game implements Sendable {
     }
 
     @Override
-    public PebbleDictionary getDictionary(int responseType) {
+    public PebbleDictionary getData(int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addString(description)
