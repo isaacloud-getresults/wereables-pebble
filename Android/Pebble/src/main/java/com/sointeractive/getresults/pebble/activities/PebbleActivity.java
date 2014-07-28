@@ -1,8 +1,6 @@
 package com.sointeractive.getresults.pebble.activities;
 
 import android.app.Activity;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +10,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.estimote.sdk.Beacon;
@@ -19,7 +18,8 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
+import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,30 +30,33 @@ public class PebbleActivity extends Activity implements Observer {
     private static final String TAG = PebbleActivity.class.getSimpleName();
 
     private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
-    public List<Beacon> beacons = new ArrayList<Beacon>();
+    private List<Beacon> beacons = new ArrayList<Beacon>();
     private Context context;
     private CheckBox checkBox;
     private Button notification_send_button;
-    private BeaconManager beaconManager;
-    private PebbleCommunicator pebbleCommunicator;
+    private TextView notification_title_text_view;
+    private TextView notification_body_text_view;
 
-    private void showInfo(String msg) {
+    private BeaconManager beaconManager;
+    private PebbleConnector pebbleConnector;
+
+    private void showInfo(final int id) {
+        final String msg = context.getString(id);
         Log.d(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         Log.d(TAG, "Event: onCreate");
         super.onCreate(savedInstanceState);
 
         initInstance();
-        registerPebbleCommunicator();
+        registerPebbleConnector();
         checkPebbleConnection();
         setBeaconManager();
         checkBluetooth();
         registerButtonHandlers();
-        setAndroidNotification("You entered a new beacon range!", "Kitchen", 15.0);
     }
 
     private void initInstance() {
@@ -62,25 +65,27 @@ public class PebbleActivity extends Activity implements Observer {
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
+        notification_title_text_view = (TextView) findViewById(R.id.notification_title_text_view);
+        notification_body_text_view = (TextView) findViewById(R.id.notification_body_text_view);
+    }
+
+    private void registerPebbleConnector() {
+        Log.d(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
+        pebbleConnector = Application.pebbleConnector;
+        pebbleConnector.addObserver(this);
     }
 
     private void checkPebbleConnection() {
         Log.d(TAG, "Init: Checking Pebble connection");
-        if (pebbleCommunicator.isPebbleConnected()) {
-            if (pebbleCommunicator.areAppMessagesSupported()) {
-                showInfo("Connection to Pebble OK");
+        if (pebbleConnector.isPebbleConnected()) {
+            if (pebbleConnector.areAppMessagesSupported()) {
+                showInfo(R.string.ok_connection_to_pebble);
             } else {
-                showInfo("Sorry, AppMessages are not supported");
+                showInfo(R.string.app_messages_not_supported);
             }
         } else {
-            showInfo("Pebble not connected");
+            showInfo(R.string.pebble_not_connected);
         }
-    }
-
-    private void registerPebbleCommunicator() {
-        Log.d(TAG, "Init: Registering PebbleCommunicator");
-        pebbleCommunicator = new PebbleCommunicator(context);
-        pebbleCommunicator.addObserver(this);
     }
 
     private void setBeaconManager() {
@@ -88,7 +93,7 @@ public class PebbleActivity extends Activity implements Observer {
         beaconManager = new BeaconManager(this);
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
-            public void onBeaconsDiscovered(Region region, final List<Beacon> newBeacons) {
+            public void onBeaconsDiscovered(final Region region, final List<Beacon> newBeacons) {
                 Log.d(TAG, "Event: New beacons discovered");
                 runOnUiThread(new Runnable() {
                     @Override
@@ -101,38 +106,38 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void checkBluetooth() {
-        boolean hasBluetoothLE = beaconManager.hasBluetooth();
+        final boolean hasBluetoothLE = beaconManager.hasBluetooth();
         Log.d(TAG, "Check: Smartphone " + (hasBluetoothLE ? "has" : "has not") + " got Bluetooth Low Energy");
 
         if (hasBluetoothLE) {
             checkBluetoothEnabled();
         } else {
-            showInfo("Device does not have Bluetooth Low Energy");
+            showInfo(R.string.bluetooth_low_energy_not_supported);
         }
     }
 
     private void checkBluetoothEnabled() {
-        boolean bluetoothEnabled = beaconManager.hasBluetooth();
+        final boolean bluetoothEnabled = beaconManager.hasBluetooth();
         Log.d(TAG, "Check: Smartphone has bluetooth " + (bluetoothEnabled ? "enabled" : "disabled"));
 
         if (bluetoothEnabled) {
             connectToService();
         } else {
             Log.d(TAG, "Action: Trying to enable bluetooth by enableBtIntent");
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            final Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, Settings.REQUEST_ENABLE_BT);
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         if (requestCode == Settings.REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.d(TAG, "Event: Success on enabling bluetooth by enableBtIntent");
                 connectToService();
             } else {
                 Log.d(TAG, "Event: Failure on enabling bluetooth by enableBtIntent");
-                showInfo("Bluetooth not enabled");
+                showInfo(R.string.bluetooth_not_enabled);
             }
         }
 
@@ -146,8 +151,8 @@ public class PebbleActivity extends Activity implements Observer {
             public void onServiceReady() {
                 try {
                     beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
-                } catch (RemoteException e) {
-                    showInfo("Cannot find beacons");
+                } catch (final RemoteException e) {
+                    showInfo(R.string.scan_beacons_error);
                     Log.e(TAG, "Error: Cannot start ranging", e);
                 }
             }
@@ -159,23 +164,12 @@ public class PebbleActivity extends Activity implements Observer {
 
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                pebbleCommunicator.sendNotification("Test Message", "Whoever said nothing was impossible never tried to slam a revolving door.");
+            public void onClick(final View v) {
+                final String title = notification_title_text_view.getText().toString();
+                final String body = notification_body_text_view.getText().toString();
+                pebbleConnector.sendNotification(title, body);
             }
         });
-    }
-
-    private void setAndroidNotification(String ticker, String title, double distance) {
-        Notification notification = new Notification.Builder(context)
-                .setTicker(ticker)
-                .setContentTitle(title)
-                .setContentText("Distance: " + String.format("%.2fm", distance))
-                .setSmallIcon(R.drawable.ic_launcher)
-                .setOngoing(true)
-                .getNotification();
-
-        NotificationManager notificationManger = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManger.notify(Settings.NOTIFICATION_ID, notification);
     }
 
     @Override
@@ -190,7 +184,7 @@ public class PebbleActivity extends Activity implements Observer {
         Log.d(TAG, "Action: Stopping ranging");
         try {
             beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS_REGION);
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.e(TAG, "Error: while stopping ranging", e);
         }
     }
@@ -217,15 +211,15 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     @Override
-    public void update(Observable observable, Object o) {
+    public void update(final Observable observable, final Object o) {
         Log.d(TAG, "Event: Observable value has changed");
-        if (observable == pebbleCommunicator) {
+        if (observable == pebbleConnector) {
             onConnectionStateChanged();
         }
     }
 
     private void onConnectionStateChanged() {
-        if (pebbleCommunicator.connectionState) {
+        if (pebbleConnector.connectionState) {
             onPebbleConnected();
         } else {
             onPebbleDisconnected();
@@ -241,5 +235,4 @@ public class PebbleActivity extends Activity implements Observer {
         Log.d(TAG, "Event: Pebble disconnected");
         checkBox.setChecked(false);
     }
-
 }
