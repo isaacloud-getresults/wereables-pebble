@@ -17,7 +17,6 @@ public class PebbleConnector extends Observable {
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
     public boolean connectionState;
-    public boolean sending = false;
 
     public PebbleConnector(final Context context) {
         this.context = context;
@@ -33,8 +32,9 @@ public class PebbleConnector extends Observable {
     public void sendDataToPebble(final List<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             if (isPebbleConnected()) {
+                final boolean wasEmpty = sendingQueue.isEmpty();
                 sendingQueue.addAll(data);
-                if (!sending) {
+                if (wasEmpty) {
                     sendNext();
                 }
             }
@@ -44,10 +44,8 @@ public class PebbleConnector extends Observable {
     public void sendNext() {
         synchronized (sendingQueue) {
             if (sendingQueue.isEmpty()) {
-                sending = false;
                 Log.d(TAG, "Event: Nothing to send, empty sendingQueue");
             } else {
-                sending = true;
                 final PebbleDictionary data = sendingQueue.poll();
                 Log.d(TAG, "Action: sending response: " + data.toJsonString());
                 PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
