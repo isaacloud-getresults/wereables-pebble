@@ -73,6 +73,7 @@ static Achievement **achievements = NULL;
 uint16_t num_beacons;
 uint16_t num_beacons_in_range;
 uint16_t num_beacons_out_of_range;
+uint16_t num_games;
 uint16_t num_games_active;
 uint16_t num_games_completed;
 uint16_t num_achievements;
@@ -83,7 +84,7 @@ static bool beacons_request_sent;
 static bool games_request_sent;
 static bool achievements_request_sent;
 
-static int textbar_height = 18;
+static int textbar_height = 24;
 
 static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_beacons() start");
@@ -106,6 +107,14 @@ static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_i
 
 static uint16_t get_num_games(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_beacons() start");
+    int i;
+    num_games_active = num_games_completed = 0;
+    for(i=0; i<num_games; ++i) {
+        if((float)(games[i]->progress)/(float)(games[i]->goal)==1.0)
+            num_games_completed++;
+        else
+            num_games_active++;
+    }
     uint16_t num = 0;
     if(section_index==0)
         num = num_games_active;
@@ -199,11 +208,8 @@ static bool update_games_table(Game *new_game) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         games = (Game**)calloc(current_beacon->games_active+current_beacon->games_completed,sizeof(Game*));
         games[0] = new_game;
-        num_games_completed = num_games_active = 0;
-        if(games[0]->progress/games[0]->goal==1)
-            num_games_completed++;
-        else
-            num_games_active++;
+        num_games = 0;
+        num_games++;
         APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first game: %s",games[0]->name);
         return true;
     }
@@ -218,16 +224,8 @@ static bool update_games_table(Game *new_game) {
                 if(games[i]->progress!=new_game->progress) {
                     APP_LOG(APP_LOG_LEVEL_DEBUG, "    game found, progress changed");
                     games[i]->progress = new_game->progress;
-                    if(games[i]->progress/games[0]->goal==1) {
-                        num_games_active--;
-                        num_games_completed++;
-                    }
-                    else {
-                        num_games_active++;
-                        num_games_completed--;
-                    }
                     free(new_game);
-                    qsort(games,size,sizeof(Game*),games_compare);
+                    //qsort(games,size,sizeof(Game*),games_compare);
                     return true;
                 }
                 else {
@@ -240,11 +238,8 @@ static bool update_games_table(Game *new_game) {
         // add new if not found in table
         APP_LOG(APP_LOG_LEVEL_DEBUG, "    game not found, adding new");
         games[size] = new_game;
-        if(games[size]->progress/games[0]->goal==1)
-            num_games_completed++;
-        else
-            num_games_active++;
-        qsort(games,size+1,sizeof(Game*),games_compare);
+        num_games++;
+        //qsort(games,size+1,sizeof(Game*),games_compare);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "update_games_table() end");
         return true;
     }
@@ -303,7 +298,7 @@ static void clear_beacons_table(Beacon **table) {
 static void clear_games_table(Game **table) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_games_table() start");
     if(table!=NULL) {
-        int size = num_games_active + num_games_completed;
+        int size = num_games;
         int i;
         for(i=0; i<size; ++i) {
             free(table[i]->name);
@@ -312,6 +307,7 @@ static void clear_games_table(Game **table) {
         }
         free(table);
     }
+    num_games = 0;
     num_games_active = 0;
     num_games_completed = 0;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_games_table() end");
@@ -489,7 +485,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_beacon->distance = distance->value->data[0];
                 new_beacon->games_active = games_active->value->data[0];
                 new_beacon->games_completed = games_completed->value->data[0];
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving a beacon: %s | distance: %u | games active: %u | games completed: %u",new_beacon->name,new_beacon->distance,new_beacon->games_active,new_beacon->games_completed);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | distance: %u | games active: %u | games completed: %u",new_beacon->name,new_beacon->distance,new_beacon->games_active,new_beacon->games_completed);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
                         APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
@@ -517,7 +513,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_game->description = new_description;
                 new_game->progress = progress->value->data[0];
                 new_game->goal = goal->value->data[0];
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved a game: %s",new_game->name);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved game: %s | progress: %u/%u",new_game->name,new_game->progress,new_game->goal);
                 if(update_games_table(new_game))
                     menu_layer_reload_data(games_menu_layer);
             }
@@ -721,7 +717,7 @@ static void user_window_load(Window *window) {
     static char text_buffer1[30];
     snprintf(text_buffer1,30,"%s",user.name);
     text_layer_set_text(user_textbar_layer,text_buffer1);
-    text_layer_set_font(user_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(user_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(user_textbar_layer, GTextAlignmentCenter);
     
     user_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
@@ -834,7 +830,7 @@ static void beacons_window_load(Window *window) {
     static char text_buffer[30];
     snprintf(text_buffer,30,"%s (%i)",user.name,user.points);
     text_layer_set_text(beacons_textbar_layer,text_buffer);
-    text_layer_set_font(beacons_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(beacons_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(beacons_textbar_layer, GTextAlignmentCenter);
     
     beacons_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
@@ -897,11 +893,10 @@ static void beacon_details_window_load(Window *window) {
     int distance_layer_height = 40;
     GRect textbar_bounds = layer_get_bounds(window_layer);
     textbar_bounds.size.h = textbar_height;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "textbar_bounds.size.h = %u",textbar_bounds.size.h);
     beacon_details_textbar_layer = text_layer_create(textbar_bounds);
-    static char text_buffer1[30];
-    snprintf(text_buffer1,30,"%s",current_beacon->name);
-    text_layer_set_text(beacon_details_textbar_layer,text_buffer1);
-    text_layer_set_font(beacon_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_text(beacon_details_textbar_layer,current_beacon->name);
+    text_layer_set_font(beacon_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(beacon_details_textbar_layer, GTextAlignmentCenter);
     
     beacon_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
@@ -988,14 +983,19 @@ static void draw_game_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
 }
 
 static void game_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-    if(cell_index->section==0 && games!=NULL)
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_select_click() start");
+    if(cell_index->section==0)
         current_game = games[cell_index->row];
-    else if(cell_index->section==1 && games!=NULL)
+    else if(cell_index->section==1)
         current_game = games[num_games_active+cell_index->row];
+    
+    if(current_game!=NULL)
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "game selected: %s",current_game->name);
     else
-        current_game= NULL;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_game==NULL");
     
     window_stack_push(game_details_window, true);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_select_click() end");
 }
 
 MenuLayerCallbacks games_menu_callbacks = {
@@ -1009,6 +1009,7 @@ MenuLayerCallbacks games_menu_callbacks = {
 };
 
 static void games_window_load(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "games_window_load() start");
     Layer *window_layer = window_get_root_layer(window);
     
     GRect textbar_bounds = layer_get_bounds(window_layer);
@@ -1017,7 +1018,7 @@ static void games_window_load(Window *window) {
     static char text_buffer[30];
     snprintf(text_buffer,30,"%s",current_beacon->name);
     text_layer_set_text(games_textbar_layer,text_buffer);
-    text_layer_set_font(games_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(games_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(games_textbar_layer, GTextAlignmentCenter);
     
     games_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
@@ -1032,17 +1033,21 @@ static void games_window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(games_textbar_layer));
     layer_add_child(window_layer, inverter_layer_get_layer(games_textbar_inverter_layer));
     layer_add_child(window_layer, menu_layer_get_layer(games_menu_layer));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "games_window_load() end");
 }
 
 static void games_window_unload(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "games_window_unload() start");
     menu_layer_destroy(games_menu_layer);
     inverter_layer_destroy(games_textbar_inverter_layer);
     text_layer_destroy(games_textbar_layer);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "games_window_unload() end");
 }
 /////////////////////////////////////
 
 ///////////////////////////////////// GAME DETAILS WINDOW
 static void game_details_window_load(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_details_window_load() start");
     Layer *window_layer = window_get_root_layer(window);
     
     GRect textbar_bounds = layer_get_bounds(window_layer);
@@ -1051,7 +1056,7 @@ static void game_details_window_load(Window *window) {
     static char text_buffer1[30];
     snprintf(text_buffer1,30,"%s",current_game->name);
     text_layer_set_text(game_details_textbar_layer,text_buffer1);
-    text_layer_set_font(game_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_14));
+    text_layer_set_font(game_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(game_details_textbar_layer, GTextAlignmentCenter);
     
     game_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
@@ -1067,12 +1072,15 @@ static void game_details_window_load(Window *window) {
     layer_add_child(window_layer, text_layer_get_layer(game_details_textbar_layer));
     layer_add_child(window_layer, inverter_layer_get_layer(game_details_textbar_inverter_layer));
     layer_add_child(window_layer, text_layer_get_layer(game_details_text_layer));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_details_window_load() end");
 }
 
 static void game_details_window_unload(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_details_window_unload() start");
     text_layer_destroy(game_details_text_layer);
     inverter_layer_destroy(game_details_textbar_inverter_layer);
     text_layer_destroy(game_details_textbar_layer);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "game_details_window_unload() end");
 }
 /////////////////////////////////////
 
@@ -1112,13 +1120,14 @@ static void init() {
     num_beacons = 0;
     num_beacons_in_range = 0;
     num_beacons_out_of_range = 0;
+    num_games = 0;
     num_games_active = 0;
     num_games_completed = 0;
     num_achievements = 0;
     prev_num_achievements = 0;
-    //current_beacon = NULL;
-    //current_game = NULL;
-    //current_achievement = NULL;
+    current_beacon = NULL;
+    current_game = NULL;
+    current_achievement = NULL;
     
     user_request_sent = false;
     beacons_request_sent = false;
