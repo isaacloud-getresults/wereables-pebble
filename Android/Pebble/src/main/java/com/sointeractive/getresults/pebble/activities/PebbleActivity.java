@@ -18,7 +18,7 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble.communication.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ public class PebbleActivity extends Activity implements Observer {
     private TextView notification_body_text_view;
 
     private BeaconManager beaconManager;
-    private PebbleCommunicator pebbleCommunicator;
+    private PebbleConnector pebbleConnector;
 
     private void showInfo(int id) {
         String msg = context.getString(id);
@@ -71,14 +71,14 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void registerPebbleCommunicator() {
         Log.d(TAG, "Init: Registering PebbleCommunicator");
-        pebbleCommunicator = Application.getPebbleCommunicator();
-        pebbleCommunicator.addObserver(this);
+        pebbleConnector = Application.getPebbleConnector();
+        pebbleConnector.addObserver(this);
     }
 
     private void checkPebbleConnection() {
         Log.d(TAG, "Init: Checking Pebble connection");
-        if (pebbleCommunicator.isPebbleConnected()) {
-            if (pebbleCommunicator.areAppMessagesSupported()) {
+        if (pebbleConnector.isPebbleConnected()) {
+            if (pebbleConnector.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
             } else {
                 showInfo(R.string.app_messages_not_supported);
@@ -167,7 +167,7 @@ public class PebbleActivity extends Activity implements Observer {
             public void onClick(View v) {
                 String title = notification_title_text_view.getText().toString();
                 String body = notification_body_text_view.getText().toString();
-                pebbleCommunicator.sendNotification(title, body);
+                pebbleConnector.sendNotification(title, body);
             }
         });
     }
@@ -213,13 +213,13 @@ public class PebbleActivity extends Activity implements Observer {
     @Override
     public void update(Observable observable, Object o) {
         Log.d(TAG, "Event: Observable value has changed");
-        if (observable == pebbleCommunicator) {
+        if (observable == pebbleConnector) {
             onConnectionStateChanged();
         }
     }
 
     private void onConnectionStateChanged() {
-        if (pebbleCommunicator.connectionState) {
+        if (pebbleConnector.connectionState) {
             onPebbleConnected();
         } else {
             onPebbleDisconnected();

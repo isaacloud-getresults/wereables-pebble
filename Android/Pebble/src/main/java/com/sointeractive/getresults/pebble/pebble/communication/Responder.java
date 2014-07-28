@@ -35,6 +35,6 @@ public class Responder {
     }
 
     private void sendResponseToPebble(List<PebbleDictionary> data) {
-        Application.getPebbleCommunicator().sendNewDataToPebble(data);
+        Application.getPebbleConnector().sendNewDataToPebble(data);
     }
 }

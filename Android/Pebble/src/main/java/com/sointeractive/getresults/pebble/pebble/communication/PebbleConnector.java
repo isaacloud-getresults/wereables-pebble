@@ -11,13 +11,13 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 
-public class PebbleCommunicator extends Observable {
-    private static final String TAG = PebbleCommunicator.class.getSimpleName();
+public class PebbleConnector extends Observable {
+    private static final String TAG = PebbleConnector.class.getSimpleName();
     private final LinkedList<PebbleDictionary> sendingQueue = new LinkedList<PebbleDictionary>();
     private final Context context;
     public boolean connectionState;
 
-    public PebbleCommunicator(Context context) {
+    public PebbleConnector(Context context) {
         this.context = context;
     }
 

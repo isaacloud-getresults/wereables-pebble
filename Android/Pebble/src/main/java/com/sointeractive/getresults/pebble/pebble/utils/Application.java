@@ -2,10 +2,10 @@ package com.sointeractive.getresults.pebble.pebble.utils;
 
 import android.content.Context;
 
-import com.sointeractive.getresults.pebble.pebble.communication.PebbleCommunicator;
+import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 
 public class Application extends android.app.Application {
-    private static PebbleCommunicator pebbleCommunicator;
+    private static PebbleConnector pebbleConnector;
     private static Context context;
 
     public Application() {
@@ -14,10 +14,10 @@ public class Application extends android.app.Application {
     }
 
     private static void createPebbleCommunicator() {
-        pebbleCommunicator = new PebbleCommunicator(context);
+        pebbleConnector = new PebbleConnector(context);
     }
 
-    public static PebbleCommunicator getPebbleCommunicator() {
-        return pebbleCommunicator;
+    public static PebbleConnector getPebbleConnector() {
+        return pebbleConnector;
     }
 }
