@@ -42,8 +42,12 @@ public class DataProvider {
 
     static {
         achievements.add(new Achievement("Employee of the month", "You were the best employee in month."));
-        achievements.add(new Achievement("Quick eater", "You ate whole lunch very fast."));
-        achievements.add(new Achievement("Swimmer", "You have swam more than 10km."));
+        achievements.add(new Achievement("Quick eater", "You ate whole lunch in less than 15 minutes."));
+        achievements.add(new Achievement("Quicker eater", "You ate whole lunch in less than 10 minutes."));
+        achievements.add(new Achievement("The quickest eater", "You ate whole lunch in less than 5 minutes."));
+        achievements.add(new Achievement("Swimmer 1", "You have swam more than 10km."));
+        achievements.add(new Achievement("Swimmer 2", "You have swam more than 50km."));
+        achievements.add(new Achievement("Swimmer 3", "You have swam more than 100km."));
     }
 
     public static List<ResponseItem> getLogin() {
