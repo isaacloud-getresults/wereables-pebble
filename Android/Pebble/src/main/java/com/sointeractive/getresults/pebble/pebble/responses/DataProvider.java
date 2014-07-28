@@ -8,12 +8,6 @@ public class DataProvider {
     * ResponseDataProvider mock-up -- will be replaced by data from IsaaCloud.
     */
 
-    private static final List<ResponseItem> user = new LinkedList<ResponseItem>();
-
-    static {
-        user.add(new User("Janusz Tester", 58008, 74));
-    }
-
     private static final List<ResponseItem> beacons = new LinkedList<ResponseItem>();
 
     static {
@@ -52,8 +46,35 @@ public class DataProvider {
         achievements.add(new Achievement("Swimmer", "You have swam more than 10km."));
     }
 
-    public static List<ResponseItem> getUser() {
-        return user;
+    public static List<ResponseItem> getLogin() {
+        Login login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievememntsSize());
+        return listWrap(login);
+    }
+
+    private static String getUser() {
+        return "Janusz Tester";
+    }
+
+    private static int getBeaconsSize() {
+        return beacons.size();
+    }
+
+    private static int getAchievememntsSize() {
+        return achievements.size();
+    }
+
+    private static int getPoints() {
+        return 58008;
+    }
+
+    private static int getRank() {
+        return 74;
+    }
+
+    private static List<ResponseItem> listWrap(ResponseItem item) {
+        List<ResponseItem> list = new LinkedList<ResponseItem>();
+        list.add(item);
+        return list;
     }
 
     public static List<ResponseItem> getBeacons() {

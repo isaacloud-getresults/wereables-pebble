@@ -15,10 +15,10 @@ public enum Request implements Sendable {
         }
     },
 
-    USER(1, "User info") {
+    LOGIN(1, "Login info") {
         @Override
         public List<ResponseItem> getSendable(String query) {
-            return DataProvider.getUser();
+            return DataProvider.getLogin();
         }
     },
 
