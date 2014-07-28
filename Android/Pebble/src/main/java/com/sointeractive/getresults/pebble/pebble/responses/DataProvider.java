@@ -3,6 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.responses;
 import java.util.LinkedList;
 import java.util.List;
 
+@SuppressWarnings("StaticMethodOnlyUsedInOneClass")
 public class DataProvider {
     /*
     * ResponseDataProvider mock-up -- will be replaced by data from IsaaCloud.
@@ -51,7 +52,7 @@ public class DataProvider {
     }
 
     public static List<ResponseItem> getLogin() {
-        final Login login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievememntsSize());
+        final ResponseItem login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievementsSize());
         return listWrap(login);
     }
 
@@ -63,7 +64,7 @@ public class DataProvider {
         return beacons.size();
     }
 
-    private static int getAchievememntsSize() {
+    private static int getAchievementsSize() {
         return achievements.size();
     }
 

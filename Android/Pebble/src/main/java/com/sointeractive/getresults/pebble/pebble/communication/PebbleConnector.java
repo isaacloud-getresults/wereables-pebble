@@ -7,7 +7,7 @@ import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.Settings;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Observable;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -22,14 +22,14 @@ public class PebbleConnector extends Observable {
         this.context = context;
     }
 
-    public void sendNewDataToPebble(final List<PebbleDictionary> data) {
+    public void sendNewDataToPebble(final Collection<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             clearSendingQueue();
             sendDataToPebble(data);
         }
     }
 
-    public void sendDataToPebble(final List<PebbleDictionary> data) {
+    public void sendDataToPebble(final Collection<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             if (isPebbleConnected()) {
                 final boolean wasEmpty = sendingQueue.isEmpty();
@@ -61,8 +61,8 @@ public class PebbleConnector extends Observable {
         final boolean currentState = PebbleKit.isWatchConnected(context);
         Log.d(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));
 
-        if (this.connectionState != currentState) {
-            this.connectionState = currentState;
+        if (connectionState != currentState) {
+            connectionState = currentState;
             setChanged();
             notifyObservers();
         }
