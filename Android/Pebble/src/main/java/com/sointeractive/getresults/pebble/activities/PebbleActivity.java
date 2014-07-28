@@ -18,6 +18,7 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.LoginTask;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
@@ -168,6 +169,9 @@ public class PebbleActivity extends Activity implements Observer {
                 final String title = notification_title_text_view.getText().toString();
                 final String body = notification_body_text_view.getText().toString();
                 pebbleConnector.sendNotification(title, body);
+
+                // TODO: DEBUG ONLY
+                new LoginTask().execute("getresultsdev@gmail.com");
             }
         });
     }
