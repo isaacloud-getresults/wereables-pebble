@@ -17,45 +17,45 @@ class NotificationSender {
 
     private final Context context;
 
-    private NotificationSender(Context context) {
+    private NotificationSender(final Context context) {
         this.context = context;
     }
 
-    public static void send(Context context, String title, String body) {
-        NotificationSender sender = new NotificationSender(context);
+    public static void send(final Context context, final String title, final String body) {
+        final NotificationSender sender = new NotificationSender(context);
         sender.send(title, body);
     }
 
-    private void send(String title, String body) {
-        Map<String, String> data = getDataMap(title, body);
-        String notificationData = getData(data);
+    private void send(final String title, final String body) {
+        final Map<String, String> data = getDataMap(title, body);
+        final String notificationData = getData(data);
 
         sendData(notificationData);
     }
 
-    private Map<String, String> getDataMap(String title, String body) {
-        Map<String, String> data = new HashMap<String, String>();
+    private Map<String, String> getDataMap(final String title, final String body) {
+        final Map<String, String> data = new HashMap<String, String>();
         data.put("title", title);
         data.put("body", body);
 
         return data;
     }
 
-    private String getData(Map<String, String> data) {
-        JSONObject jsonData = new JSONObject(data);
+    private String getData(final Map<String, String> data) {
+        final JSONObject jsonData = new JSONObject(data);
 
         return new JSONArray().put(jsonData).toString();
     }
 
-    private void sendData(String notificationData) {
+    private void sendData(final String notificationData) {
         Log.d(TAG, "Action: Sending notification: " + notificationData);
         final Intent i = getIntent(notificationData);
 
         context.sendBroadcast(i);
     }
 
-    private Intent getIntent(String notificationData) {
-        Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
+    private Intent getIntent(final String notificationData) {
+        final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
         i.putExtra("messageType", "PEBBLE_ALERT");
         i.putExtra("sender", Settings.APP_NAME);
         i.putExtra("notificationData", notificationData);

@@ -12,29 +12,29 @@ public class Responder {
 
     private final PebbleDictionary data;
 
-    private Responder(PebbleDictionary data) {
+    private Responder(final PebbleDictionary data) {
         this.data = data;
     }
 
-    public static void response(PebbleDictionary data) {
-        Responder responder = new Responder(data);
+    public static void response(final PebbleDictionary data) {
+        final Responder responder = new Responder(data);
         responder.processRequest();
     }
 
     private void processRequest() {
-        Request request = getRequest();
+        final Request request = getRequest();
         if (request != Request.UNKNOWN) {
             sendResponseToPebble(request.getDataToSend());
         }
     }
 
     private Request getRequest() {
-        Request request = Request.getByData(data);
+        final Request request = Request.getByData(data);
         Log.d(TAG, "Request: " + request.getLogMessage());
         return request;
     }
 
-    private void sendResponseToPebble(List<PebbleDictionary> data) {
+    private void sendResponseToPebble(final List<PebbleDictionary> data) {
         Application.getPebbleConnector().sendNewDataToPebble(data);
     }
 }

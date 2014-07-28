@@ -10,35 +10,35 @@ import java.util.List;
 public enum Request implements Sendable {
     UNKNOWN(0, "UNKNOWN") {
         @Override
-        public List<ResponseItem> getSendable(String query) {
+        public List<ResponseItem> getSendable(final String query) {
             return null;
         }
     },
 
     LOGIN(1, "Login info") {
         @Override
-        public List<ResponseItem> getSendable(String query) {
+        public List<ResponseItem> getSendable(final String query) {
             return DataProvider.getLogin();
         }
     },
 
     BEACONS(2, "Beacons list") {
         @Override
-        public List<ResponseItem> getSendable(String query) {
+        public List<ResponseItem> getSendable(final String query) {
             return DataProvider.getBeacons();
         }
     },
 
     GAMES(3, "Games list") {
         @Override
-        public List<ResponseItem> getSendable(String query) {
+        public List<ResponseItem> getSendable(final String query) {
             return DataProvider.getGames();
         }
     },
 
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
-        public List<ResponseItem> getSendable(String query) {
+        public List<ResponseItem> getSendable(final String query) {
             return DataProvider.getAchievements();
         }
     };
@@ -54,32 +54,32 @@ public enum Request implements Sendable {
 
     private String query;
 
-    private Request(int id, String logMessage) {
+    private Request(final int id, final String logMessage) {
         this.id = id;
         this.logMessage = logMessage;
     }
 
-    public static Request getByData(PebbleDictionary data) {
-        int requestID = getRequestId(data);
-        Request request = Request.getById(requestID);
+    public static Request getByData(final PebbleDictionary data) {
+        final int requestID = getRequestId(data);
+        final Request request = Request.getById(requestID);
         request.query = getRequestQuery(data);
         return request;
     }
 
-    private static int getRequestId(PebbleDictionary data) {
-        Long requestID = data.getInteger(REQUEST_TYPE);
+    private static int getRequestId(final PebbleDictionary data) {
+        final Long requestID = data.getInteger(REQUEST_TYPE);
         return requestID.intValue();
     }
 
-    private static Request getById(int id) {
-        for (Request e : values()) {
+    private static Request getById(final int id) {
+        for (final Request e : values()) {
             if (e.id == id)
                 return e;
         }
         return UNKNOWN;
     }
 
-    private static String getRequestQuery(PebbleDictionary data) {
+    private static String getRequestQuery(final PebbleDictionary data) {
         if (data.contains(REQUEST_QUERY)) {
             return data.getString(REQUEST_QUERY);
         } else {
@@ -92,8 +92,8 @@ public enum Request implements Sendable {
     }
 
     public List<PebbleDictionary> getDataToSend() {
-        List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
-        for (ResponseItem responseItem : getSendable(query)) {
+        final List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
+        for (final ResponseItem responseItem : getSendable(query)) {
             list.add(responseItem.getData(id));
         }
         return list;

@@ -30,7 +30,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
         });
     }
 
-    private void sendAckToPebble(Context context, int transactionId) {
+    private void sendAckToPebble(final Context context, final int transactionId) {
         Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
         PebbleKit.sendAckToPebble(context, transactionId);
     }

@@ -9,7 +9,7 @@ public class PebbleConnectedReceiver extends BroadcastReceiver {
     private static final String TAG = PebbleConnectedReceiver.class.getSimpleName();
 
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, final Intent intent) {
         Log.d(TAG, "Event: Pebble is now connected");
     }
 }

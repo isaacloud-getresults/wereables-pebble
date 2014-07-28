@@ -40,14 +40,14 @@ public class PebbleActivity extends Activity implements Observer {
     private BeaconManager beaconManager;
     private PebbleConnector pebbleConnector;
 
-    private void showInfo(int id) {
-        String msg = context.getString(id);
+    private void showInfo(final int id) {
+        final String msg = context.getString(id);
         Log.d(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         Log.d(TAG, "Event: onCreate");
         super.onCreate(savedInstanceState);
 
@@ -93,7 +93,7 @@ public class PebbleActivity extends Activity implements Observer {
         beaconManager = new BeaconManager(this);
         beaconManager.setRangingListener(new BeaconManager.RangingListener() {
             @Override
-            public void onBeaconsDiscovered(Region region, final List<Beacon> newBeacons) {
+            public void onBeaconsDiscovered(final Region region, final List<Beacon> newBeacons) {
                 Log.d(TAG, "Event: New beacons discovered");
                 runOnUiThread(new Runnable() {
                     @Override
@@ -106,7 +106,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void checkBluetooth() {
-        boolean hasBluetoothLE = beaconManager.hasBluetooth();
+        final boolean hasBluetoothLE = beaconManager.hasBluetooth();
         Log.d(TAG, "Check: Smartphone " + (hasBluetoothLE ? "has" : "has not") + " got Bluetooth Low Energy");
 
         if (hasBluetoothLE) {
@@ -117,20 +117,20 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void checkBluetoothEnabled() {
-        boolean bluetoothEnabled = beaconManager.hasBluetooth();
+        final boolean bluetoothEnabled = beaconManager.hasBluetooth();
         Log.d(TAG, "Check: Smartphone has bluetooth " + (bluetoothEnabled ? "enabled" : "disabled"));
 
         if (bluetoothEnabled) {
             connectToService();
         } else {
             Log.d(TAG, "Action: Trying to enable bluetooth by enableBtIntent");
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            final Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableBtIntent, Settings.REQUEST_ENABLE_BT);
         }
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
         if (requestCode == Settings.REQUEST_ENABLE_BT) {
             if (resultCode == Activity.RESULT_OK) {
                 Log.d(TAG, "Event: Success on enabling bluetooth by enableBtIntent");
@@ -151,7 +151,7 @@ public class PebbleActivity extends Activity implements Observer {
             public void onServiceReady() {
                 try {
                     beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                     showInfo(R.string.scan_beacons_error);
                     Log.e(TAG, "Error: Cannot start ranging", e);
                 }
@@ -164,9 +164,9 @@ public class PebbleActivity extends Activity implements Observer {
 
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                String title = notification_title_text_view.getText().toString();
-                String body = notification_body_text_view.getText().toString();
+            public void onClick(final View v) {
+                final String title = notification_title_text_view.getText().toString();
+                final String body = notification_body_text_view.getText().toString();
                 pebbleConnector.sendNotification(title, body);
             }
         });
@@ -184,7 +184,7 @@ public class PebbleActivity extends Activity implements Observer {
         Log.d(TAG, "Action: Stopping ranging");
         try {
             beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS_REGION);
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.e(TAG, "Error: while stopping ranging", e);
         }
     }
@@ -211,7 +211,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     @Override
-    public void update(Observable observable, Object o) {
+    public void update(final Observable observable, final Object o) {
         Log.d(TAG, "Event: Observable value has changed");
         if (observable == pebbleConnector) {
             onConnectionStateChanged();

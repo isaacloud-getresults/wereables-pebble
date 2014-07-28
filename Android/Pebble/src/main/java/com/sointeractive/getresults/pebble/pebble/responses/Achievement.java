@@ -7,13 +7,13 @@ public class Achievement implements ResponseItem {
     private final String name;
     private final String description;
 
-    public Achievement(String name, String description) {
+    public Achievement(final String name, final String description) {
         this.name = name;
         this.description = description;
     }
 
     @Override
-    public PebbleDictionary getData(int responseType) {
+    public PebbleDictionary getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addString(description)

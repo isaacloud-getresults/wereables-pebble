@@ -9,7 +9,7 @@ public class Beacon implements ResponseItem {
     private final int games_active;
     private final int games_completed;
 
-    public Beacon(String name, int distance, int games_active, int games_completed) {
+    public Beacon(final String name, final int distance, final int games_active, final int games_completed) {
         this.name = name;
         this.distance = distance;
         this.games_active = games_active;
@@ -17,7 +17,7 @@ public class Beacon implements ResponseItem {
     }
 
     @Override
-    public PebbleDictionary getData(int responseType) {
+    public PebbleDictionary getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addInt(distance)

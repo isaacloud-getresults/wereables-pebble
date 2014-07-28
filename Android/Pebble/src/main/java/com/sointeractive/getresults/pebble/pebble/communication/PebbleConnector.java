@@ -17,18 +17,18 @@ public class PebbleConnector extends Observable {
     private final Context context;
     public boolean connectionState;
 
-    public PebbleConnector(Context context) {
+    public PebbleConnector(final Context context) {
         this.context = context;
     }
 
-    public synchronized void sendNewDataToPebble(List<PebbleDictionary> data) {
+    public synchronized void sendNewDataToPebble(final List<PebbleDictionary> data) {
         clearSendingQueue();
         sendDataToPebble(data);
     }
 
-    public synchronized void sendDataToPebble(List<PebbleDictionary> data) {
+    public synchronized void sendDataToPebble(final List<PebbleDictionary> data) {
         if (isPebbleConnected()) {
-            boolean wasEmpty = sendingQueue.isEmpty();
+            final boolean wasEmpty = sendingQueue.isEmpty();
             sendingQueue.addAll(data);
             if (wasEmpty) {
                 sendNext();
@@ -40,7 +40,7 @@ public class PebbleConnector extends Observable {
         if (sendingQueue.isEmpty()) {
             Log.d(TAG, "Event: Nothing to send, empty sendingQueue");
         } else {
-            PebbleDictionary data = sendingQueue.poll();
+            final PebbleDictionary data = sendingQueue.poll();
             Log.d(TAG, "Action: sending response: " + data.toJsonString());
             PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
         }
@@ -51,7 +51,7 @@ public class PebbleConnector extends Observable {
     }
 
     public boolean isPebbleConnected() {
-        boolean currentState = PebbleKit.isWatchConnected(context);
+        final boolean currentState = PebbleKit.isWatchConnected(context);
         Log.d(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));
 
         if (this.connectionState != currentState) {
@@ -64,13 +64,13 @@ public class PebbleConnector extends Observable {
     }
 
     public boolean areAppMessagesSupported() {
-        boolean appMessagesSupported = PebbleKit.areAppMessagesSupported(context);
+        final boolean appMessagesSupported = PebbleKit.areAppMessagesSupported(context);
         Log.d(TAG, "Check: AppMessages " + (appMessagesSupported ? "are supported" : "are not supported"));
 
         return appMessagesSupported;
     }
 
-    public void sendNotification(String title, String body) {
+    public void sendNotification(final String title, final String body) {
         NotificationSender.send(context, title, body);
     }
 }

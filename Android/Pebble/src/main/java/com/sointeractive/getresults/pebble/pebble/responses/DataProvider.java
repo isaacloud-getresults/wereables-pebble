@@ -51,7 +51,7 @@ public class DataProvider {
     }
 
     public static List<ResponseItem> getLogin() {
-        Login login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievememntsSize());
+        final Login login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievememntsSize());
         return listWrap(login);
     }
 
@@ -75,8 +75,8 @@ public class DataProvider {
         return 74;
     }
 
-    private static List<ResponseItem> listWrap(ResponseItem item) {
-        List<ResponseItem> list = new LinkedList<ResponseItem>();
+    private static List<ResponseItem> listWrap(final ResponseItem item) {
+        final List<ResponseItem> list = new LinkedList<ResponseItem>();
         list.add(item);
         return list;
     }

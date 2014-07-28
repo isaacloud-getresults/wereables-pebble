@@ -10,7 +10,7 @@ public class Login implements ResponseItem {
     private final int beaconsSize;
     private final int achievementsSize;
 
-    public Login(String name, int points, int rank, int beaconsSize, int achievementsSize) {
+    public Login(final String name, final int points, final int rank, final int beaconsSize, final int achievementsSize) {
         this.name = name;
         this.points = points;
         this.rank = rank;
@@ -19,7 +19,7 @@ public class Login implements ResponseItem {
     }
 
     @Override
-    public PebbleDictionary getData(int responseType) {
+    public PebbleDictionary getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addInt(points)

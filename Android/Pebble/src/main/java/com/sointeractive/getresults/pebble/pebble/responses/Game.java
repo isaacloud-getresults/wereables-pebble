@@ -9,7 +9,7 @@ public class Game implements ResponseItem {
     private final int progress;
     private final int goal;
 
-    public Game(String name, String description, int progress, int goal) {
+    public Game(final String name, final String description, final int progress, final int goal) {
         this.name = name;
         this.description = description;
         this.progress = progress;
@@ -17,7 +17,7 @@ public class Game implements ResponseItem {
     }
 
     @Override
-    public PebbleDictionary getData(int responseType) {
+    public PebbleDictionary getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addString(description)
