@@ -1,15 +1,11 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
-import android.util.Log;
-
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 import java.util.List;
 
 public class Responder {
-    private static final String TAG = Responder.class.getSimpleName();
-
     private final PebbleDictionary data;
 
     private Responder(final PebbleDictionary data) {
@@ -30,11 +26,11 @@ public class Responder {
 
     private Request getRequest() {
         final Request request = Request.getByData(data);
-        Log.d(TAG, "Request: " + request.getLogMessage());
+        request.log();
         return request;
     }
 
     private void sendResponseToPebble(final List<PebbleDictionary> data) {
-        Application.getPebbleConnector().sendNewDataToPebble(data);
+        Application.pebbleConnector.sendNewDataToPebble(data);
     }
 }

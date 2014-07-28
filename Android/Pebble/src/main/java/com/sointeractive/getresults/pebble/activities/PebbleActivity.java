@@ -52,7 +52,7 @@ public class PebbleActivity extends Activity implements Observer {
         super.onCreate(savedInstanceState);
 
         initInstance();
-        registerPebbleCommunicator();
+        registerPebbleConnector();
         checkPebbleConnection();
         setBeaconManager();
         checkBluetooth();
@@ -69,9 +69,9 @@ public class PebbleActivity extends Activity implements Observer {
         notification_body_text_view = (TextView) findViewById(R.id.notification_body_text_view);
     }
 
-    private void registerPebbleCommunicator() {
-        Log.d(TAG, "Init: Registering PebbleCommunicator");
-        pebbleConnector = Application.getPebbleConnector();
+    private void registerPebbleConnector() {
+        Log.d(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
+        pebbleConnector = Application.pebbleConnector;
         pebbleConnector.addObserver(this);
     }
 

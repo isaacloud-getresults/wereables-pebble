@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
+import android.util.Log;
+
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.responses.DataProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
@@ -42,16 +44,13 @@ public enum Request implements Sendable {
             return DataProvider.getAchievements();
         }
     };
-
     public static final int RESPONSE_TYPE = 1;
     public static final int RESPONSE_DATA_INDEX = 2;
-
+    private static final String TAG = Request.class.getSimpleName();
     private static final int REQUEST_TYPE = 1;
     private static final int REQUEST_QUERY = 2;
-
+    public final String logMessage;
     private final int id;
-    private final String logMessage;
-
     private String query;
 
     private Request(final int id, final String logMessage) {
@@ -87,15 +86,15 @@ public enum Request implements Sendable {
         }
     }
 
-    public String getLogMessage() {
-        return logMessage;
-    }
-
     public List<PebbleDictionary> getDataToSend() {
         final List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : getSendable(query)) {
             list.add(responseItem.getData(id));
         }
         return list;
+    }
+
+    public void log() {
+        Log.d(TAG, "Request: " + logMessage);
     }
 }
