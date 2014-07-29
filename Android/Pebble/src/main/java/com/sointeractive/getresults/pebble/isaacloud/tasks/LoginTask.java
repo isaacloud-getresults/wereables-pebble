@@ -4,7 +4,6 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.User;
-import com.sointeractive.getresults.pebble.isaacloud.responses.UserResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,11 +43,11 @@ public class LoginTask extends AsyncTask<String, Integer, User> {
 
         final JSONArray users = response.getJSONArray();
         for (int i = 0; i < users.length(); i++) {
-            final JSONObject user = (JSONObject) users.get(i);
+            final JSONObject userJSON = (JSONObject) users.get(i);
 
-            if (email.equals(user.get(UserResponse.EMAIL))) {
-                Log.d(TAG, "Event: User found: " + user.toString());
-                return new User(user);
+            if (email.equals(userJSON.get("email"))) {
+                Log.d(TAG, "Event: User found: " + userJSON.toString());
+                return new User(userJSON);
             }
         }
         return null;
@@ -59,7 +58,7 @@ public class LoginTask extends AsyncTask<String, Integer, User> {
         Log.d(TAG, "Event: onPostExecute");
 
         if (result != null) {
-            Log.d(TAG, "Event: Login success");
+            Log.d(TAG, "Event: Success");
         }
     }
 }
