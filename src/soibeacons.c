@@ -26,11 +26,14 @@ static TextLayer *beacon_details_lowertext_layer = NULL;
 static TextLayer *games_textbar_layer = NULL;
 static TextLayer *game_details_textbar_layer = NULL;
 static TextLayer *game_details_text_layer = NULL;
+static TextLayer *achievement_details_textbar_layer = NULL;
+static TextLayer *achievement_details_text_layer = NULL;
 static InverterLayer *user_textbar_inverter_layer = NULL;
 static InverterLayer *beacons_textbar_inverter_layer = NULL;
 static InverterLayer *beacon_details_textbar_inverter_layer = NULL;
 static InverterLayer *games_textbar_inverter_layer = NULL;
 static InverterLayer *game_details_textbar_inverter_layer = NULL;
+static InverterLayer *achievement_details_textbar_inverter_layer = NULL;
 static Layer *beacon_details_distance_layer = NULL;
 static AppTimer *timer = NULL;
 
@@ -686,7 +689,7 @@ static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *ce
     if(cell_index->section==0 && achievements!=NULL)
         current_achievement = achievements[cell_index->row];
     
-    //window_stack_push(achievement_details_window, true);
+    window_stack_push(achievement_details_window, true);
 }
 
 MenuLayerCallbacks achievements_menu_callbacks = {
@@ -978,15 +981,17 @@ static void draw_game_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
 
 static void game_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "game_select_click() start");
-    if(cell_index->section==0)
+    if(cell_index->section==0) {
         current_game = games[num_games_completed+cell_index->row];
-    else if(cell_index->section==1)
+    }
+    else if(cell_index->section==1) {
         current_game = games[cell_index->row];
+    }
     
     if(current_game!=NULL)
         APP_LOG(APP_LOG_LEVEL_DEBUG, "game selected: %s",current_game->name);
     else
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_game==NULL");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "current_game==NULL!");
     
     window_stack_push(game_details_window, true);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "game_select_click() end");
@@ -1078,6 +1083,45 @@ static void game_details_window_unload(Window *window) {
 }
 /////////////////////////////////////
 
+///////////////////////////////////// ACHIEVEMENT DETAILS WINDOW
+static void achievement_details_window_load(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_load() start");
+    Layer *window_layer = window_get_root_layer(window);
+    
+    GRect textbar_bounds = layer_get_bounds(window_layer);
+    textbar_bounds.size.h = textbar_height;
+    achievement_details_textbar_layer = text_layer_create(textbar_bounds);
+    static char text_buffer1[30];
+    snprintf(text_buffer1,30,"%s",current_achievement->name);
+    text_layer_set_text(achievement_details_textbar_layer,text_buffer1);
+    text_layer_set_font(achievement_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(achievement_details_textbar_layer, GTextAlignmentCenter);
+    
+    achievement_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    
+    GRect text_bounds = layer_get_bounds(window_layer);
+    text_bounds.size.h -= textbar_height;
+    text_bounds.origin.y = textbar_height;
+    achievement_details_text_layer = text_layer_create(text_bounds);
+    text_layer_set_text(achievement_details_text_layer,current_achievement->description);
+    text_layer_set_font(achievement_details_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(achievement_details_text_layer, GTextAlignmentCenter);
+    
+    layer_add_child(window_layer, text_layer_get_layer(achievement_details_textbar_layer));
+    layer_add_child(window_layer, inverter_layer_get_layer(achievement_details_textbar_inverter_layer));
+    layer_add_child(window_layer, text_layer_get_layer(achievement_details_text_layer));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_load() end");
+}
+
+static void achievement_details_window_unload(Window *window) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() start");
+    text_layer_destroy(achievement_details_text_layer);
+    inverter_layer_destroy(achievement_details_textbar_inverter_layer);
+    text_layer_destroy(achievement_details_textbar_layer);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() end");
+}
+/////////////////////////////////////
+
 /////////////////////////////////////
 static WindowHandlers login_window_handlers = {
     .load = login_window_load,
@@ -1104,13 +1148,12 @@ static WindowHandlers game_details_window_handlers = {
     .load = game_details_window_load,
     .unload = game_details_window_unload
 };
+static WindowHandlers achievement_details_window_handlers = {
+    .load = achievement_details_window_load,
+    .unload = achievement_details_window_unload
+};
 
 static void init() {
-    /*
-     timer = NULL;
-     beacons = NULL;
-     games = NULL;
-     achievements = NULL;*/
     num_beacons = 0;
     num_beacons_in_range = 0;
     num_beacons_out_of_range = 0;
@@ -1119,9 +1162,6 @@ static void init() {
     num_games_completed = 0;
     num_achievements = 0;
     prev_num_achievements = 0;
-    current_beacon = NULL;
-    current_game = NULL;
-    current_achievement = NULL;
     
     user_request_sent = false;
     beacons_request_sent = false;
@@ -1153,13 +1193,17 @@ static void init() {
     window_set_fullscreen(game_details_window, true);
     window_set_window_handlers(game_details_window, game_details_window_handlers);
     
+    achievement_details_window = window_create();
+    window_set_fullscreen(achievement_details_window, true);
+    window_set_window_handlers(achievement_details_window, achievement_details_window_handlers);
+    
     app_message_register_inbox_received(in_received_handler);
     app_message_register_inbox_dropped(in_dropped_handler);
     app_message_register_outbox_sent(out_sent_handler);
     app_message_register_outbox_failed(out_failed_handler);
     
     const int inbound_size = app_message_inbox_size_maximum();
-    const int outbound_size = APP_MESSAGE_OUTBOX_SIZE_MINIMUM;
+    const int outbound_size = 128;
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message initialising: %s",translate_result(app_message_open(200,outbound_size)));
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message inbound size: %u",inbound_size);
     APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message outbound size: %u",outbound_size);
@@ -1168,12 +1212,13 @@ static void init() {
 }
 
 static void deinit() {
-    window_destroy(login_window);
-    window_destroy(user_window);
-    window_destroy(beacons_window);
-    window_destroy(beacon_details_window);
-    window_destroy(games_window);
+    window_destroy(achievement_details_window);
     window_destroy(game_details_window);
+    window_destroy(games_window);
+    window_destroy(beacon_details_window);
+    window_destroy(beacons_window);
+    window_destroy(user_window);
+    window_destroy(login_window);
     
     if(user.name!=NULL)
         free(user.name);
