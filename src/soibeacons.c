@@ -110,7 +110,7 @@ static uint16_t get_num_games(struct MenuLayer* menu_layer, uint16_t section_ind
     int i;
     num_games_active = num_games_completed = 0;
     for(i=0; i<num_games; ++i) {
-        if((float)(games[i]->progress)/(float)(games[i]->goal)==1.0)
+        if(games[i]->progress==games[i]->goal)
             num_games_completed++;
         else
             num_games_active++;
@@ -131,14 +131,12 @@ static uint16_t get_num_achievements(struct MenuLayer* menu_layer, uint16_t sect
 }
 
 static int beacons_compare(const void *b1, const void *b2) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_compare()");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_compare()");
     // beacons closer to user (distance value higher) are placed in the table first
-    if(((Beacon*)b1)->distance>((Beacon*)b2)->distance)
-        return -1;
-    else if(((Beacon*)b1)->distance==((Beacon*)b2)->distance)
-        return 0;
-    else
-        return 1;
+    int d1 = (*(Beacon**)b1)->distance;
+    int d2 = (*(Beacon**)b2)->distance;
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    d1: %i | d2: %i",d1,d2);
+    return d2-d1;
 }
 
 static int games_compare(const void *g1, const void *g2) {
@@ -146,14 +144,10 @@ static int games_compare(const void *g1, const void *g2) {
     // games with bigger progress/goal ratio are placed in the table first,
     // then after all active are placed inactive unsorted
     // (that means the same order in which they were recieved)
-    Game *game1 = (Game*)g1;
-    Game *game2 = (Game*)g2;
-    if(((float)(game1->progress)/(float)(game1->goal))>((float)(game2->progress)/(float)(game2->goal)))
-        return -1;
-    else if(((float)(game1->progress)/(float)(game1->goal))==((float)(game2->progress)/(float)(game2->goal)))
-        return 0;
-    else
-        return 1;
+    double p1 = (double)((*(Game**)g1)->progress)/(double)((*(Game**)g1)->goal);
+    double p2 = (double)((*(Game**)g2)->progress)/(double)((*(Game**)g2)->goal);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    p1=%f | p2=%f",p1,p2);
+    return (int)((p2-p1)*1000);
 }
 
 static bool update_beacons_table(Beacon *new_beacon) {
@@ -182,7 +176,7 @@ static bool update_beacons_table(Beacon *new_beacon) {
                     //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, distance changed");
                     beacons[i]->distance = new_beacon->distance;
                     free(new_beacon);
-                    //qsort(beacons,size,sizeof(Beacon*),beacons_compare);
+                    qsort(beacons,size,sizeof(Beacon*),beacons_compare);
                     return true;
                 }
                 else {
@@ -196,7 +190,7 @@ static bool update_beacons_table(Beacon *new_beacon) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new");
         beacons[size] = new_beacon;
         num_beacons++;
-        //qsort(beacons,size+1,sizeof(Beacon*),beacons_compare);
+        qsort(beacons,size+1,sizeof(Beacon*),beacons_compare);
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
         return true;
     }
@@ -225,7 +219,7 @@ static bool update_games_table(Game *new_game) {
                     APP_LOG(APP_LOG_LEVEL_DEBUG, "    game found, progress changed");
                     games[i]->progress = new_game->progress;
                     free(new_game);
-                    //qsort(games,size,sizeof(Game*),games_compare);
+                    qsort(games,size,sizeof(Game*),games_compare);
                     return true;
                 }
                 else {
@@ -239,7 +233,7 @@ static bool update_games_table(Game *new_game) {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "    game not found, adding new");
         games[size] = new_game;
         num_games++;
-        //qsort(games,size+1,sizeof(Game*),games_compare);
+        qsort(games,size+1,sizeof(Game*),games_compare);
         APP_LOG(APP_LOG_LEVEL_DEBUG, "update_games_table() end");
         return true;
     }
@@ -456,8 +450,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         user.name = new_name;   
                     }
                 }
-                user.points = points->value->data[0];
-                user.rank = rank->value->data[0];
+                user.points = points->value->data[0]+points->value->data[1]*256;
+                user.rank = rank->value->data[0]+rank->value->data[1]*256;
                 user.beacons = beacons->value->data[0];
                 user.achievements = achievements->value->data[0];
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u | achievements: %u",user.name,user.points,user.rank,user.beacons,user.achievements);
@@ -483,8 +477,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 strcpy(new_name,name->value->cstring);
                 new_beacon->name = new_name;
                 new_beacon->distance = distance->value->data[0];
-                new_beacon->games_active = games_active->value->data[0];
-                new_beacon->games_completed = games_completed->value->data[0];
+                new_beacon->games_active = games_active->value->data[0]+games_active->value->data[1]*256;
+                new_beacon->games_completed = games_completed->value->data[0]+games_completed->value->data[1]*256;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | distance: %u | games active: %u | games completed: %u",new_beacon->name,new_beacon->distance,new_beacon->games_active,new_beacon->games_completed);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
@@ -511,9 +505,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 strcpy(new_description,description->value->cstring);
                 new_game->name = new_name;
                 new_game->description = new_description;
-                new_game->progress = progress->value->data[0];
-                new_game->goal = goal->value->data[0];
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved game: %s | progress: %u/%u",new_game->name,new_game->progress,new_game->goal);
+                new_game->progress = progress->value->data[0]+progress->value->data[1]*256;
+                new_game->goal = goal->value->data[0]+goal->value->data[1]*256;
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved game: %s | progress: %i/%i",new_game->name,new_game->progress,new_game->goal);
                 if(update_games_table(new_game))
                     menu_layer_reload_data(games_menu_layer);
             }
@@ -893,7 +887,7 @@ static void beacon_details_window_load(Window *window) {
     int distance_layer_height = 40;
     GRect textbar_bounds = layer_get_bounds(window_layer);
     textbar_bounds.size.h = textbar_height;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "textbar_bounds.size.h = %u",textbar_bounds.size.h);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "textbar_bounds.size.h = %u",textbar_bounds.size.h);
     beacon_details_textbar_layer = text_layer_create(textbar_bounds);
     text_layer_set_text(beacon_details_textbar_layer,current_beacon->name);
     text_layer_set_font(beacon_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
@@ -973,11 +967,11 @@ static void draw_game_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
     switch (cell_index->section) {
         case 0:
             if(games!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, games[cell_index->row]->name, NULL, NULL);
+                menu_cell_basic_draw(ctx, cell_layer, games[num_games_completed+cell_index->row]->name, NULL, NULL);
             break;
         case 1:
             if(games!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, games[num_games_active+cell_index->row]->name, NULL, NULL);
+                menu_cell_basic_draw(ctx, cell_layer, games[cell_index->row]->name, NULL, NULL);
             break;
     }
 }
@@ -985,9 +979,9 @@ static void draw_game_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cel
 static void game_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
     APP_LOG(APP_LOG_LEVEL_DEBUG, "game_select_click() start");
     if(cell_index->section==0)
-        current_game = games[cell_index->row];
+        current_game = games[num_games_completed+cell_index->row];
     else if(cell_index->section==1)
-        current_game = games[num_games_active+cell_index->row];
+        current_game = games[cell_index->row];
     
     if(current_game!=NULL)
         APP_LOG(APP_LOG_LEVEL_DEBUG, "game selected: %s",current_game->name);
