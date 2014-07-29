@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.responses.DataProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.LinkedList;
@@ -20,30 +19,31 @@ public enum Request implements Sendable {
     LOGIN(1, "Login info") {
         @Override
         public List<ResponseItem> getSendable(final String query) {
-            return DataProvider.getLogin();
+            return IsaacloudProxy.getLogin();
         }
     },
 
     BEACONS(2, "Beacons list") {
         @Override
         public List<ResponseItem> getSendable(final String query) {
-            return DataProvider.getBeacons();
+            return IsaacloudProxy.getBeacons();
         }
     },
 
     GAMES(3, "Games list") {
         @Override
         public List<ResponseItem> getSendable(final String query) {
-            return DataProvider.getGames();
+            return IsaacloudProxy.getGames();
         }
     },
 
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
         public List<ResponseItem> getSendable(final String query) {
-            return DataProvider.getAchievements();
+            return IsaacloudProxy.getAchievements();
         }
     };
+
     public static final int RESPONSE_TYPE = 1;
     public static final int RESPONSE_DATA_INDEX = 2;
     private static final String TAG = Request.class.getSimpleName();

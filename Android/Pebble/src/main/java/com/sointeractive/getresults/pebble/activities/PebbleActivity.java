@@ -18,7 +18,7 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.LoginTask;
+import com.sointeractive.getresults.pebble.isaacloud.data.DataProvider;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
@@ -58,6 +58,7 @@ public class PebbleActivity extends Activity implements Observer {
         setBeaconManager();
         checkBluetooth();
         registerButtonHandlers();
+        preloadIsaacloudData();
     }
 
     private void initInstance() {
@@ -171,9 +172,13 @@ public class PebbleActivity extends Activity implements Observer {
                 pebbleConnector.sendNotification(title, body);
 
                 // TODO: DEBUG ONLY
-                new LoginTask().execute("getresultsdev@gmail.com");
+                DataProvider.reloadUser();
             }
         });
+    }
+
+    private void preloadIsaacloudData() {
+        DataProvider.reloadAllData();
     }
 
     @Override

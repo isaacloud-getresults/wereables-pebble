@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
-import java.util.List;
+import java.util.Collection;
 
 public class Responder {
     private final PebbleDictionary data;
@@ -30,7 +30,7 @@ public class Responder {
         return request;
     }
 
-    private void sendResponseToPebble(final List<PebbleDictionary> data) {
+    private void sendResponseToPebble(final Collection<PebbleDictionary> data) {
         Application.pebbleConnector.sendNewDataToPebble(data);
     }
 }

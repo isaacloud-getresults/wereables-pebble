@@ -7,7 +7,6 @@ public class Settings {
     // IsaaCloud connection
     public static final String instanceId = "157";
     public static final String appSecret = "59f8d59eb77eaec6f7ef9f1023815550";
-    public static final int responseLimit = 1000;
 
     // Pebble connection
     public static final String APP_NAME = "GetResults!";
@@ -15,4 +14,6 @@ public class Settings {
 
     // Instance requests
     public static final int REQUEST_ENABLE_BT = 1234;
+    public static final String USER_EMAIL = "john@sointeractive.pl";
+//    public static final String USER_EMAIL = "getresultsdev@gmail.com";
 }

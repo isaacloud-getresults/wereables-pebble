@@ -1,10 +1,17 @@
-package com.sointeractive.getresults.pebble.pebble.responses;
+package com.sointeractive.getresults.pebble.pebble.communication;
+
+import com.sointeractive.getresults.pebble.isaacloud.data.DataProvider;
+import com.sointeractive.getresults.pebble.pebble.responses.Achievement;
+import com.sointeractive.getresults.pebble.pebble.responses.Beacon;
+import com.sointeractive.getresults.pebble.pebble.responses.Game;
+import com.sointeractive.getresults.pebble.pebble.responses.Login;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @SuppressWarnings("StaticMethodOnlyUsedInOneClass")
-public class DataProvider {
+public class IsaacloudProxy {
     /*
     * ResponseDataProvider mock-up -- will be replaced by data from IsaaCloud.
     */
@@ -13,15 +20,15 @@ public class DataProvider {
 
     static {
         // In range
-        beacons.add(new Beacon("Kitchen 1", 1, 0, 6));
-        beacons.add(new Beacon("Meeting Room", 2, 1, 5));
-        beacons.add(new Beacon("Meeting Room 2", 4, 2, 4));
-        beacons.add(new Beacon("Boss Room", 8, 3, 3));
+        beacons.add(new Beacon("Kitchen 1", 1, 0, 7));
+        beacons.add(new Beacon("Meeting Room", 2, 1, 6));
+        beacons.add(new Beacon("Meeting Room 2", 4, 2, 5));
+        beacons.add(new Beacon("Boss Room", 8, 3, 4));
 
         // Out of range
-        beacons.add(new Beacon("Kitchen 2", 0, 4, 2));
-        beacons.add(new Beacon("Games Room", 0, 5, 1));
-        beacons.add(new Beacon("Games Room 2", 0, 6, 0));
+        beacons.add(new Beacon("Kitchen 2", 0, 4, 3));
+        beacons.add(new Beacon("Games Room", 0, 5, 2));
+        beacons.add(new Beacon("Games Room 2", 0, 6, 1));
     }
 
     private static final List<ResponseItem> games = new LinkedList<ResponseItem>();
@@ -29,7 +36,7 @@ public class DataProvider {
     static {
         // Active
         games.add(new Game("100 visits", "Visit room 100 times.", 75, 100));
-        games.add(new Game("150 visits", "Visit room 150 times.", 75, 150));
+        games.add(new Game("150 visit", "Visit room 150 times.", 75, 150));
         games.add(new Game("300 visits", "Visit room 300 times.", 75, 300));
         games.add(new Game("Without queue", "Enter empty room.", 0, 1));
 
@@ -52,20 +59,12 @@ public class DataProvider {
     }
 
     public static List<ResponseItem> getLogin() {
-        final ResponseItem login = new Login(getUser(), getPoints(), getRank(), getBeaconsSize(), getAchievementsSize());
+        final ResponseItem login = new Login(getUserName(), getPoints(), getRank(), getBeaconsSize(), getAchievementsSize());
         return listWrap(login);
     }
 
-    private static String getUser() {
-        return "Janusz Tester";
-    }
-
-    private static int getBeaconsSize() {
-        return beacons.size();
-    }
-
-    private static int getAchievementsSize() {
-        return achievements.size();
+    private static String getUserName() {
+        return DataProvider.getUser().getFullName();
     }
 
     private static int getPoints() {
@@ -74,6 +73,14 @@ public class DataProvider {
 
     private static int getRank() {
         return 74;
+    }
+
+    private static int getBeaconsSize() {
+        return beacons.size();
+    }
+
+    private static int getAchievementsSize() {
+        return achievements.size();
     }
 
     private static List<ResponseItem> listWrap(final ResponseItem item) {
