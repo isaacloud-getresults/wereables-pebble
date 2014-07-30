@@ -1,8 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
+    <!-- Global -->
     <string name="app_name">Pebble</string>
-    <string name="send_notification_button">Send notification</string>
-    <string name="pebble_communication_activity">Pebble Communication</string>
 
+    <!-- PebbleActivity -->
+    <!-- Layout-->
+    <string name="notification_send_button_label">Send notification</string>
+    <string name="notification_body_text_field_hint">Notification body</string>
+    <string name="notification_title_text_field_hint">Notification title</string>
+
+    <!-- Info messages -->
+    <string name="ok_connection_to_pebble">Connection to Pebble OK</string>
+    <string name="app_messages_not_supported">Sorry, AppMessages are not supported</string>
+    <string name="pebble_not_connected">Pebble not connected</string>
 </resources>
