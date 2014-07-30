@@ -20,11 +20,6 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
     private static final String TAG = GetUserAchievementsTask.class.getSimpleName();
 
     @Override
-    protected void onPreExecute() {
-        Log.d(TAG, "Event: onPreExecute");
-    }
-
-    @Override
     protected Collection<AchievementIC> doInBackground(final Integer... userId) {
         Log.d(TAG, "Action: Get achievements in background");
 
@@ -42,20 +37,19 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
 
     private Collection<AchievementIC> getAchievements(final String user) throws IOException, IsaaCloudConnectionException, JSONException {
         final HttpResponse response = Query.ACHIEVEMENTS.getResponse(user);
-        final Collection<AchievementIC> result = new LinkedList<AchievementIC>();
 
+        final Collection<AchievementIC> result = new LinkedList<AchievementIC>();
         final JSONArray achievements = response.getJSONArray();
         for (int i = 0; i < achievements.length(); i++) {
             final JSONObject achievementJSON = (JSONObject) achievements.get(i);
             result.add(new AchievementIC(achievementJSON));
         }
+
         return result;
     }
 
     @Override
     protected void onPostExecute(final Collection<AchievementIC> result) {
-        Log.d(TAG, "Event: onPostExecute");
-
         if (result != null) {
             Log.d(TAG, "Event: Success");
         }

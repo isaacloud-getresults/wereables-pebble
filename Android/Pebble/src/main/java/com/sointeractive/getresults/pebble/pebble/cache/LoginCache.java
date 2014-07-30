@@ -10,17 +10,12 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class LoginCache implements Cache {
-    public static final LoginCache INSTANCE = new LoginCache();
+    public static final Cache INSTANCE = new LoginCache();
+
     private Collection<ResponseItem> loginResponse;
 
     private LoginCache() {
         // Exists only to defeat instantiation.
-    }
-
-    private static Collection<ResponseItem> listWrap(final ResponseItem item) {
-        final Collection<ResponseItem> list = new LinkedList<ResponseItem>();
-        list.add(item);
-        return list;
     }
 
     @Override
@@ -44,5 +39,11 @@ public class LoginCache implements Cache {
 
         final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
         loginResponse = listWrap(login);
+    }
+
+    private Collection<ResponseItem> listWrap(final ResponseItem item) {
+        final Collection<ResponseItem> list = new LinkedList<ResponseItem>();
+        list.add(item);
+        return list;
     }
 }

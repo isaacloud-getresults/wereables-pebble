@@ -9,7 +9,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class AchievementsCache implements Cache {
-    public static final AchievementsCache INSTANCE = new AchievementsCache();
+    public static final Cache INSTANCE = new AchievementsCache();
+
     private Collection<ResponseItem> achievementsResponse;
 
     private AchievementsCache() {

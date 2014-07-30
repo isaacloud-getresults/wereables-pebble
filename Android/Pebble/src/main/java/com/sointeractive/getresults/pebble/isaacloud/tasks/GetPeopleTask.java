@@ -20,11 +20,6 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
     private static final String TAG = GetPeopleTask.class.getSimpleName();
 
     @Override
-    protected void onPreExecute() {
-        Log.d(TAG, "Event: onPreExecute");
-    }
-
-    @Override
     protected Collection<PersonIC> doInBackground(final Void... params) {
         Log.d(TAG, "Action: Get people in background");
 
@@ -49,13 +44,12 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
             final JSONObject personJSON = (JSONObject) peopleJSON.get(i);
             people.add(new PersonIC(personJSON));
         }
+
         return people;
     }
 
     @Override
     protected void onPostExecute(final Collection<PersonIC> result) {
-        Log.d(TAG, "Event: onPostExecute");
-
         if (result != null) {
             Log.d(TAG, "Event: Success");
         }

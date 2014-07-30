@@ -13,6 +13,7 @@ import java.util.LinkedList;
 
 public class PeopleCache {
     public static final PeopleCache INSTANCE = new PeopleCache();
+
     private SparseArray<Collection<ResponseItem>> peopleResponses;
 
     private PeopleCache() {
@@ -47,6 +48,7 @@ public class PeopleCache {
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
         int id;
         for (final PersonIC person : people) {
+            // TODO: Remove this after adding id communication feture
             if (!person.getFullName().equals("null null")) {
                 id = person.beacon;
                 if (peopleResponses.get(id) == null) {

@@ -20,11 +20,6 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
     private static final String TAG = GetRoomsTask.class.getSimpleName();
 
     @Override
-    protected void onPreExecute() {
-        Log.d(TAG, "Event: onPreExecute");
-    }
-
-    @Override
     protected Collection<RoomIC> doInBackground(final Void... params) {
         Log.d(TAG, "Action: Get beacons in background");
 
@@ -42,20 +37,19 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
 
     private Collection<RoomIC> getBeacons() throws IOException, IsaaCloudConnectionException, JSONException {
         final HttpResponse response = Query.BEACONS.getResponse();
-        final Collection<RoomIC> result = new LinkedList<RoomIC>();
 
+        final Collection<RoomIC> result = new LinkedList<RoomIC>();
         final JSONArray beacons = response.getJSONArray();
         for (int i = 0; i < beacons.length(); i++) {
             final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
             result.add(new RoomIC(beaconsJSON));
         }
+
         return result;
     }
 
     @Override
     protected void onPostExecute(final Collection<RoomIC> result) {
-        Log.d(TAG, "Event: onPostExecute");
-
         if (result != null) {
             Log.d(TAG, "Event: Success");
         }

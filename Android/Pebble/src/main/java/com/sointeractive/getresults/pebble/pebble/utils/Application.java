@@ -1,7 +1,5 @@
 package com.sointeractive.getresults.pebble.pebble.utils;
 
-import android.content.Context;
-
 import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 
@@ -14,10 +12,8 @@ import pl.sointeractive.isaacloud.exceptions.InvalidConfigException;
 public class Application extends android.app.Application {
     public static Isaacloud isaacloudConnector;
     public static PebbleConnector pebbleConnector;
-    private static Context context;
 
     public Application() {
-        context = this;
         pebbleConnector = new PebbleConnector(this);
         initIsaacloudConnector();
     }
@@ -33,8 +29,8 @@ public class Application extends android.app.Application {
     private Map<String, String> getIsaacloudConfig() {
         final Map<String, String> config = new HashMap<String, String>();
 
-        config.put("instanceId", Settings.instanceId);
-        config.put("appSecret", Settings.appSecret);
+        config.put("instanceId", Settings.INSTANCE_ID);
+        config.put("appSecret", Settings.APP_SECRET);
 
         return config;
     }

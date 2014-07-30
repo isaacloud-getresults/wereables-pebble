@@ -16,10 +16,12 @@ public class PebbleConnector extends Observable {
     private static final String TAG = PebbleConnector.class.getSimpleName();
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
+    private final NotificationSender sender;
     public boolean connectionState;
 
     public PebbleConnector(final Context context) {
         this.context = context;
+        sender = new NotificationSender(context);
     }
 
     public void sendNewDataToPebble(final Collection<PebbleDictionary> data) {
@@ -78,6 +80,6 @@ public class PebbleConnector extends Observable {
     }
 
     public void sendNotification(final String title, final String body) {
-        NotificationSender.send(context, title, body);
+        sender.send(title, body);
     }
 }

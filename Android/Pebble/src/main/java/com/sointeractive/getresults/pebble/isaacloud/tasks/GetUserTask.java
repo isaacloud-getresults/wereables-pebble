@@ -18,11 +18,6 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
     private static final String TAG = GetUserTask.class.getSimpleName();
 
     @Override
-    protected void onPreExecute() {
-        Log.d(TAG, "Event: onPreExecute");
-    }
-
-    @Override
     protected UserIC doInBackground(final String... emails) {
         Log.d(TAG, "Action: Login in background");
 
@@ -39,7 +34,7 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
     }
 
     private UserIC logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.USERS_LIST.getResponse();
+        final HttpResponse response = Query.USER.getResponse();
 
         final JSONArray users = response.getJSONArray();
         for (int i = 0; i < users.length(); i++) {
@@ -50,13 +45,12 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
                 return new UserIC(userJSON);
             }
         }
+
         return null;
     }
 
     @Override
     protected void onPostExecute(final UserIC result) {
-        Log.d(TAG, "Event: onPostExecute");
-
         if (result != null) {
             Log.d(TAG, "Event: Success");
         }

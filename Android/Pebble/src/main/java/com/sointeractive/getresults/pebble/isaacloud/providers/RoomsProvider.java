@@ -8,6 +8,7 @@ import java.util.concurrent.ExecutionException;
 
 public class RoomsProvider implements Provider {
     public static final RoomsProvider INSTANCE = new RoomsProvider();
+
     private Collection<RoomIC> roomsIC;
 
     private RoomsProvider() {

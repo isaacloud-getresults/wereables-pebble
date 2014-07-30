@@ -17,20 +17,15 @@ class NotificationSender {
 
     private final Context context;
 
-    private NotificationSender(final Context context) {
+    public NotificationSender(final Context context) {
         this.context = context;
     }
 
-    public static void send(final Context context, final String title, final String body) {
-        final NotificationSender sender = new NotificationSender(context);
-        sender.send(title, body);
-    }
+    public void send(final String title, final String body) {
+        final Map<String, String> map = getDataMap(title, body);
+        final String data = getData(map);
 
-    private void send(final String title, final String body) {
-        final Map<String, String> data = getDataMap(title, body);
-        final String notificationData = getData(data);
-
-        sendData(notificationData);
+        sendData(data);
     }
 
     private Map<String, String> getDataMap(final String title, final String body) {
@@ -41,24 +36,24 @@ class NotificationSender {
         return data;
     }
 
-    private String getData(final Map<String, String> data) {
-        final JSONObject jsonData = new JSONObject(data);
+    private String getData(final Map<String, String> map) {
+        final JSONObject jsonData = new JSONObject(map);
 
         return new JSONArray().put(jsonData).toString();
     }
 
-    private void sendData(final String notificationData) {
-        Log.d(TAG, "Action: Sending notification: " + notificationData);
-        final Intent i = getIntent(notificationData);
+    private void sendData(final String data) {
+        Log.d(TAG, "Action: Sending notification: " + data);
+        final Intent i = getIntent(data);
 
         context.sendBroadcast(i);
     }
 
-    private Intent getIntent(final String notificationData) {
+    private Intent getIntent(final String data) {
         final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
         i.putExtra("messageType", "PEBBLE_ALERT");
         i.putExtra("sender", Settings.APP_NAME);
-        i.putExtra("notificationData", notificationData);
+        i.putExtra("notificationData", data);
 
         return i;
     }

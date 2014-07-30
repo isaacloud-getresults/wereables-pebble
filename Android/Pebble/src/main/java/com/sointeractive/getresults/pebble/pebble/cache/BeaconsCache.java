@@ -9,7 +9,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class BeaconsCache implements Cache {
-    public static final BeaconsCache INSTANCE = new BeaconsCache();
+    public static final Cache INSTANCE = new BeaconsCache();
+
     private Collection<ResponseItem> beaconsResponse;
 
     private BeaconsCache() {
