@@ -9,8 +9,8 @@ import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class LoginCache implements Cache {
-    public static final Cache INSTANCE = new LoginCache();
+public class LoginCache {
+    public static final LoginCache INSTANCE = new LoginCache();
 
     private Collection<ResponseItem> loginResponse;
 
@@ -18,7 +18,6 @@ public class LoginCache implements Cache {
         // Exists only to defeat instantiation.
     }
 
-    @Override
     public Collection<ResponseItem> getData() {
         if (loginResponse == null) {
             reload();
@@ -26,7 +25,6 @@ public class LoginCache implements Cache {
         return loginResponse;
     }
 
-    @Override
     public Collection<ResponseItem> getUpToDateData() {
         reload();
         return loginResponse;

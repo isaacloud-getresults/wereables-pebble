@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetRoomsTask;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class RoomsProvider implements Provider {
+public class RoomsProvider {
     public static final RoomsProvider INSTANCE = new RoomsProvider();
 
     private Collection<RoomIC> roomsIC;

@@ -8,8 +8,8 @@ import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class AchievementsCache implements Cache {
-    public static final Cache INSTANCE = new AchievementsCache();
+public class AchievementsCache {
+    public static final AchievementsCache INSTANCE = new AchievementsCache();
 
     private Collection<ResponseItem> achievementsResponse;
 
@@ -17,7 +17,6 @@ public class AchievementsCache implements Cache {
         // Exists only to defeat instantiation.
     }
 
-    @Override
     public Collection<ResponseItem> getData() {
         if (achievementsResponse == null) {
             reload();
@@ -25,7 +24,6 @@ public class AchievementsCache implements Cache {
         return achievementsResponse;
     }
 
-    @Override
     public Collection<ResponseItem> getUpToDateData() {
         reload();
         return achievementsResponse;

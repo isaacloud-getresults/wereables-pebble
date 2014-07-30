@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetPeopleTask;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class PeopleProvider implements Provider {
+public class PeopleProvider {
     public static final PeopleProvider INSTANCE = new PeopleProvider();
 
     private Collection<PersonIC> peopleIC;

@@ -8,8 +8,8 @@ import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class BeaconsCache implements Cache {
-    public static final Cache INSTANCE = new BeaconsCache();
+public class BeaconsCache {
+    public static final BeaconsCache INSTANCE = new BeaconsCache();
 
     private Collection<ResponseItem> beaconsResponse;
 
@@ -17,7 +17,6 @@ public class BeaconsCache implements Cache {
         // Exists only to defeat instantiation.
     }
 
-    @Override
     public Collection<ResponseItem> getData() {
         if (beaconsResponse == null) {
             reload();
@@ -25,7 +24,6 @@ public class BeaconsCache implements Cache {
         return beaconsResponse;
     }
 
-    @Override
     public Collection<ResponseItem> getUpToDateData() {
         reload();
         return beaconsResponse;
