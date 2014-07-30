@@ -45,12 +45,14 @@ typedef struct {
 } User;
 
 typedef struct {
+    int id;
     char *name;
     int proximity;
     int coworkers;
 } Beacon;
 
 typedef struct {
+    int id;
     char *name;
 } Coworker;
 
@@ -140,8 +142,8 @@ static bool update_beacons_table(Beacon *new_beacon) {
         int i;
         for(i=0; i<size && i<user.beacons; ++i) {
             // if that beacon already exists in the table
-            if(strcmp(beacons[i]->name,new_beacon->name)==0) {
-                // overwrite games counters (probably faster than checking them and overwriting if changed)
+            if(beacons[i]->id==new_beacon->id) {
+                // overwrite coworkers counter (probably faster than checking them and overwriting if changed)
                 beacons[i]->coworkers=new_beacon->coworkers;
                 // if proximity changed
                 if(beacons[i]->proximity!=new_beacon->proximity) {
@@ -190,7 +192,7 @@ static bool update_coworkers_table(Coworker *new_coworker) {
         int i;
         for(i=0; i<size && i<current_beacon->coworkers; ++i) {
             // if that coworker already exists in the table
-            if(strcmp(coworkers[i]->name,new_coworker->name)==0) {
+            if(coworkers[i]->id==new_coworker->id) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
                 free(new_coworker);
                 return false;
@@ -322,10 +324,12 @@ enum {
     USER_RANK = 4,
     USER_BEACONS = 5,
     USER_ACHIEVEMENTS = 6,
-    BEACON_NAME = 2,
-    BEACON_PROXIMITY = 3,
-    BEACON_COWORKERS = 4,
-    COWORKER_NAME = 2,
+    BEACON_ID = 2,
+    BEACON_NAME = 3,
+    BEACON_PROXIMITY = 4,
+    BEACON_COWORKERS = 5,
+    COWORKER_ID = 2,
+    COWORKER_NAME = 3,
     ACHIEVEMENT_NAME = 2,
     ACHIEVEMENT_DESCRIPTION = 3,
     
@@ -371,13 +375,13 @@ static void send_simple_request(int8_t request) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u end",request);
 }
 
-static void send_query_request(int8_t request, char *query) {
+static void send_query_request(int8_t request, int query) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %s start",request,query);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
     Tuplet value1 = TupletInteger(REQUEST_TYPE,request);
-    Tuplet value2 = TupletCString(REQUEST_QUERY,query);
+    Tuplet value2 = TupletInteger(REQUEST_QUERY,query);
     dict_write_tuplet(iter,&value1);
     dict_write_tuplet(iter,&value2);
     dict_write_end(iter);
@@ -438,14 +442,16 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
         else if(receiving_type->value->data[0]==RESPONSE_BEACON && window_stack_get_top_window()==beacons_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
+            Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
             Tuple *proximity = dict_find(iter,BEACON_PROXIMITY);
             Tuple *coworkers = dict_find(iter,BEACON_COWORKERS);
             Beacon *new_beacon = (Beacon*)malloc(sizeof(Beacon));
-            if(new_beacon && coworkers && proximity && name) {
+            if(new_beacon && coworkers && proximity && name && id) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];// = (char*)calloc(strlen(name->value->cstring),sizeof(char));
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
+                new_beacon->id = id->value->data[0]+id->value->data[1]*256;
                 new_beacon->name = new_name;
                 new_beacon->proximity = proximity->value->data[0];
                 new_beacon->coworkers = coworkers->value->data[0]+coworkers->value->data[1]*256;
@@ -467,11 +473,13 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
         else if(receiving_type->value->data[0]==RESPONSE_COWORKER && window_stack_get_top_window()==coworkers_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
+            Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
-            if(new_coworker && name!=NULL) {
+            if(new_coworker && name && id) {
                 char new_name[strlen(name->value->cstring)+1]; // = malloc(strlen(name->value->cstring)*sizeof(char));
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
+                new_coworker->id = id->value->data[0]+id->value->data[1]*256;
                 new_coworker->name = new_name;
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
                 if(update_coworkers_table(new_coworker)) {
@@ -494,7 +502,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *name = dict_find(iter,ACHIEVEMENT_NAME);
             Tuple *description = dict_find(iter,ACHIEVEMENT_DESCRIPTION);
             Achievement *new_achievement = (Achievement*)malloc(sizeof(Achievement));
-            if(new_achievement && description && name!=NULL) {
+            if(new_achievement && description && name) {
                 char new_name[strlen(name->value->cstring)+1]; // = malloc(strlen(name->value->cstring)*sizeof(char));
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 char new_description[strlen(description->value->cstring)+1]; // = (char*)malloc(strlen(description->value->cstring)*sizeof(char));
@@ -892,7 +900,7 @@ static void coworkers_list_select_handler(ClickRecognizerRef recognizer, void *c
     if(current_beacon->coworkers>0) {
         if(previous_beacon!=current_beacon)
             clear_coworkers_table();
-        send_query_request(REQUEST_COWORKERS,current_beacon->name);
+        send_query_request(REQUEST_COWORKERS,current_beacon->id);
         is_downloading = true;
         previous_beacon = current_beacon;
         window_stack_push(coworkers_window, true);
