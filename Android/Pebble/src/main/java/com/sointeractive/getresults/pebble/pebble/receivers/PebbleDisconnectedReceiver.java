@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.pebble.connection.ConnectionState;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
 public class PebbleDisconnectedReceiver extends BroadcastReceiver {
@@ -14,6 +13,6 @@ public class PebbleDisconnectedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.d(TAG, "Event: Pebble is now disconnected");
-        Application.pebbleConnector.setState(ConnectionState.DISCONNECTED);
+        Application.pebbleConnector.isPebbleConnected();
     }
 }

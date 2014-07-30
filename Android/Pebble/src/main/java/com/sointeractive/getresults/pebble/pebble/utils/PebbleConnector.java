@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble.connection;
+package com.sointeractive.getresults.pebble.pebble.utils;
 
 import android.content.Context;
 import android.util.Log;
@@ -15,24 +15,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PebbleConnector extends Observable {
     private static final String TAG = PebbleConnector.class.getSimpleName();
-
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
     private final NotificationSender sender;
-    private ConnectionState state;
+    public boolean connectionState;
 
     public PebbleConnector(final Context context) {
         this.context = context;
         sender = new NotificationSender(context);
-        setInitialState();
-    }
-
-    private void setInitialState() {
-        if (PebbleKit.isWatchConnected(context)) {
-            state = ConnectionState.CONNECTED;
-        } else {
-            state = ConnectionState.DISCONNECTED;
-        }
     }
 
     public void sendNewDataToPebble(final Collection<PebbleDictionary> data) {
@@ -42,7 +32,11 @@ public class PebbleConnector extends Observable {
         }
     }
 
-    void sendDataToPebble(final Collection<PebbleDictionary> data) {
+    private void clearSendingQueue() {
+        sendingQueue.clear();
+    }
+
+    private void sendDataToPebble(final Collection<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             if (isPebbleConnected()) {
                 final boolean wasEmpty = sendingQueue.isEmpty();
@@ -66,21 +60,17 @@ public class PebbleConnector extends Observable {
         }
     }
 
-    private void clearSendingQueue() {
-        sendingQueue.clear();
-    }
-
     public boolean isPebbleConnected() {
-        Log.d(TAG, "Check: Pebble is " + (state.isConnected() ? "connected" : "not connected"));
-        return state.isConnected();
-    }
+        final boolean currentState = PebbleKit.isWatchConnected(context);
+        Log.d(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));
 
-    public void setState(final ConnectionState newState) {
-        if (state != newState) {
-            state = newState;
+        if (connectionState != currentState) {
+            connectionState = currentState;
             setChanged();
             notifyObservers();
         }
+
+        return currentState;
     }
 
     public boolean areAppMessagesSupported() {
