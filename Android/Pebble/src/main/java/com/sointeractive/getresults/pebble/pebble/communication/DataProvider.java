@@ -36,8 +36,7 @@ class DataProvider {
         final UserIC userIC = UserProvider.INSTANCE.getData();
         final int roomsNumber = RoomsProvider.INSTANCE.getData().size();
         final int achievementsNumber = getAchievements().size();
-        // TODO: Provide real rank position
-        final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, 0, roomsNumber, achievementsNumber);
+        final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
         return listWrap(login);
     }
 
