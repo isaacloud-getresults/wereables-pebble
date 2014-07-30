@@ -18,7 +18,7 @@ public class PebbleConnector extends Observable {
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
     private final NotificationSender sender;
-    public boolean connectionState;
+    private boolean connectionState;
 
     public PebbleConnector(final Context context) {
         this.context = context;
