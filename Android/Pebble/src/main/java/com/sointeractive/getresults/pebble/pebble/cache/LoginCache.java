@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class LoginCache implements Cache {
-    public final static LoginCache INSTANCE = new LoginCache();
+    public static final LoginCache INSTANCE = new LoginCache();
     private Collection<ResponseItem> loginResponse;
 
     private LoginCache() {
@@ -37,7 +37,7 @@ public class LoginCache implements Cache {
         return loginResponse;
     }
 
-    private void reload() {
+    public void reload() {
         final UserIC userIC = UserProvider.INSTANCE.getData();
         final int roomsNumber = RoomsProvider.INSTANCE.getData().size();
         final int achievementsNumber = AchievementsCache.INSTANCE.getData().size();

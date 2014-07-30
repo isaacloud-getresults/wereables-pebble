@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class PeopleCache {
-    public final static PeopleCache INSTANCE = new PeopleCache();
+    public static final PeopleCache INSTANCE = new PeopleCache();
     private SparseArray<Collection<ResponseItem>> peopleResponses;
 
     private PeopleCache() {
@@ -41,7 +41,7 @@ public class PeopleCache {
         }
     }
 
-    private void reload() {
+    public void reload() {
         final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
 
         peopleResponses = new SparseArray<Collection<ResponseItem>>();

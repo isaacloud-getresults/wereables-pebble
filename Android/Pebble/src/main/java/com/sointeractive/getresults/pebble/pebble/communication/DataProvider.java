@@ -12,7 +12,7 @@ import java.util.Collection;
 import java.util.NoSuchElementException;
 
 class DataProvider {
-    public final static DataProvider INSTANCE = new DataProvider();
+    public static final DataProvider INSTANCE = new DataProvider();
 
     private DataProvider() {
         // Exists only to defeat instantiation.

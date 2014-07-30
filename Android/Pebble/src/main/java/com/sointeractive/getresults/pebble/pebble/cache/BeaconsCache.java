@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class BeaconsCache implements Cache {
-    public final static BeaconsCache INSTANCE = new BeaconsCache();
+    public static final BeaconsCache INSTANCE = new BeaconsCache();
     private Collection<ResponseItem> beaconsResponse;
 
     private BeaconsCache() {
@@ -30,7 +30,7 @@ public class BeaconsCache implements Cache {
         return beaconsResponse;
     }
 
-    private void reload() {
+    public void reload() {
         final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getData();
 
         beaconsResponse = new LinkedList<ResponseItem>();

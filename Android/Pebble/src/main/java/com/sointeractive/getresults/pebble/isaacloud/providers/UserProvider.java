@@ -7,7 +7,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
 import java.util.concurrent.ExecutionException;
 
 public class UserProvider implements Provider {
-    public final static UserProvider INSTANCE = new UserProvider();
+    public static final UserProvider INSTANCE = new UserProvider();
     private UserIC userIC;
 
     private UserProvider() {

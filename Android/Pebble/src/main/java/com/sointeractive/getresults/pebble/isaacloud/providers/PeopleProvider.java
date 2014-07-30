@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 public class PeopleProvider implements Provider {
-    public final static PeopleProvider INSTANCE = new PeopleProvider();
+    public static final PeopleProvider INSTANCE = new PeopleProvider();
     private Collection<PersonIC> peopleIC;
 
     private PeopleProvider() {

@@ -9,7 +9,7 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class AchievementsCache implements Cache {
-    public final static AchievementsCache INSTANCE = new AchievementsCache();
+    public static final AchievementsCache INSTANCE = new AchievementsCache();
     private Collection<ResponseItem> achievementsResponse;
 
     private AchievementsCache() {
@@ -30,7 +30,7 @@ public class AchievementsCache implements Cache {
         return achievementsResponse;
     }
 
-    private void reload() {
+    public void reload() {
         final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
 
         achievementsResponse = new LinkedList<ResponseItem>();

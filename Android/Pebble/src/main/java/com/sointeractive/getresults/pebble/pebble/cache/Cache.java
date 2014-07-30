@@ -8,4 +8,6 @@ public interface Cache {
     Collection<ResponseItem> getData();
 
     Collection<ResponseItem> getUpToDateData();
+
+    void reload();
 }

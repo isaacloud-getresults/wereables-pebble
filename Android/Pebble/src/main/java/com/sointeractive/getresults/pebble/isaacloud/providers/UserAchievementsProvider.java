@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
 public class UserAchievementsProvider implements Provider {
-    public final static UserAchievementsProvider INSTANCE = new UserAchievementsProvider();
+    public static final UserAchievementsProvider INSTANCE = new UserAchievementsProvider();
     private Collection<AchievementIC> achievementsIC;
 
     private UserAchievementsProvider() {
