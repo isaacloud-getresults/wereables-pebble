@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetPeopleTask;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class PeopleProvider {
+public class PeopleProvider implements Provider {
     public final static PeopleProvider INSTANCE = new PeopleProvider();
     private Collection<PersonIC> peopleIC;
 
@@ -14,14 +14,14 @@ public class PeopleProvider {
         // Exists only to defeat instantiation.
     }
 
-    public Collection<PersonIC> get() {
+    public Collection<PersonIC> getData() {
         if (peopleIC == null) {
             reload();
         }
         return peopleIC;
     }
 
-    public Collection<PersonIC> getUpToDate() {
+    public Collection<PersonIC> getUpToDateData() {
         reload();
         return peopleIC;
     }

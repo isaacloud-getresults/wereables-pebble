@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetAchievementsTask;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class AchievementProvider {
+public class AchievementProvider implements Provider {
     public final static AchievementProvider INSTANCE = new AchievementProvider();
     private Collection<AchievementIC> achievementsIC;
 
@@ -14,14 +14,16 @@ public class AchievementProvider {
         // Exists only to defeat instantiation.
     }
 
-    public Collection<AchievementIC> get() {
+    @Override
+    public Collection<AchievementIC> getData() {
         if (achievementsIC == null) {
             reload();
         }
         return achievementsIC;
     }
 
-    public Collection<AchievementIC> getUpToDate() {
+    @Override
+    public Collection<AchievementIC> getUpToDateData() {
         reload();
         return achievementsIC;
     }

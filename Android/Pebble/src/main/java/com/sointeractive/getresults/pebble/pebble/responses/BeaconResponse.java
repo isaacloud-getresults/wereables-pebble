@@ -6,14 +6,12 @@ import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 public class BeaconResponse implements ResponseItem {
     private final String name;
     private final int distance;
-    private final int games_active;
-    private final int games_completed;
+    private final int people;
 
-    public BeaconResponse(final String name, final int distance, final int games_active, final int games_completed) {
+    public BeaconResponse(final String name, final int distance, final int people) {
         this.name = name;
         this.distance = distance;
-        this.games_active = games_active;
-        this.games_completed = games_completed;
+        this.people = people;
     }
 
     @Override
@@ -21,8 +19,7 @@ public class BeaconResponse implements ResponseItem {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addInt(distance)
-                .addInt(games_active)
-                .addInt(games_completed)
+                .addInt(people)
                 .build();
     }
 }

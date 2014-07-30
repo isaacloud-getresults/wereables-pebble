@@ -6,7 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.tasks.GetRoomsTask;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class RoomsProvider {
+public class RoomsProvider implements Provider {
     public final static RoomsProvider INSTANCE = new RoomsProvider();
     private Collection<RoomIC> roomsIC;
 
@@ -14,14 +14,14 @@ public class RoomsProvider {
         // Exists only to defeat instantiation.
     }
 
-    public Collection<RoomIC> get() {
+    public Collection<RoomIC> getData() {
         if (roomsIC == null) {
             reload();
         }
         return roomsIC;
     }
 
-    public Collection<RoomIC> getUpToDate() {
+    public Collection<RoomIC> getUpToDateData() {
         reload();
         return roomsIC;
     }

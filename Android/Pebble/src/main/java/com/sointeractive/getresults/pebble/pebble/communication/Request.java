@@ -19,28 +19,28 @@ public enum Request implements Sendable {
     LOGIN(1, "Login info") {
         @Override
         public Collection<ResponseItem> getSendable(final String query) {
-            return DataProvider.getLogin();
+            return DataProvider.INSTANCE.getLogin();
         }
     },
 
     BEACONS(2, "Beacons list") {
         @Override
         public Collection<ResponseItem> getSendable(final String query) {
-            return DataProvider.getBeacons();
+            return DataProvider.INSTANCE.getBeacons();
         }
     },
 
     PEOPLE_IN_ROOM(3, "People list") {
         @Override
         public Collection<ResponseItem> getSendable(final String query) {
-            return DataProvider.getPeople(query);
+            return DataProvider.INSTANCE.getPeople(query);
         }
     },
 
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
         public Collection<ResponseItem> getSendable(final String query) {
-            return DataProvider.getAchievements();
+            return DataProvider.INSTANCE.getAchievements();
         }
     };
 

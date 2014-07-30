@@ -31,6 +31,8 @@ public class Responder {
     }
 
     private void sendResponseToPebble(final Collection<PebbleDictionary> data) {
-        Application.pebbleConnector.sendNewDataToPebble(data);
+        if (!data.isEmpty()) {
+            Application.pebbleConnector.sendNewDataToPebble(data);
+        }
     }
 }
