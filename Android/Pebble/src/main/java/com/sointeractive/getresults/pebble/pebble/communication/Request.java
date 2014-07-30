@@ -30,11 +30,10 @@ public enum Request implements Sendable {
         }
     },
 
-    GAMES(3, "Games list") {
+    PEOPLE_IN_ROOM(3, "People list") {
         @Override
         public Collection<ResponseItem> getSendable(final String query) {
-            // TODO: Replace with user list
-            return null;
+            return DataProvider.getPeople(query);
         }
     },
 

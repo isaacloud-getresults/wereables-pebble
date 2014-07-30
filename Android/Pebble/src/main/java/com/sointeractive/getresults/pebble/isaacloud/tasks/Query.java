@@ -8,7 +8,8 @@ import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
 public enum Query {
-    USERS_LIST("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "gainedAchievements", "wonGames", "counterValues"}),
+    USERS_LIST("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "gainedAchievements", "counterValues"}),
+    PEOPLE("/cache/users", new String[]{"id", "firstName", "lastName", "counterValues"}),
     ACHIEVEMENTS("/cache/achievements", new String[]{"id", "name", "description"}),
     BEACONS("/cache/users/groups", new String[]{"id", "name"});
 

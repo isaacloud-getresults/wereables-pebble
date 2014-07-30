@@ -23,13 +23,11 @@ class DataProvider {
     }
 
     private static int getPoints() {
-        // TODO: Get real points
-        return 58008;
+        return IsaacloudProxy.getUserPoints();
     }
 
     private static int getRank() {
-        // TODO: Get real rank
-        return 74;
+        return IsaacloudProxy.getUserRank();
     }
 
     private static int getBeaconsSize() {
@@ -54,5 +52,7 @@ class DataProvider {
         return IsaacloudProxy.getUserAchievements();
     }
 
-    // TODO: Get in-room user list
+    public static Collection<ResponseItem> getPeople(final String query) {
+        return IsaacloudProxy.getPeopleResponse(query);
+    }
 }

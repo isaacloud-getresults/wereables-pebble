@@ -3,13 +3,16 @@ package com.sointeractive.getresults.pebble.isaacloud.data;
 import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetAchievementsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetBeaconsTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.GetPeopleTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.LoginTask;
 import com.sointeractive.getresults.pebble.pebble.responses.AchievementResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.BeaconResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
 public class IsaacloudProxy {
@@ -18,19 +21,13 @@ public class IsaacloudProxy {
     private static Collection<ResponseItem> userAchievements;
     private static Collection<Room> rooms;
     private static Collection<ResponseItem> beacons;
+    private static Collection<Person> people;
 
     private static User getUser() {
         if (user == null) {
             reloadUser();
         }
         return user;
-    }
-
-    private static Collection<Achievement> getAchievements() {
-        if (achievements == null) {
-            reloadAchievements();
-        }
-        return achievements;
     }
 
     public static void reloadUser() {
@@ -44,10 +41,35 @@ public class IsaacloudProxy {
         }
     }
 
+    private static Collection<Achievement> getAchievements() {
+        if (achievements == null) {
+            reloadAchievements();
+        }
+        return achievements;
+    }
+
     private static void reloadAchievements() {
         final GetAchievementsTask getAchievements = new GetAchievementsTask();
         try {
             achievements = getAchievements.execute().get();
+        } catch (final InterruptedException e) {
+            e.printStackTrace();
+        } catch (final ExecutionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Collection<Person> getPeople() {
+        if (people == null) {
+            reloadPeople();
+        }
+        return people;
+    }
+
+    private static void reloadPeople() {
+        final GetPeopleTask getPeople = new GetPeopleTask();
+        try {
+            people = getPeople.execute().get();
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
@@ -128,5 +150,42 @@ public class IsaacloudProxy {
 
     public static int getBeaconsSize() {
         return getBeacons().size();
+    }
+
+
+    public static Collection<ResponseItem> getPeopleResponse(final String query) {
+        try {
+            return getPeopleInRoom(getRoomId(query));
+        } catch (final NoSuchElementException e) {
+            return new LinkedList<ResponseItem>();
+        }
+    }
+
+    private static Collection<ResponseItem> getPeopleInRoom(final int roomId) {
+        final Collection<ResponseItem> peopleInRoom = new LinkedList<ResponseItem>();
+        final Collection<Person> people = getPeople();
+        for (final Person person : people) {
+            if (person.beacon == roomId) {
+                peopleInRoom.add(new PersonResponse(person.getFullName()));
+            }
+        }
+        return peopleInRoom;
+    }
+
+    private static int getRoomId(final String query) throws NoSuchElementException {
+        for (final Room room : rooms) {
+            if (room.name.equals(query)) {
+                return room.id;
+            }
+        }
+        throw new NoSuchElementException("There is no room of that name.");
+    }
+
+    public static int getUserPoints() {
+        return getUser().points;
+    }
+
+    public static int getUserRank() {
+        return 74;
     }
 }

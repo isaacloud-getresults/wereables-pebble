@@ -1,7 +1,5 @@
 package com.sointeractive.getresults.pebble.isaacloud.data;
 
-import android.util.SparseIntArray;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,25 +7,18 @@ import org.json.JSONObject;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class User {
+public class User extends Person {
     public final Collection<Integer> achievements = new LinkedList<Integer>();
-    private final int userId;
-    private final String firstName;
-    private final String lastName;
     private final String email;
     private final int level;
-    private final Collection<Integer> games = new LinkedList<Integer>();
-    private final SparseIntArray counters = new SparseIntArray();
+    public int points;
 
     public User(final JSONObject json) throws JSONException {
-        userId = json.getInt("id");
-        firstName = json.getString("firstName");
-        lastName = json.getString("lastName");
+        super(json);
         email = json.getString("email");
         level = json.getInt("level");
         setAchievements(json.getJSONArray("gainedAchievements"));
-        setGames(json.getJSONArray("wonGames"));
-        setCounterValues(json.getJSONArray("counterValues"));
+        setPoints();
     }
 
     private void setAchievements(final JSONArray jsonArray) throws JSONException {
@@ -37,21 +28,16 @@ public class User {
         }
     }
 
-    private void setGames(final JSONArray jsonArray) throws JSONException {
-        for (int i = 0; i < jsonArray.length(); i++) {
-            final JSONObject counter = jsonArray.getJSONObject(i);
-            games.add(counter.getInt("game"));
+    private void setPoints() {
+        int key;
+        Integer val;
+        points = 0;
+        for (int i = 0; i < counters.size(); i++) {
+            key = counters.keyAt(i);
+            val = counters.get(key);
+            if (key != 6) {
+                points += val;
+            }
         }
-    }
-
-    private void setCounterValues(final JSONArray jsonArray) throws JSONException {
-        for (int i = 0; i < jsonArray.length(); i++) {
-            final JSONObject counter = jsonArray.getJSONObject(i);
-            counters.put(counter.getInt("counter"), counter.getInt("value"));
-        }
-    }
-
-    public String getFullName() {
-        return firstName + " " + lastName;
     }
 }
