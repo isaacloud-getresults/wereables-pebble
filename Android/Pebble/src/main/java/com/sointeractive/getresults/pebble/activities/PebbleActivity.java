@@ -1,11 +1,8 @@
 package com.sointeractive.getresults.pebble.activities;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -13,32 +10,23 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.estimote.sdk.Beacon;
-import com.estimote.sdk.BeaconManager;
-import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
-import com.sointeractive.getresults.pebble.config.Settings;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 import com.sointeractive.getresults.pebble.pebble.utils.CacheReloader;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Observable;
 import java.util.Observer;
 
 public class PebbleActivity extends Activity implements Observer {
     private static final String TAG = PebbleActivity.class.getSimpleName();
 
-    private static final Region ALL_ESTIMOTE_BEACONS_REGION = new Region("rid", null, null, null);
-    private List<Beacon> beacons = new ArrayList<Beacon>();
     private Context context;
     private CheckBox checkBox;
     private Button notification_send_button;
     private TextView notification_title_text_view;
     private TextView notification_body_text_view;
 
-    private BeaconManager beaconManager;
     private PebbleConnector pebbleConnector;
 
     private void showInfo(final int id) {
@@ -55,8 +43,6 @@ public class PebbleActivity extends Activity implements Observer {
         initInstance();
         registerPebbleConnector();
         checkPebbleConnection();
-        setBeaconManager();
-        checkBluetooth();
         registerButtonHandlers();
         preloadIsaacloudData();
     }
@@ -90,77 +76,6 @@ public class PebbleActivity extends Activity implements Observer {
         }
     }
 
-    private void setBeaconManager() {
-        Log.d(TAG, "Init: Setting beacon manager");
-        beaconManager = new BeaconManager(this);
-        beaconManager.setRangingListener(new BeaconManager.RangingListener() {
-            @Override
-            public void onBeaconsDiscovered(final Region region, final List<Beacon> newBeacons) {
-                Log.d(TAG, "Event: New beacons discovered");
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        beacons = new ArrayList<Beacon>(newBeacons);
-                    }
-                });
-            }
-        });
-    }
-
-    private void checkBluetooth() {
-        final boolean hasBluetoothLE = beaconManager.hasBluetooth();
-        Log.d(TAG, "Check: Smartphone " + (hasBluetoothLE ? "has" : "has not") + " got Bluetooth Low Energy");
-
-        if (hasBluetoothLE) {
-            checkBluetoothEnabled();
-        } else {
-            showInfo(R.string.bluetooth_low_energy_not_supported);
-        }
-    }
-
-    private void checkBluetoothEnabled() {
-        final boolean bluetoothEnabled = beaconManager.hasBluetooth();
-        Log.d(TAG, "Check: Smartphone has bluetooth " + (bluetoothEnabled ? "enabled" : "disabled"));
-
-        if (bluetoothEnabled) {
-            connectToService();
-        } else {
-            Log.d(TAG, "Action: Trying to enable bluetooth by enableBtIntent");
-            final Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, Settings.REQUEST_ENABLE_BT);
-        }
-    }
-
-    @Override
-    protected void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
-        if (requestCode == Settings.REQUEST_ENABLE_BT) {
-            if (resultCode == Activity.RESULT_OK) {
-                Log.d(TAG, "Event: Success on enabling bluetooth by enableBtIntent");
-                connectToService();
-            } else {
-                Log.d(TAG, "Event: Failure on enabling bluetooth by enableBtIntent");
-                showInfo(R.string.bluetooth_not_enabled);
-            }
-        }
-
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void connectToService() {
-        Log.d(TAG, "Action: Connecting to beacon scan service");
-        beaconManager.connect(new BeaconManager.ServiceReadyCallback() {
-            @Override
-            public void onServiceReady() {
-                try {
-                    beaconManager.startRanging(ALL_ESTIMOTE_BEACONS_REGION);
-                } catch (final RemoteException e) {
-                    showInfo(R.string.scan_beacons_error);
-                    Log.e(TAG, "Error: Cannot start ranging", e);
-                }
-            }
-        });
-    }
-
     private void registerButtonHandlers() {
         Log.d(TAG, "Init: Registering button click handlers");
 
@@ -176,44 +91,6 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void preloadIsaacloudData() {
         CacheReloader.INSTANCE.reload();
-    }
-
-    @Override
-    protected void onStop() {
-        Log.d(TAG, "Event: onStop");
-        stopRanging();
-
-        super.onStop();
-    }
-
-    private void stopRanging() {
-        Log.d(TAG, "Action: Stopping ranging");
-        try {
-            beaconManager.stopRanging(ALL_ESTIMOTE_BEACONS_REGION);
-        } catch (final RemoteException e) {
-            Log.e(TAG, "Error: while stopping ranging", e);
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        Log.d(TAG, "Event: onDestroy");
-
-        beaconManager.disconnect();
-
-        super.onDestroy();
-    }
-
-    @Override
-    protected void onResume() {
-        Log.d(TAG, "Event: onResume");
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        Log.d(TAG, "Event: onPause");
-        super.onPause();
     }
 
     @Override
