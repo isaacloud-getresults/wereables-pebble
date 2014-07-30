@@ -6,14 +6,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Person {
+public class PersonIC {
     protected final int userId;
     protected final String firstName;
     protected final String lastName;
     protected final SparseIntArray counters = new SparseIntArray();
     public int beacon;
 
-    public Person(final JSONObject json) throws JSONException {
+    public PersonIC(final JSONObject json) throws JSONException {
         userId = json.getInt("id");
         firstName = json.getString("firstName");
         lastName = json.getString("lastName");

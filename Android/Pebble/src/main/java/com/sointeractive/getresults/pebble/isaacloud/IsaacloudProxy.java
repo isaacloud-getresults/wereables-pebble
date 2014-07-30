@@ -1,6 +1,10 @@
-package com.sointeractive.getresults.pebble.isaacloud.data;
+package com.sointeractive.getresults.pebble.isaacloud;
 
 import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
+import com.sointeractive.getresults.pebble.isaacloud.data.PersonIC;
+import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
+import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetAchievementsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetBeaconsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetPeopleTask;
@@ -16,14 +20,14 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.ExecutionException;
 
 public class IsaacloudProxy {
-    private static User user;
-    private static Collection<Achievement> achievements;
+    private static UserIC user;
+    private static Collection<AchievementIC> achievements;
     private static Collection<ResponseItem> userAchievements;
-    private static Collection<Room> rooms;
+    private static Collection<RoomIC> rooms;
     private static Collection<ResponseItem> beacons;
-    private static Collection<Person> people;
+    private static Collection<PersonIC> people;
 
-    private static User getUser() {
+    private static UserIC getUser() {
         if (user == null) {
             reloadUser();
         }
@@ -41,7 +45,7 @@ public class IsaacloudProxy {
         }
     }
 
-    private static Collection<Achievement> getAchievements() {
+    private static Collection<AchievementIC> getAchievements() {
         if (achievements == null) {
             reloadAchievements();
         }
@@ -59,7 +63,7 @@ public class IsaacloudProxy {
         }
     }
 
-    private static Collection<Person> getPeople() {
+    private static Collection<PersonIC> getPeople() {
         if (people == null) {
             reloadPeople();
         }
@@ -89,10 +93,10 @@ public class IsaacloudProxy {
 
     private static void reloadUserAchievements() {
         final Collection<ResponseItem> userAchievements = new LinkedList<ResponseItem>();
-        final Collection<Achievement> allAchievements = getAchievements();
-        final User currentUser = getUser();
+        final Collection<AchievementIC> allAchievements = getAchievements();
+        final UserIC currentUser = getUser();
 
-        for (final Achievement achievement : allAchievements) {
+        for (final AchievementIC achievement : allAchievements) {
             if (currentUser.achievements.contains(achievement.id)) {
                 userAchievements.add(new AchievementResponse(achievement.name, achievement.description));
             }
@@ -112,7 +116,7 @@ public class IsaacloudProxy {
         return getUserAchievements().size();
     }
 
-    private static Collection<Room> getRooms() {
+    private static Collection<RoomIC> getRooms() {
         if (rooms == null) {
             reloadRooms();
         }
@@ -139,9 +143,9 @@ public class IsaacloudProxy {
 
     private static void reloadBeacons() {
         final Collection<ResponseItem> beacons = new LinkedList<ResponseItem>();
-        final Collection<Room> rooms = getRooms();
+        final Collection<RoomIC> rooms = getRooms();
 
-        for (final Room room : rooms) {
+        for (final RoomIC room : rooms) {
             beacons.add(new BeaconResponse(room.name, 0, 0, 0));
         }
 
@@ -163,8 +167,8 @@ public class IsaacloudProxy {
 
     private static Collection<ResponseItem> getPeopleInRoom(final int roomId) {
         final Collection<ResponseItem> peopleInRoom = new LinkedList<ResponseItem>();
-        final Collection<Person> people = getPeople();
-        for (final Person person : people) {
+        final Collection<PersonIC> people = getPeople();
+        for (final PersonIC person : people) {
             if (person.beacon == roomId) {
                 peopleInRoom.add(new PersonResponse(person.getFullName()));
             }
@@ -173,7 +177,7 @@ public class IsaacloudProxy {
     }
 
     private static int getRoomId(final String query) throws NoSuchElementException {
-        for (final Room room : rooms) {
+        for (final RoomIC room : rooms) {
             if (room.name.equals(query)) {
                 return room.id;
             }

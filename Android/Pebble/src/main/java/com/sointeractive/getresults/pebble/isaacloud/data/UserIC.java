@@ -7,13 +7,13 @@ import org.json.JSONObject;
 import java.util.Collection;
 import java.util.LinkedList;
 
-public class User extends Person {
+public class UserIC extends PersonIC {
     public final Collection<Integer> achievements = new LinkedList<Integer>();
     private final String email;
     private final int level;
     public int points;
 
-    public User(final JSONObject json) throws JSONException {
+    public UserIC(final JSONObject json) throws JSONException {
         super(json);
         email = json.getString("email");
         level = json.getInt("level");

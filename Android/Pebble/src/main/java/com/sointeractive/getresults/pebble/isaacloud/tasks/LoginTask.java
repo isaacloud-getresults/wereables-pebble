@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.isaacloud.data.User;
+import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,7 +14,7 @@ import java.io.IOException;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class LoginTask extends AsyncTask<String, Integer, User> {
+public class LoginTask extends AsyncTask<String, Integer, UserIC> {
     private static final String TAG = LoginTask.class.getSimpleName();
 
     @Override
@@ -23,7 +23,7 @@ public class LoginTask extends AsyncTask<String, Integer, User> {
     }
 
     @Override
-    protected User doInBackground(final String... emails) {
+    protected UserIC doInBackground(final String... emails) {
         Log.d(TAG, "Action: Login in background");
 
         try {
@@ -38,7 +38,7 @@ public class LoginTask extends AsyncTask<String, Integer, User> {
         return null;
     }
 
-    private User logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
+    private UserIC logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
         final HttpResponse response = Query.USERS_LIST.getResponse();
 
         final JSONArray users = response.getJSONArray();
@@ -47,14 +47,14 @@ public class LoginTask extends AsyncTask<String, Integer, User> {
 
             if (email.equals(userJSON.get("email"))) {
                 Log.d(TAG, "Event: User found: " + userJSON.toString());
-                return new User(userJSON);
+                return new UserIC(userJSON);
             }
         }
         return null;
     }
 
     @Override
-    protected void onPostExecute(final User result) {
+    protected void onPostExecute(final UserIC result) {
         Log.d(TAG, "Event: onPostExecute");
 
         if (result != null) {

@@ -1,6 +1,6 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
-import com.sointeractive.getresults.pebble.isaacloud.data.IsaacloudProxy;
+import com.sointeractive.getresults.pebble.isaacloud.IsaacloudProxy;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 

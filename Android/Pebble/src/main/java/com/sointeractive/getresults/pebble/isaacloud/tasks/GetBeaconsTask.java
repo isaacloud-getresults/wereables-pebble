@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.isaacloud.data.Room;
+import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,7 +16,7 @@ import java.util.LinkedList;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetBeaconsTask extends AsyncTask<Void, Integer, Collection<Room>> {
+public class GetBeaconsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
     private static final String TAG = GetBeaconsTask.class.getSimpleName();
 
     @Override
@@ -25,7 +25,7 @@ public class GetBeaconsTask extends AsyncTask<Void, Integer, Collection<Room>> {
     }
 
     @Override
-    protected Collection<Room> doInBackground(final Void... params) {
+    protected Collection<RoomIC> doInBackground(final Void... params) {
         Log.d(TAG, "Action: Get beacons in background");
 
         try {
@@ -40,20 +40,20 @@ public class GetBeaconsTask extends AsyncTask<Void, Integer, Collection<Room>> {
         return null;
     }
 
-    private Collection<Room> getBeacons() throws IOException, IsaaCloudConnectionException, JSONException {
+    private Collection<RoomIC> getBeacons() throws IOException, IsaaCloudConnectionException, JSONException {
         final HttpResponse response = Query.BEACONS.getResponse();
-        final Collection<Room> result = new LinkedList<Room>();
+        final Collection<RoomIC> result = new LinkedList<RoomIC>();
 
         final JSONArray beacons = response.getJSONArray();
         for (int i = 0; i < beacons.length(); i++) {
             final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
-            result.add(new Room(beaconsJSON));
+            result.add(new RoomIC(beaconsJSON));
         }
         return result;
     }
 
     @Override
-    protected void onPostExecute(final Collection<Room> result) {
+    protected void onPostExecute(final Collection<RoomIC> result) {
         Log.d(TAG, "Event: onPostExecute");
 
         if (result != null) {
