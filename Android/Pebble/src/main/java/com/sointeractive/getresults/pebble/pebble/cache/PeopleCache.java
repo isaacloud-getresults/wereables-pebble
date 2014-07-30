@@ -48,14 +48,11 @@ public class PeopleCache {
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
         int id;
         for (final PersonIC person : people) {
-            // TODO: Remove this after adding id communication feature
-            if (!person.getFullName().equals("null null")) {
-                id = person.beacon;
-                if (peopleResponses.get(id) == null) {
-                    peopleResponses.put(id, new ArrayList<ResponseItem>());
-                }
-                peopleResponses.get(id).add(new PersonResponse(person.getFullName()));
+            id = person.beacon;
+            if (peopleResponses.get(id) == null) {
+                peopleResponses.put(id, new ArrayList<ResponseItem>());
             }
+            peopleResponses.get(id).add(new PersonResponse(person.id, person.getFullName()));
         }
     }
 }
