@@ -16,8 +16,8 @@ import java.util.LinkedList;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetAchievementsTask extends AsyncTask<Void, Integer, Collection<AchievementIC>> {
-    private static final String TAG = GetAchievementsTask.class.getSimpleName();
+public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collection<AchievementIC>> {
+    private static final String TAG = GetUserAchievementsTask.class.getSimpleName();
 
     @Override
     protected void onPreExecute() {
@@ -25,11 +25,11 @@ public class GetAchievementsTask extends AsyncTask<Void, Integer, Collection<Ach
     }
 
     @Override
-    protected Collection<AchievementIC> doInBackground(final Void... params) {
+    protected Collection<AchievementIC> doInBackground(final Integer... userId) {
         Log.d(TAG, "Action: Get achievements in background");
 
         try {
-            return getAchievements();
+            return getAchievements(userId[0].toString());
         } catch (final JSONException e) {
             e.printStackTrace();
         } catch (final IsaaCloudConnectionException e) {
@@ -40,8 +40,8 @@ public class GetAchievementsTask extends AsyncTask<Void, Integer, Collection<Ach
         return null;
     }
 
-    private Collection<AchievementIC> getAchievements() throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.ACHIEVEMENTS.getResponse();
+    private Collection<AchievementIC> getAchievements(final String user) throws IOException, IsaaCloudConnectionException, JSONException {
+        final HttpResponse response = Query.ACHIEVEMENTS.getResponse(user);
         final Collection<AchievementIC> result = new LinkedList<AchievementIC>();
 
         final JSONArray achievements = response.getJSONArray();

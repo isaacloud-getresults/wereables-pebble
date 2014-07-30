@@ -18,10 +18,9 @@ import com.estimote.sdk.BeaconManager;
 import com.estimote.sdk.Region;
 import com.sointeractive.getresults.pebble.R;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.isaacloud.providers.AchievementProvider;
-import com.sointeractive.getresults.pebble.isaacloud.providers.PeopleProvider;
-import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
-import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
+import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
+import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
+import com.sointeractive.getresults.pebble.pebble.cache.LoginCache;
 import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 
@@ -178,10 +177,9 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void preloadIsaacloudData() {
-        AchievementProvider.INSTANCE.getUpToDateData();
-        PeopleProvider.INSTANCE.getUpToDateData();
-        RoomsProvider.INSTANCE.getUpToDateData();
-        UserProvider.INSTANCE.getUpToDateData();
+        LoginCache.INSTANCE.getUpToDateData();
+        AchievementsCache.INSTANCE.getUpToDateData();
+        BeaconsCache.INSTANCE.getUpToDateData();
     }
 
     @Override

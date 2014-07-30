@@ -1,16 +1,16 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.GetAchievementsTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserAchievementsTask;
 
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 
-public class AchievementProvider implements Provider {
-    public final static AchievementProvider INSTANCE = new AchievementProvider();
+public class UserAchievementsProvider implements Provider {
+    public final static UserAchievementsProvider INSTANCE = new UserAchievementsProvider();
     private Collection<AchievementIC> achievementsIC;
 
-    private AchievementProvider() {
+    private UserAchievementsProvider() {
         // Exists only to defeat instantiation.
     }
 
@@ -29,9 +29,9 @@ public class AchievementProvider implements Provider {
     }
 
     private void reload() {
-        final GetAchievementsTask getAchievements = new GetAchievementsTask();
+        final GetUserAchievementsTask getAchievements = new GetUserAchievementsTask();
         try {
-            achievementsIC = getAchievements.execute().get();
+            achievementsIC = getAchievements.execute(UserProvider.INSTANCE.getData().id).get();
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {

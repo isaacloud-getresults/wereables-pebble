@@ -41,7 +41,7 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
     }
 
     private Collection<PersonIC> getPeople() throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.USERS_LIST.getResponse();
+        final HttpResponse response = Query.PEOPLE.getResponse();
 
         final Collection<PersonIC> people = new LinkedList<PersonIC>();
         final JSONArray peopleJSON = response.getJSONArray();

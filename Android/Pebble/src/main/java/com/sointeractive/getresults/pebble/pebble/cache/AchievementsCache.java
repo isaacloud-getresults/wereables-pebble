@@ -1,9 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
-import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.providers.AchievementProvider;
-import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
+import com.sointeractive.getresults.pebble.isaacloud.providers.UserAchievementsProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.AchievementResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
@@ -33,14 +31,11 @@ public class AchievementsCache implements Cache {
     }
 
     private void reload() {
-        final Collection<AchievementIC> allAchievements = AchievementProvider.INSTANCE.getData();
-        final UserIC currentUser = UserProvider.INSTANCE.getData();
+        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
 
         achievementsResponse = new LinkedList<ResponseItem>();
-        for (final AchievementIC achievement : allAchievements) {
-            if (currentUser.achievements.contains(achievement.id)) {
-                achievementsResponse.add(new AchievementResponse(achievement.name, achievement.description));
-            }
+        for (final AchievementIC achievement : userAchievements) {
+            achievementsResponse.add(new AchievementResponse(achievement.name, achievement.description));
         }
     }
 }

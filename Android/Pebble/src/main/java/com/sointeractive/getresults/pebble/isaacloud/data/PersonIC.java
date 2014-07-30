@@ -7,14 +7,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class PersonIC {
-    protected final int userId;
+    public final int id;
     protected final String firstName;
     protected final String lastName;
     protected final SparseIntArray counters = new SparseIntArray();
     public int beacon;
 
     public PersonIC(final JSONObject json) throws JSONException {
-        userId = json.getInt("id");
+        id = json.getInt("id");
         firstName = json.getString("firstName");
         lastName = json.getString("lastName");
         setCounterValues(json.getJSONArray("counterValues"));

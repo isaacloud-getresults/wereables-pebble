@@ -9,6 +9,7 @@ import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedList;
 
 public class PeopleCache {
     public final static PeopleCache INSTANCE = new PeopleCache();
@@ -22,12 +23,22 @@ public class PeopleCache {
         if (peopleResponses == null) {
             reload();
         }
-        return peopleResponses.get(room);
+        return peopleRoomResponse(room);
     }
 
     public Collection<ResponseItem> getUpToDateData(final int room) {
         reload();
-        return peopleResponses.get(room);
+        return peopleRoomResponse(room);
+    }
+
+    private Collection<ResponseItem> peopleRoomResponse(final int room) {
+        final Collection<ResponseItem> response = peopleResponses.get(room);
+
+        if (response == null) {
+            return new LinkedList<ResponseItem>();
+        } else {
+            return response;
+        }
     }
 
     private void reload() {
