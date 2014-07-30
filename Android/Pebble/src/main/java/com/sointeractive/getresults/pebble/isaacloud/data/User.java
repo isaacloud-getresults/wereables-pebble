@@ -10,14 +10,14 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class User {
-    public final int userId;
-    public final String firstName;
-    public final String lastName;
-    public final String email;
-    public final int level;
     public final Collection<Integer> achievements = new LinkedList<Integer>();
-    public final Collection<Integer> games = new LinkedList<Integer>();
-    public final SparseIntArray counters = new SparseIntArray();
+    private final int userId;
+    private final String firstName;
+    private final String lastName;
+    private final String email;
+    private final int level;
+    private final Collection<Integer> games = new LinkedList<Integer>();
+    private final SparseIntArray counters = new SparseIntArray();
 
     public User(final JSONObject json) throws JSONException {
         userId = json.getInt("id");

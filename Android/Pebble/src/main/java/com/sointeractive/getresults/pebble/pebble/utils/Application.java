@@ -14,7 +14,7 @@ import pl.sointeractive.isaacloud.exceptions.InvalidConfigException;
 public class Application extends android.app.Application {
     public static Isaacloud isaacloudConnector;
     public static PebbleConnector pebbleConnector;
-    public static Context context;
+    private static Context context;
 
     public Application() {
         context = this;

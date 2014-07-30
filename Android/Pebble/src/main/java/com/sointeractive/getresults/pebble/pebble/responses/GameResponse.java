@@ -3,13 +3,17 @@ package com.sointeractive.getresults.pebble.pebble.responses;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
 
-public class Achievement implements ResponseItem {
+public class GameResponse implements ResponseItem {
     private final String name;
     private final String description;
+    private final int progress;
+    private final int goal;
 
-    public Achievement(final String name, final String description) {
+    public GameResponse(final String name, final String description, final int progress, final int goal) {
         this.name = name;
         this.description = description;
+        this.progress = progress;
+        this.goal = goal;
     }
 
     @Override
@@ -17,6 +21,8 @@ public class Achievement implements ResponseItem {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addString(description)
+                .addInt(progress)
+                .addInt(goal)
                 .build();
     }
 }

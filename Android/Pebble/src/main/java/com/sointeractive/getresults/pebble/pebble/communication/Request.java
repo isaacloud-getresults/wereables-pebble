@@ -5,42 +5,43 @@ import android.util.Log;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
+import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 
 public enum Request implements Sendable {
     UNKNOWN(0, "UNKNOWN") {
         @Override
-        public List<ResponseItem> getSendable(final String query) {
+        public Collection<ResponseItem> getSendable(final String query) {
             return null;
         }
     },
 
     LOGIN(1, "Login info") {
         @Override
-        public List<ResponseItem> getSendable(final String query) {
-            return IsaacloudProxy.getLogin();
+        public Collection<ResponseItem> getSendable(final String query) {
+            return DataProvider.getLogin();
         }
     },
 
     BEACONS(2, "Beacons list") {
         @Override
-        public List<ResponseItem> getSendable(final String query) {
-            return IsaacloudProxy.getBeacons();
+        public Collection<ResponseItem> getSendable(final String query) {
+            return DataProvider.getBeacons();
         }
     },
 
     GAMES(3, "Games list") {
         @Override
-        public List<ResponseItem> getSendable(final String query) {
-            return IsaacloudProxy.getGames();
+        public Collection<ResponseItem> getSendable(final String query) {
+            // TODO: Replace with user list
+            return null;
         }
     },
 
     ACHIEVEMENTS(4, "Achievements info") {
         @Override
-        public List<ResponseItem> getSendable(final String query) {
-            return IsaacloudProxy.getAchievements();
+        public Collection<ResponseItem> getSendable(final String query) {
+            return DataProvider.getAchievements();
         }
     };
 
@@ -49,7 +50,7 @@ public enum Request implements Sendable {
     private static final String TAG = Request.class.getSimpleName();
     private static final int REQUEST_TYPE = 1;
     private static final int REQUEST_QUERY = 2;
-    public final String logMessage;
+    private final String logMessage;
     private final int id;
     private String query;
 
@@ -86,8 +87,8 @@ public enum Request implements Sendable {
         }
     }
 
-    public List<PebbleDictionary> getDataToSend() {
-        final List<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
+    public Collection<PebbleDictionary> getDataToSend() {
+        final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : getSendable(query)) {
             list.add(responseItem.getData(id));
         }

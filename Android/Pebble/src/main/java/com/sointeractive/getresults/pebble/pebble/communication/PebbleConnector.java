@@ -29,7 +29,7 @@ public class PebbleConnector extends Observable {
         }
     }
 
-    public void sendDataToPebble(final Collection<PebbleDictionary> data) {
+    void sendDataToPebble(final Collection<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             if (isPebbleConnected()) {
                 final boolean wasEmpty = sendingQueue.isEmpty();

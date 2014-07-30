@@ -9,9 +9,8 @@ import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
 public enum Query {
     USERS_LIST("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "gainedAchievements", "wonGames", "counterValues"}),
-    ACHIEVEMENTS("/cache/achievements", new String[]{"id", "name", "description"});
-
-    private static final int RESPONSE_LIMIT = 100000;
+    ACHIEVEMENTS("/cache/achievements", new String[]{"id", "name", "description"}),
+    BEACONS("/cache/users/groups", new String[]{"id", "name"});
 
     private final String query;
     private final String[] fields;
@@ -25,11 +24,10 @@ public enum Query {
         return getResponse("");
     }
 
-    public HttpResponse getResponse(final String param) throws IOException, IsaaCloudConnectionException {
+    HttpResponse getResponse(final String param) throws IOException, IsaaCloudConnectionException {
         return Application.isaacloudConnector
                 .path(String.format(query, param))
                 .withFields(fields)
-                .withLimit(RESPONSE_LIMIT)
                 .get();
     }
 }
