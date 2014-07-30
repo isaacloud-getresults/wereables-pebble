@@ -16,8 +16,8 @@ import java.util.LinkedList;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetBeaconsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
-    private static final String TAG = GetBeaconsTask.class.getSimpleName();
+public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
+    private static final String TAG = GetRoomsTask.class.getSimpleName();
 
     @Override
     protected void onPreExecute() {

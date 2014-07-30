@@ -14,8 +14,8 @@ import java.io.IOException;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class LoginTask extends AsyncTask<String, Integer, UserIC> {
-    private static final String TAG = LoginTask.class.getSimpleName();
+public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
+    private static final String TAG = GetUserTask.class.getSimpleName();
 
     @Override
     protected void onPreExecute() {
