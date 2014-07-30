@@ -60,6 +60,7 @@ typedef struct {
 } Achievement;
 
 static Beacon *current_beacon = NULL;
+static Beacon *previous_beacon = NULL;
 static Achievement *current_achievement = NULL;
 
 static User user;
@@ -889,8 +890,11 @@ static void dinstance_layer_update(Layer *layer, GContext *ctx) {
 static void coworkers_list_select_handler(ClickRecognizerRef recognizer, void *context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() start");
     if(current_beacon->coworkers>0) {
+        if(previous_beacon!=current_beacon)
+            clear_coworkers_table();
         send_query_request(REQUEST_COWORKERS,current_beacon->name);
         is_downloading = true;
+        previous_beacon = current_beacon;
         window_stack_push(coworkers_window, true);
     }
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() end");
