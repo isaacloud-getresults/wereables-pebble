@@ -1,7 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.utils;
 
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
+import com.sointeractive.getresults.pebble.pebble.connection.PebbleConnector;
 
 import java.util.HashMap;
 import java.util.Map;

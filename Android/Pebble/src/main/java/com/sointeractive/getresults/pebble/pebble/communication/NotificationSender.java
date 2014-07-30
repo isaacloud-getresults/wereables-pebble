@@ -12,7 +12,7 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-class NotificationSender {
+public class NotificationSender {
     private static final String TAG = NotificationSender.class.getSimpleName();
 
     private final Context context;

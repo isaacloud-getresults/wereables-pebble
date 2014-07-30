@@ -11,7 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sointeractive.getresults.pebble.R;
-import com.sointeractive.getresults.pebble.pebble.communication.PebbleConnector;
+import com.sointeractive.getresults.pebble.pebble.connection.PebbleConnector;
 import com.sointeractive.getresults.pebble.pebble.utils.Application;
 import com.sointeractive.getresults.pebble.pebble.utils.CacheReloader;
 
@@ -102,7 +102,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void onConnectionStateChanged() {
-        if (pebbleConnector.connectionState) {
+        if (pebbleConnector.isPebbleConnected()) {
             onPebbleConnected();
         } else {
             onPebbleDisconnected();

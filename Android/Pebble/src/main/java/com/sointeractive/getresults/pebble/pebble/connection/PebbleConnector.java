@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble.communication;
+package com.sointeractive.getresults.pebble.pebble.connection;
 
 import android.content.Context;
 import android.util.Log;
@@ -6,6 +6,7 @@ import android.util.Log;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.pebble.communication.NotificationSender;
 
 import java.util.Collection;
 import java.util.Observable;
@@ -14,14 +15,24 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PebbleConnector extends Observable {
     private static final String TAG = PebbleConnector.class.getSimpleName();
+
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
     private final NotificationSender sender;
-    public boolean connectionState;
+    private ConnectionState state;
 
     public PebbleConnector(final Context context) {
         this.context = context;
         sender = new NotificationSender(context);
+        setInitialState();
+    }
+
+    private void setInitialState() {
+        if (PebbleKit.isWatchConnected(context)) {
+            state = ConnectionState.CONNECTED;
+        } else {
+            state = ConnectionState.DISCONNECTED;
+        }
     }
 
     public void sendNewDataToPebble(final Collection<PebbleDictionary> data) {
@@ -60,16 +71,16 @@ public class PebbleConnector extends Observable {
     }
 
     public boolean isPebbleConnected() {
-        final boolean currentState = PebbleKit.isWatchConnected(context);
-        Log.d(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));
+        Log.d(TAG, "Check: Pebble is " + (state.isConnected() ? "connected" : "not connected"));
+        return state.isConnected();
+    }
 
-        if (connectionState != currentState) {
-            connectionState = currentState;
+    public void setState(final ConnectionState newState) {
+        if (state != newState) {
+            state = newState;
             setChanged();
             notifyObservers();
         }
-
-        return currentState;
     }
 
     public boolean areAppMessagesSupported() {
