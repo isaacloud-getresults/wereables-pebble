@@ -27,6 +27,10 @@ public class UserAchievementsProvider {
         return achievementsIC;
     }
 
+    public boolean isCached() {
+        return achievementsIC != null;
+    }
+
     private void reload() {
         final GetUserAchievementsTask getAchievements = new GetUserAchievementsTask();
         try {
