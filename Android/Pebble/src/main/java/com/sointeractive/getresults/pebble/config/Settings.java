@@ -6,7 +6,7 @@ import java.util.UUID;
 public class Settings {
     // IsaaCloud connection
     public static final String INSTANCE_ID = "157";
-    public static final String APP_SECRET = "59f8d59eb77eaec6f7ef9f1023815550";
+    public static final String APP_SECRET = "c71afba58164c6c855cbb958d36b7eb9";
     public static final String LOGIN_EMAIL = "john@sointeractive.pl";
 
     // Pebble connection
