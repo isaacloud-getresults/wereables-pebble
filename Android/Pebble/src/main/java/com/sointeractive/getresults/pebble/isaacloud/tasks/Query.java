@@ -13,6 +13,8 @@ public enum Query {
     BEACONS("/cache/users/groups", new String[]{"id", "name"}),
     PEOPLE("/cache/users", new String[]{"id", "firstName", "lastName", "counterValues"});
 
+    private static final int UNLIMITED = 0;
+
     private final String query;
     private final String[] fields;
 
@@ -28,6 +30,7 @@ public enum Query {
     HttpResponse getResponse(final String param) throws IOException, IsaaCloudConnectionException {
         return Application.isaacloudConnector
                 .path(String.format(query, param))
+                .withLimit(UNLIMITED)
                 .withFields(fields)
                 .get();
     }
