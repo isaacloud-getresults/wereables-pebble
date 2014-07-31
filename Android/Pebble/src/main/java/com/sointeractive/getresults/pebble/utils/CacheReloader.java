@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble.utils;
+package com.sointeractive.getresults.pebble.utils;
 
 import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;

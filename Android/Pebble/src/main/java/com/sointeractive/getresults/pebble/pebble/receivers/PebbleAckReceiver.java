@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.getresults.pebble.config.Settings;
-import com.sointeractive.getresults.pebble.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 public class PebbleAckReceiver extends PebbleKit.PebbleAckReceiver {
     private static final String TAG = PebbleAckReceiver.class.getSimpleName();

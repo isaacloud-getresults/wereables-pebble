@@ -2,7 +2,7 @@ package com.sointeractive.getresults.pebble.isaacloud.notification;
 
 import android.content.Intent;
 
-import com.sointeractive.getresults.pebble.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 public class IsaacloudNotification {
     private static final String ACTION = "com.isaacloud.action.ISAACLOUD_NOTIFICATION";

@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 public class IsaacloudNotificationReceiver extends BroadcastReceiver {
     private static final String TAG = IsaacloudNotificationReceiver.class.getSimpleName();

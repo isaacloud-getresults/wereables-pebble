@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
 

@@ -1,4 +1,4 @@
-package com.sointeractive.getresults.pebble.pebble.utils;
+package com.sointeractive.getresults.pebble.utils;
 
 import android.content.Context;
 import android.util.Log;

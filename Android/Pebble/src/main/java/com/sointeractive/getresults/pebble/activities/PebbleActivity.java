@@ -11,9 +11,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sointeractive.getresults.pebble.R;
-import com.sointeractive.getresults.pebble.pebble.utils.Application;
-import com.sointeractive.getresults.pebble.pebble.utils.CacheReloader;
-import com.sointeractive.getresults.pebble.pebble.utils.PebbleConnector;
+import com.sointeractive.getresults.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.CacheReloader;
+import com.sointeractive.getresults.pebble.utils.PebbleConnector;
 
 import java.util.Observable;
 import java.util.Observer;

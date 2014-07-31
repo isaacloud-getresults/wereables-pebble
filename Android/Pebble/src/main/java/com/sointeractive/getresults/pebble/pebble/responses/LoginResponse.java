@@ -1,7 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.responses;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.utils.DictionaryBuilder;
+import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
 public class LoginResponse implements ResponseItem {
     private final String name;
