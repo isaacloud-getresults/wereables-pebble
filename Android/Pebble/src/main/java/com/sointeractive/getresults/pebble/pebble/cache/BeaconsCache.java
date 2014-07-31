@@ -24,13 +24,8 @@ public class BeaconsCache {
         return beaconsResponse;
     }
 
-    public Collection<ResponseItem> getUpToDateData() {
-        reload();
-        return beaconsResponse;
-    }
-
     public void reload() {
-        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getData();
+        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getUpToDateData();
 
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {

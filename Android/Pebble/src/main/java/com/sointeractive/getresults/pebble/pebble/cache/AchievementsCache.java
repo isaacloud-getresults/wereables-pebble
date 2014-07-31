@@ -24,13 +24,8 @@ public class AchievementsCache {
         return achievementsResponse;
     }
 
-    public Collection<ResponseItem> getUpToDateData() {
-        reload();
-        return achievementsResponse;
-    }
-
     public void reload() {
-        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
+        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getUpToDateData();
 
         achievementsResponse = new LinkedList<ResponseItem>();
         for (final AchievementIC achievement : userAchievements) {

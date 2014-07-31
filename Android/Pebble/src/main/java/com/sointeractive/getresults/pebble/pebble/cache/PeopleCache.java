@@ -27,11 +27,6 @@ public class PeopleCache {
         return peopleRoomResponse(room);
     }
 
-    public Collection<ResponseItem> getUpToDateData(final int room) {
-        reload();
-        return peopleRoomResponse(room);
-    }
-
     private Collection<ResponseItem> peopleRoomResponse(final int room) {
         final Collection<ResponseItem> response = peopleResponses.get(room);
 
@@ -43,7 +38,7 @@ public class PeopleCache {
     }
 
     public void reload() {
-        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
+        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getUpToDateData();
 
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
         int id;

@@ -2,6 +2,7 @@ package com.sointeractive.getresults.pebble.pebble.cache;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
+import com.sointeractive.getresults.pebble.isaacloud.providers.UserAchievementsProvider;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
@@ -25,15 +26,10 @@ public class LoginCache {
         return loginResponse;
     }
 
-    public Collection<ResponseItem> getUpToDateData() {
-        reload();
-        return loginResponse;
-    }
-
     public void reload() {
-        final UserIC userIC = UserProvider.INSTANCE.getData();
+        final UserIC userIC = UserProvider.INSTANCE.getUpToDateData();
         final int roomsNumber = RoomsProvider.INSTANCE.getData().size();
-        final int achievementsNumber = AchievementsCache.INSTANCE.getData().size();
+        final int achievementsNumber = UserAchievementsProvider.INSTANCE.getData().size();
 
         final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
         loginResponse = listWrap(login);
