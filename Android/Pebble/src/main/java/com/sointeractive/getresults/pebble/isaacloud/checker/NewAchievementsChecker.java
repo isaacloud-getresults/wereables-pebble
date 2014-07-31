@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.isaacloud.checker;
 
+import android.util.Log;
+
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
@@ -10,6 +12,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class NewAchievementsChecker {
+    private static final String TAG = NewAchievementsChecker.class.getSimpleName();
 
     public static void check(final Collection<AchievementIC> result) {
         if (UserAchievementsProvider.INSTANCE.isCached()) {
@@ -20,6 +23,7 @@ public class NewAchievementsChecker {
     private static void checkForNew(final Collection<AchievementIC> result) {
         final Set<AchievementIC> newAchievements = getNewAchievements(result);
         if (!newAchievements.isEmpty()) {
+            Log.i(TAG, "Check: New achievements found");
             notifyAchievements(newAchievements);
         }
     }

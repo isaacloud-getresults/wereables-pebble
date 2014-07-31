@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
+import android.util.Log;
 
 import com.sointeractive.getresults.pebble.isaacloud.receivers.AlarmReceiver;
 import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
@@ -14,7 +15,7 @@ import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 
 public class CacheReloader {
     public static final CacheReloader INSTANCE = new CacheReloader();
-
+    private static final String TAG = CacheReloader.class.getSimpleName();
     private static final int SECOND = 1000;
     private static final int INTERVAL = 10 * SECOND;
 
@@ -26,6 +27,7 @@ public class CacheReloader {
     }
 
     public void reload() {
+        Log.i(TAG, "Action: Reload cache");
         AchievementsCache.INSTANCE.reload();
         BeaconsCache.INSTANCE.reload();
         LoginCache.INSTANCE.reload();
@@ -33,6 +35,8 @@ public class CacheReloader {
     }
 
     public void setAutoReload(final Context context) {
+        Log.i(TAG, "Action: Set cache auto reload");
+
         final Intent intent = new Intent(context, AlarmReceiver.class);
         alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
@@ -41,6 +45,8 @@ public class CacheReloader {
     }
 
     public void stopAutoReload() {
+        Log.i(TAG, "Action: Stop cache auto reload");
+
         if (alarmManager != null) {
             alarmManager.cancel(alarmIntent);
         }

@@ -46,6 +46,7 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
             }
         }
 
+        Log.i(TAG, "Event: user not found");
         return null;
     }
 

@@ -15,12 +15,16 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class PebbleConnector extends Observable {
     private static final String TAG = PebbleConnector.class.getSimpleName();
+
     private final Queue<PebbleDictionary> sendingQueue = new ConcurrentLinkedQueue<PebbleDictionary>();
     private final Context context;
     private final NotificationSender sender;
+
     private boolean connectionState;
 
     public PebbleConnector(final Context context) {
+        Log.i(TAG, "Action: Initialize Pebble connector");
+
         this.context = context;
         sender = new NotificationSender(context);
     }
@@ -33,6 +37,7 @@ public class PebbleConnector extends Observable {
     }
 
     private void clearSendingQueue() {
+        Log.i(TAG, "Action: Empty sending queue");
         sendingQueue.clear();
     }
 

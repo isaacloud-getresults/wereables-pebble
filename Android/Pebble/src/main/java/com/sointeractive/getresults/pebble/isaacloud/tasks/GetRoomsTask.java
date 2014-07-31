@@ -45,6 +45,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
             result.add(new RoomIC(beaconsJSON));
         }
 
+        Log.i(TAG, "Event: " + result.size() + " rooms found");
         return result;
     }
 

@@ -18,6 +18,7 @@ public class NotificationSender {
     private final Context context;
 
     public NotificationSender(final Context context) {
+        Log.i(TAG, "Action: Initialize notification sender");
         this.context = context;
     }
 
