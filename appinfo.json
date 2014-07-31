@@ -4,15 +4,32 @@
         ""
     ],
     "companyName": "SoInteractive GetResults!",
-    "longName": "Get Results!",
+    "longName": "GR",
     "projectType": "native",
     "resources": {
-        "media": []
+        "media": [
+            {
+                "file": "images/BeaconIcon.png",
+                "name": "ICON_BEACON",
+                "type": "png"
+            },
+            {
+                "file": "images/UserIcon.png",
+                "name": "ICON_USER",
+                "type": "png"
+            },
+            {
+                "file": "images/GetResultsIcon.png",
+                "menuIcon": true,
+                "name": "ICON_GET_RESULTS",
+                "type": "png"
+            }
+        ]
     },
-    "shortName": "Get Results!",
+    "shortName": "GR",
     "uuid": "51b19145-0542-474f-8b62-c8c34ae4b87b",
     "versionCode": 1,
-    "versionLabel": "1.0",
+    "versionLabel": "1.3",
     "watchapp": {
         "watchface": false
     }
