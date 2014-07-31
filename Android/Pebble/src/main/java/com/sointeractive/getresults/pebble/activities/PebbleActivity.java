@@ -31,13 +31,13 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void showInfo(final int id) {
         final String msg = context.getString(id);
-        Log.d(TAG, "Info: Showing info: " + msg);
+        Log.i(TAG, "Info: Showing info: " + msg);
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        Log.d(TAG, "Event: onCreate");
+        Log.i(TAG, "Event: onCreate");
         super.onCreate(savedInstanceState);
 
         initInstance();
@@ -50,7 +50,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void initInstance() {
-        Log.d(TAG, "Init: Initializing instance");
+        Log.i(TAG, "Init: Initializing instance");
         setContentView(R.layout.pebble_activity);
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
@@ -60,13 +60,13 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void registerPebbleConnector() {
-        Log.d(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
+        Log.i(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
         pebbleConnector = Application.pebbleConnector;
         pebbleConnector.addObserver(this);
     }
 
     private void checkPebbleConnection() {
-        Log.d(TAG, "Init: Checking Pebble connection");
+        Log.i(TAG, "Init: Checking Pebble connection");
         if (pebbleConnector.isPebbleConnected()) {
             if (pebbleConnector.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
@@ -79,7 +79,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void registerButtonHandlers() {
-        Log.d(TAG, "Init: Registering button click handlers");
+        Log.i(TAG, "Init: Registering button click handlers");
 
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -93,7 +93,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     @Override
     public void update(final Observable observable, final Object o) {
-        Log.d(TAG, "Event: Observable value has changed");
+        Log.i(TAG, "Event: Observable value has changed");
         if (observable == pebbleConnector) {
             onConnectionStateChanged();
         }
@@ -108,13 +108,13 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void onPebbleConnected() {
-        Log.d(TAG, "Event: Pebble connected");
+        Log.i(TAG, "Event: Pebble connected");
         checkBox.setChecked(true);
         CacheReloader.INSTANCE.setAutoReload(context);
     }
 
     private void onPebbleDisconnected() {
-        Log.d(TAG, "Event: Pebble disconnected");
+        Log.i(TAG, "Event: Pebble disconnected");
         checkBox.setChecked(false);
         CacheReloader.INSTANCE.stopAutoReload();
     }

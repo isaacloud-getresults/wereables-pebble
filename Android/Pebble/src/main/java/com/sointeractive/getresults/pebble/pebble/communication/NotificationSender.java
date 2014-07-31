@@ -43,7 +43,7 @@ public class NotificationSender {
     }
 
     private void sendData(final String data) {
-        Log.d(TAG, "Action: Sending notification: " + data);
+        Log.i(TAG, "Action: Sending notification: " + data);
         final Intent i = getIntent(data);
 
         context.sendBroadcast(i);

@@ -30,7 +30,7 @@ public class Responder {
 
     private Request getRequest() {
         final Request request = getByData(data);
-        Log.d(TAG, "Request: " + request.logMessage);
+        Log.i(TAG, "Request: " + request.logMessage);
         request.setQuery(data);
         return request;
     }

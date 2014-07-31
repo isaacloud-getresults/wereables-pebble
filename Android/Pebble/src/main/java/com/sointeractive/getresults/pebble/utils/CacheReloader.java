@@ -15,8 +15,8 @@ import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 public class CacheReloader {
     public static final CacheReloader INSTANCE = new CacheReloader();
 
-    private static final int ONE_MINUTE = 60 * 1000;
-    private static final int INTERVAL = 2 * ONE_MINUTE;
+    private static final int SECOND = 1000;
+    private static final int INTERVAL = 10 * SECOND;
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;

@@ -12,7 +12,7 @@ public class AlarmReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        Log.d(TAG, "Event: Alarm tick");
+        Log.i(TAG, "Event: Alarm tick");
         CacheReloader.INSTANCE.reload();
     }
 }

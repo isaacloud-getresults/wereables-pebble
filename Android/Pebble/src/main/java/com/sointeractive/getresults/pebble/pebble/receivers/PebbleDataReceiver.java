@@ -20,7 +20,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
 
     @Override
     public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
-        Log.d(TAG, "Event: Message received, value: " + data.toJsonString());
+        Log.i(TAG, "Event: Message received, value: " + data.toJsonString());
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -31,7 +31,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     }
 
     private void sendAckToPebble(final Context context, final int transactionId) {
-        Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
+        Log.i(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
         PebbleKit.sendAckToPebble(context, transactionId);
     }
 }

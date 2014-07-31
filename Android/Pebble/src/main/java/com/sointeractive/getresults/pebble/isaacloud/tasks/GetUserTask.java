@@ -19,7 +19,7 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
 
     @Override
     protected UserIC doInBackground(final String... emails) {
-        Log.d(TAG, "Action: Login in background");
+        Log.i(TAG, "Action: Login in background");
 
         try {
             return logIn(emails[0]);
@@ -41,7 +41,7 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
             final JSONObject userJSON = (JSONObject) users.get(i);
 
             if (email.equals(userJSON.get("email"))) {
-                Log.d(TAG, "Event: User found: " + userJSON.toString());
+                Log.i(TAG, "Event: User found: " + userJSON.toString());
                 return new UserIC(userJSON);
             }
         }
@@ -52,7 +52,7 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
     @Override
     protected void onPostExecute(final UserIC result) {
         if (result != null) {
-            Log.d(TAG, "Event: Success");
+            Log.i(TAG, "Event: Success");
         }
     }
 }

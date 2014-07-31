@@ -12,7 +12,7 @@ public class PebbleConnectedReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        Log.d(TAG, "Event: Pebble is now connected");
+        Log.i(TAG, "Event: Pebble is now connected");
         Application.pebbleConnector.isPebbleConnected();
     }
 }

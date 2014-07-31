@@ -21,7 +21,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
 
     @Override
     protected Collection<RoomIC> doInBackground(final Void... params) {
-        Log.d(TAG, "Action: Get beacons in background");
+        Log.i(TAG, "Action: Get beacons in background");
 
         try {
             return getBeacons();
@@ -51,7 +51,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
     @Override
     protected void onPostExecute(final Collection<RoomIC> result) {
         if (result != null) {
-            Log.d(TAG, "Event: Success");
+            Log.i(TAG, "Event: Success");
         }
     }
 }

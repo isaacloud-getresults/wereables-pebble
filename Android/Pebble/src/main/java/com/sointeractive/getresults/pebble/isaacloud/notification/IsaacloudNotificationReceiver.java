@@ -12,7 +12,7 @@ public class IsaacloudNotificationReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
-        Log.d(TAG, "Event: New notification");
+        Log.i(TAG, "Event: New notification");
         final String title = intent.getStringExtra("title");
         final String body = intent.getStringExtra("body");
         Application.pebbleConnector.sendNotification(title, body);
