@@ -34,6 +34,7 @@ static Layer *user_downloading_sign_layer = NULL;
 static Layer *beacon_details_proximity_layer = NULL;
 static Layer *beacons_downloading_sign_layer = NULL;
 static Layer *coworkers_downloading_sign_layer = NULL;
+static ScrollLayer *achievement_details_scroll_layer = NULL;
 static AppTimer *timer = NULL;
 
 typedef struct {
@@ -691,11 +692,15 @@ static int16_t get_cell_height_achievements(MenuLayer *menu_layer, MenuIndex *ce
 
 static void draw_achievement_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_achievement_header()");
-    switch (section_index) {
-        case 0:
-            menu_cell_basic_header_draw(ctx, cell_layer, "Achievements");
-            break;
+    if(achievements!=NULL) {
+        switch (section_index) {
+            case 0:
+                menu_cell_basic_header_draw(ctx, cell_layer, "Achievements");
+                break;
+        }
     }
+    else
+        menu_cell_basic_header_draw(ctx, cell_layer, "No achievements");
 }
 
 static void draw_achievement_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
@@ -744,7 +749,7 @@ static void user_window_load(Window *window) {
     GRect user_sign_layer_bounds = layer_get_bounds(window_layer);
     user_sign_layer_bounds.size.h = textbar_height;
     user_sign_layer_bounds.size.w = textbar_height;
-    user_sign_layer_bounds.origin.x = 144-textbar_height;
+    user_sign_layer_bounds.origin.x = textbar_bounds.size.w-textbar_height;
     user_downloading_sign_layer = layer_create(user_sign_layer_bounds);
     layer_set_update_proc(user_downloading_sign_layer, user_downloading_sign_layer_update);
     
@@ -812,17 +817,18 @@ static int16_t get_cell_height_beacons(MenuLayer *menu_layer, MenuIndex *cell_in
 
 static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_header()");
-    switch (section_index) {
-        case 0:
-            menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
-            break;
-        case 1:
-            menu_cell_basic_header_draw(ctx, cell_layer, "Beacons out of range");
-            break;
-        default:
-            menu_cell_basic_header_draw(ctx, cell_layer, "Looking for beacons...");
-            break;
+    if(beacons!=NULL) {
+        switch (section_index) {
+            case 0:
+                menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
+                break;
+            case 1:
+                menu_cell_basic_header_draw(ctx, cell_layer, "Beacons out of range");
+                break;
+        }
     }
+    else
+        menu_cell_basic_header_draw(ctx, cell_layer, "Looking for beacons...");
 }
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
@@ -879,7 +885,7 @@ static void beacons_window_load(Window *window) {
     GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
     downloading_sign_layer_bounds.size.h = textbar_height;
     downloading_sign_layer_bounds.size.w = textbar_height;
-    downloading_sign_layer_bounds.origin.x = 144-textbar_height;
+    downloading_sign_layer_bounds.origin.x = textbar_bounds.size.w-textbar_height;
     beacons_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
     layer_set_update_proc(beacons_downloading_sign_layer, beacons_downloading_sign_layer_update);
     
@@ -982,9 +988,9 @@ static void beacon_details_window_load(Window *window) {
     beacon_details_lowertext_layer = text_layer_create(lowertext_bounds);
     static char text_buffer2[70];
     if(current_beacon->coworkers>0)
-        snprintf(text_buffer2,70,"Coworkers near: %i\n\nClick SELECT to see who they are",current_beacon->coworkers);
+        snprintf(text_buffer2,70," Coworkers near: %i\n\n Click SELECT to see\n who they are",current_beacon->coworkers);
     else
-        snprintf(text_buffer2,70,"Coworkers near: %i",current_beacon->coworkers);
+        snprintf(text_buffer2,70," Coworkers near: %i",current_beacon->coworkers);
     text_layer_set_text(beacon_details_lowertext_layer,text_buffer2);
     text_layer_set_font(beacon_details_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(beacon_details_lowertext_layer, GTextAlignmentLeft);
@@ -1094,7 +1100,7 @@ static void coworkers_window_load(Window *window) {
     GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
     downloading_sign_layer_bounds.size.h = textbar_height;
     downloading_sign_layer_bounds.size.w = textbar_height;
-    downloading_sign_layer_bounds.origin.x = 144-textbar_height;
+    downloading_sign_layer_bounds.origin.x = textbar_bounds.size.w-textbar_height;
     coworkers_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
     layer_set_update_proc(coworkers_downloading_sign_layer, coworkers_downloading_sign_layer_update);
     
@@ -1138,23 +1144,32 @@ static void achievement_details_window_load(Window *window) {
     
     achievement_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
     
-    GRect text_bounds = layer_get_bounds(window_layer);
-    text_bounds.size.h -= textbar_height;
-    text_bounds.origin.y = textbar_height;
-    achievement_details_text_layer = text_layer_create(text_bounds);
+    GRect max_text_bounds = GRect(0,0,textbar_bounds.size.w,500);
+    achievement_details_text_layer = text_layer_create(max_text_bounds);
     text_layer_set_text(achievement_details_text_layer,current_achievement->description);
     text_layer_set_font(achievement_details_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(achievement_details_text_layer, GTextAlignmentCenter);
     
+    GRect scroll_layer_bounds = layer_get_bounds(window_layer);
+    scroll_layer_bounds.size.h -= textbar_height;
+    scroll_layer_bounds.origin.y = textbar_height;
+    achievement_details_scroll_layer = scroll_layer_create(scroll_layer_bounds);
+    scroll_layer_set_click_config_onto_window(achievement_details_scroll_layer,achievement_details_window);
+    GSize max_size = text_layer_get_content_size(achievement_details_text_layer);
+    text_layer_set_size(achievement_details_text_layer,max_size); 
+    scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_size.h));
+    scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_text_layer));
+    
     layer_add_child(window_layer, text_layer_get_layer(achievement_details_textbar_layer));
     layer_add_child(window_layer, inverter_layer_get_layer(achievement_details_textbar_inverter_layer));
-    layer_add_child(window_layer, text_layer_get_layer(achievement_details_text_layer));
+    layer_add_child(window_layer,scroll_layer_get_layer(achievement_details_scroll_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_load() end");
 }
 
 static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() start");
     text_layer_destroy(achievement_details_text_layer);
+    scroll_layer_destroy(achievement_details_scroll_layer);
     inverter_layer_destroy(achievement_details_textbar_inverter_layer);
     text_layer_destroy(achievement_details_textbar_layer);
     current_achievement = NULL;
