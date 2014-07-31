@@ -9,6 +9,6 @@ public class RoomIC {
 
     public RoomIC(final JSONObject json) throws JSONException {
         id = json.getInt("id");
-        name = json.getString("name");
+        name = json.getString("label");
     }
 }

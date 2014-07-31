@@ -9,8 +9,8 @@ import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
 public enum Query {
     USER("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "counterValues", "leaderboards"}),
-    ACHIEVEMENTS("/cache/users/%s/achievements", new String[]{"id", "name", "description"}),
-    BEACONS("/cache/users/groups", new String[]{"id", "name"}),
+    ACHIEVEMENTS("/cache/users/%s/achievements", new String[]{"id", "label", "description"}),
+    BEACONS("/cache/users/groups", new String[]{"id", "label"}),
     PEOPLE("/cache/users", new String[]{"id", "firstName", "lastName", "counterValues"});
 
     private static final int UNLIMITED = 0;

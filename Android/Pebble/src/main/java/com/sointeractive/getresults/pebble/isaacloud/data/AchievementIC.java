@@ -11,7 +11,7 @@ public class AchievementIC {
 
     public AchievementIC(final JSONObject json) throws JSONException {
         id = json.getInt("id");
-        name = json.getString("name");
+        name = json.getString("label");
         description = json.getString("description");
     }
 
