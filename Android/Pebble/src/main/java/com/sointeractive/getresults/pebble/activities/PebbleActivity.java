@@ -44,7 +44,9 @@ public class PebbleActivity extends Activity implements Observer {
         registerPebbleConnector();
         checkPebbleConnection();
         registerButtonHandlers();
-        preloadIsaacloudData();
+
+        // TODO: Remove this, it exists for debug without Pebble purpose
+        CacheReloader.INSTANCE.setAutoReload(context);
     }
 
     private void initInstance() {
@@ -89,10 +91,6 @@ public class PebbleActivity extends Activity implements Observer {
         });
     }
 
-    private void preloadIsaacloudData() {
-        CacheReloader.INSTANCE.reload();
-    }
-
     @Override
     public void update(final Observable observable, final Object o) {
         Log.d(TAG, "Event: Observable value has changed");
@@ -112,10 +110,12 @@ public class PebbleActivity extends Activity implements Observer {
     private void onPebbleConnected() {
         Log.d(TAG, "Event: Pebble connected");
         checkBox.setChecked(true);
+        CacheReloader.INSTANCE.setAutoReload(context);
     }
 
     private void onPebbleDisconnected() {
         Log.d(TAG, "Event: Pebble disconnected");
         checkBox.setChecked(false);
+        CacheReloader.INSTANCE.stopAutoReload();
     }
 }
