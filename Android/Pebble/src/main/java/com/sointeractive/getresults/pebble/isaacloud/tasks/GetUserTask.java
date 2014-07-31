@@ -24,12 +24,13 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
         try {
             return logIn(emails[0]);
         } catch (final JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IsaaCloudConnection error");
         } catch (final IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IO error");
         }
+
         return null;
     }
 

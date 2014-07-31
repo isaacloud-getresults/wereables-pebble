@@ -4,6 +4,7 @@ import com.sointeractive.getresults.pebble.isaacloud.data.PersonIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetPeopleTask;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
 public class PeopleProvider {
@@ -31,10 +32,22 @@ public class PeopleProvider {
         final GetPeopleTask getPeople = new GetPeopleTask();
         try {
             peopleIC = getPeople.execute().get();
+
+            if (peopleIC == null) {
+                peopleIC = new LinkedList<PersonIC>();
+            }
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
             e.printStackTrace();
+        }
+    }
+
+    public int getSize() {
+        if (peopleIC == null) {
+            return 0;
+        } else {
+            return peopleIC.size();
         }
     }
 }

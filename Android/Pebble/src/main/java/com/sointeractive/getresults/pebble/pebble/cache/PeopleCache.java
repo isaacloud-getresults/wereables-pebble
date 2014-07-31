@@ -28,13 +28,13 @@ public class PeopleCache {
     }
 
     private Collection<ResponseItem> peopleRoomResponse(final int room) {
-        final Collection<ResponseItem> response = peopleResponses.get(room);
+        Collection<ResponseItem> response = peopleResponses.get(room);
 
         if (response == null) {
-            return new LinkedList<ResponseItem>();
-        } else {
-            return response;
+            response = new LinkedList<ResponseItem>();
         }
+
+        return response;
     }
 
     public void reload() {

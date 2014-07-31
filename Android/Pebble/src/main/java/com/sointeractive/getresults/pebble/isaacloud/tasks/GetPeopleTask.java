@@ -26,12 +26,13 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
         try {
             return getPeople();
         } catch (final JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IsaaCloudConnection error");
         } catch (final IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IO error");
         }
+
         return null;
     }
 

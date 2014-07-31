@@ -26,12 +26,13 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
         try {
             return getAchievements(userId[0].toString());
         } catch (final JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IsaaCloudConnection error");
         } catch (final IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IO error");
         }
+
         return null;
     }
 

@@ -28,16 +28,14 @@ public class LoginCache {
 
     public void reload() {
         final UserIC userIC = UserProvider.INSTANCE.getUpToDateData();
-        final int roomsNumber = RoomsProvider.INSTANCE.getData().size();
-        final int achievementsNumber = UserAchievementsProvider.INSTANCE.getData().size();
+        final int roomsNumber = RoomsProvider.INSTANCE.getSize();
+        final int achievementsNumber = UserAchievementsProvider.INSTANCE.getSize();
 
-        final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
-        loginResponse = listWrap(login);
-    }
+        loginResponse = new LinkedList<ResponseItem>();
 
-    private Collection<ResponseItem> listWrap(final ResponseItem item) {
-        final Collection<ResponseItem> list = new LinkedList<ResponseItem>();
-        list.add(item);
-        return list;
+        if (userIC != null) {
+            final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
+            loginResponse.add(login);
+        }
     }
 }

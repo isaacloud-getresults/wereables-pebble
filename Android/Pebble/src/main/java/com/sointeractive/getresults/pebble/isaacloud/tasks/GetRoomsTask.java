@@ -26,12 +26,13 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
         try {
             return getBeacons();
         } catch (final JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IsaaCloudConnection error");
         } catch (final IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IO error");
         }
+
         return null;
     }
 

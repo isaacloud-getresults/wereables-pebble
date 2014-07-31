@@ -28,8 +28,16 @@ public class AchievementsCache {
         final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getUpToDateData();
 
         achievementsResponse = new LinkedList<ResponseItem>();
-        for (final AchievementIC achievement : userAchievements) {
+        for (final AchievementIC achievement : safe(userAchievements)) {
             achievementsResponse.add(new AchievementResponse(achievement.name, achievement.description));
+        }
+    }
+
+    private Iterable<AchievementIC> safe(final Iterable<AchievementIC> collection) {
+        if (collection == null) {
+            return new LinkedList<AchievementIC>();
+        } else {
+            return collection;
         }
     }
 }
