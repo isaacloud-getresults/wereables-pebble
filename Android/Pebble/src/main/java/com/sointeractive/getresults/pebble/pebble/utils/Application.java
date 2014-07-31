@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.utils;
 
+import android.content.Context;
+
 import com.sointeractive.getresults.pebble.config.Settings;
 
 import java.util.HashMap;
@@ -11,8 +13,10 @@ import pl.sointeractive.isaacloud.exceptions.InvalidConfigException;
 public class Application extends android.app.Application {
     public static Isaacloud isaacloudConnector;
     public static PebbleConnector pebbleConnector;
+    public static Context context;
 
     public Application() {
+        context = this;
         pebbleConnector = new PebbleConnector(this);
         initIsaacloudConnector();
     }
