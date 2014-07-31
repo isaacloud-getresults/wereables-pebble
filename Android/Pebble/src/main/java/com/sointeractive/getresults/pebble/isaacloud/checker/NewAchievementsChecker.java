@@ -5,7 +5,6 @@ import android.util.Log;
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
-import com.sointeractive.getresults.pebble.isaacloud.providers.UserAchievementsProvider;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -14,25 +13,19 @@ import java.util.Set;
 public class NewAchievementsChecker {
     private static final String TAG = NewAchievementsChecker.class.getSimpleName();
 
-    public static void check(final Collection<AchievementIC> result) {
-        if (UserAchievementsProvider.INSTANCE.isCached()) {
-            checkForNew(result);
-        }
-    }
-
-    private static void checkForNew(final Collection<AchievementIC> result) {
-        final Set<AchievementIC> newAchievements = getNewAchievements(result);
-        if (!newAchievements.isEmpty()) {
+    public static void check(final Collection<AchievementIC> achievements1, final Collection<AchievementIC> achievements2) {
+        if (achievements1 != null && achievements2 != null && achievements1.size() != achievements2.size()) {
             Log.i(TAG, "Check: New achievements found");
+
+            final Set<AchievementIC> newAchievements = getNewAchievements(achievements1, achievements2);
             notifyAchievements(newAchievements);
         }
     }
 
-    private static Set<AchievementIC> getNewAchievements(final Collection<AchievementIC> result) {
-        final Collection<AchievementIC> previousCollection = UserAchievementsProvider.INSTANCE.getData();
-        final Set<AchievementIC> previousSet = new HashSet<AchievementIC>(previousCollection);
-        final Set<AchievementIC> resultSet = new HashSet<AchievementIC>(result);
-        return Sets.difference(resultSet, previousSet);
+    private static Set<AchievementIC> getNewAchievements(final Collection<AchievementIC> achievements1, final Collection<AchievementIC> achievements2) {
+        final Set<AchievementIC> set1 = new HashSet<AchievementIC>(achievements1);
+        final Set<AchievementIC> set2 = new HashSet<AchievementIC>(achievements2);
+        return Sets.symmetricDifference(set1, set2).immutableCopy();
     }
 
     private static void notifyAchievements(final Collection<AchievementIC> newAchievements) {

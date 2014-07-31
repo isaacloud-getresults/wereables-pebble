@@ -1,5 +1,6 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
+import com.sointeractive.getresults.pebble.isaacloud.checker.NewAchievementsChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserAchievementsTask;
 
@@ -27,14 +28,12 @@ public class UserAchievementsProvider {
         return achievementsIC;
     }
 
-    public boolean isCached() {
-        return achievementsIC != null;
-    }
-
     private void reload() {
         final GetUserAchievementsTask getAchievements = new GetUserAchievementsTask();
         try {
+            final Collection<AchievementIC> oldAchievements = achievementsIC;
             achievementsIC = getAchievements.execute(UserProvider.INSTANCE.getData().id).get();
+            NewAchievementsChecker.check(oldAchievements, achievementsIC);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {

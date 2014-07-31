@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.isaacloud.checker.NewAchievementsChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 
 import org.json.JSONArray;
@@ -54,7 +53,6 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
     protected void onPostExecute(final Collection<AchievementIC> result) {
         if (result != null) {
             Log.i(TAG, "Event: Success");
-            NewAchievementsChecker.check(result);
         }
     }
 }
