@@ -29,7 +29,7 @@ public class AchievementsCache {
 
         achievementsResponse = new LinkedList<ResponseItem>();
         for (final AchievementIC achievement : safe(userAchievements)) {
-            achievementsResponse.add(new AchievementResponse(achievement.name, achievement.description));
+            achievementsResponse.add(new AchievementResponse(achievement.id, achievement.name, achievement.description));
         }
     }
 

@@ -7,7 +7,7 @@ public class AchievementIC {
     public final String name;
     public final String description;
 
-    private final int id;
+    public final int id;
 
     public AchievementIC(final JSONObject json) throws JSONException {
         id = json.getInt("id");
