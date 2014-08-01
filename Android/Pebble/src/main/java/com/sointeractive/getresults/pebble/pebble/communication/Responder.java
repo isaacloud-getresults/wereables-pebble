@@ -10,8 +10,8 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class Responder {
+    public static final int PERSON_POP = 5;
     private static final String TAG = Responder.class.getSimpleName();
-
     private final PebbleDictionary data;
 
     private Responder(final PebbleDictionary data) {

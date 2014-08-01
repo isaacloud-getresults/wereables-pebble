@@ -42,12 +42,4 @@ public class PeopleProvider {
             e.printStackTrace();
         }
     }
-
-    public int getSize() {
-        if (peopleIC == null) {
-            return 0;
-        } else {
-            return peopleIC.size();
-        }
-    }
 }
