@@ -7,7 +7,7 @@ public class Settings {
     // IsaaCloud connection
     public static final String INSTANCE_ID = "179";
     public static final String APP_SECRET = "cbe82930e310e3519666c8ddf9776cee";
-    public static final String LOGIN_EMAIL = "johnsnow@sosoftware.pl";
+    public static final String LOGIN_EMAIL = "getresults@gmail.com";
 
     // Pebble connection
     public static final String APP_NAME = "GetResults!";

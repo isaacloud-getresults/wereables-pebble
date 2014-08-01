@@ -43,7 +43,10 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
         final JSONArray beacons = response.getJSONArray();
         for (int i = 0; i < beacons.length(); i++) {
             final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
-            result.add(new RoomIC(beaconsJSON));
+            final RoomIC roomFound = new RoomIC(beaconsJSON);
+            if (!roomFound.name.equals("skip this room")) {
+                result.add(roomFound);
+            }
         }
 
         Log.i(TAG, "Event: " + result.size() + " rooms found");
