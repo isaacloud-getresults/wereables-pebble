@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.isaacloud.tasks;
 
+import android.util.Log;
+
 import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.io.IOException;
@@ -8,11 +10,13 @@ import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
 public enum Query {
-    USER("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "counterValues", "leaderboards"}),
+    LOGIN("/cache/users", new String[]{"id", "firstName", "lastName", "email", "level", "counterValues", "leaderboards"}),
+    USER("/cache/users/%s", new String[]{"id", "firstName", "lastName", "email", "level", "counterValues", "leaderboards"}),
     ACHIEVEMENTS("/cache/users/%s/achievements", new String[]{"id", "label", "description"}),
     BEACONS("/cache/users/groups", new String[]{"id", "label"}),
     PEOPLE("/cache/users", new String[]{"id", "firstName", "lastName", "counterValues"});
 
+    private static final String TAG = Query.class.getSimpleName();
     private static final int UNLIMITED = 0;
 
     private final String query;
@@ -28,10 +32,12 @@ public enum Query {
     }
 
     HttpResponse getResponse(final String param) throws IOException, IsaaCloudConnectionException {
+        final String path = String.format(query, param);
+        Log.i(TAG, "Action: query to path: " + path);
         return Application.isaacloudConnector
-                .path(String.format(query, param))
-                .withLimit(UNLIMITED)
+                .path(path)
                 .withFields(fields)
+                .withLimit(UNLIMITED)
                 .get();
     }
 }

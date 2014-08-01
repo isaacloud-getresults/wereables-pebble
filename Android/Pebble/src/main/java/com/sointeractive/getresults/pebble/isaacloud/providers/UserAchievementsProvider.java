@@ -47,12 +47,4 @@ public class UserAchievementsProvider {
             e.printStackTrace();
         }
     }
-
-    public int getSize() {
-        if (achievementsIC == null) {
-            return 0;
-        } else {
-            return achievementsIC.size();
-        }
-    }
 }

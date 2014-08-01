@@ -17,7 +17,7 @@ public class CacheReloader {
     public static final CacheReloader INSTANCE = new CacheReloader();
     private static final String TAG = CacheReloader.class.getSimpleName();
     private static final int SECOND = 1000;
-    private static final int INTERVAL = 15 * SECOND;
+    private static final int INTERVAL = 10 * SECOND;
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
