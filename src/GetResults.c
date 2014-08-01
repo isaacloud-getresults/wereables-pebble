@@ -42,7 +42,6 @@ typedef struct {
     int points;
     int rank;
     int beacons;
-    int achievements;
 } User;
 
 typedef struct {
@@ -76,6 +75,7 @@ uint16_t num_beacons_in_range;
 uint16_t num_beacons_out_of_range;
 uint16_t num_coworkers;
 uint16_t num_achievements;
+uint16_t max_achievements;
 
 uint8_t last_request;
 
@@ -200,15 +200,18 @@ static bool update_coworkers_table(Coworker *new_coworker) {
                 return false;
             }
         }
-        // add new if not found in table
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
-        char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
-        strcpy(new_name,new_coworker->name);
-        coworkers[size] = new_coworker;
-        coworkers[size]->name = new_name;
-        num_coworkers++;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
-        return true;
+        if(size<current_beacon->coworkers) {
+            // add new if not found in table
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
+            char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+            strcpy(new_name,new_coworker->name);
+            coworkers[size] = new_coworker;
+            coworkers[size]->name = new_name;
+            num_coworkers++;
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            return true;
+        }
+        return false;
     }
 }
 
@@ -216,7 +219,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table()");
     if(achievements==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-        achievements = (Achievement**)calloc(user.achievements,sizeof(Achievement*));
+        achievements = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
         char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
         strcpy(new_name,new_achievement->name);
         char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
@@ -232,7 +235,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
         int size = num_achievements;
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
         int i;
-        for(i=0; i<size && i<user.achievements; ++i) {
+        for(i=0; i<size && i<max_achievements; ++i) {
             // if that achievement already exists in the table
             if(strcmp(achievements[i]->name,new_achievement->name)==0) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement found, rejecting");
@@ -243,15 +246,37 @@ static bool update_achievements_table(Achievement *new_achievement) {
             }
         }
         // add new if not found in table
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, adding new");
-        char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
-        strcpy(new_name,new_achievement->name);
-        char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
-        strcpy(new_description,new_achievement->description);
-        achievements[size] = new_achievement;
-        achievements[size]->name = new_name;
-        achievements[size]->description = new_description;
-        num_achievements++;
+        if(i<max_achievements) {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, adding new");
+            char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
+            strcpy(new_name,new_achievement->name);
+            char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
+            strcpy(new_description,new_achievement->description);
+            achievements[i] = new_achievement;
+            achievements[i]->name = new_name;
+            achievements[i]->description = new_description;
+            num_achievements++;
+        }
+        // reallocate table and increase its size twice if new element doesn't fit
+        else {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, reallocating table and adding new");
+            max_achievements *= 2;
+            Achievement **new_table = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
+            if(new_table!=NULL) {
+                for(i=0; i<size; ++i)
+                    new_table[i] = achievements[i];
+                free(achievements);
+                achievements = new_table;
+                char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
+                strcpy(new_name,new_achievement->name);
+                char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
+                strcpy(new_description,new_achievement->description);
+                achievements[i] = new_achievement;
+                achievements[i]->name = new_name;
+                achievements[i]->description = new_description;
+                num_achievements++;
+            }
+        }
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() end");
         return true;
     }
@@ -309,7 +334,7 @@ static void clear_achievements_table() {
         int size = num_achievements;
         int i;
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_achievements_table() size: %i",size);
-        for(i=0; i<size && i<user.achievements; ++i) {
+        for(i=0; i<size && i<max_achievements; ++i) {
             if(achievements[i]!=NULL) {
                 if(achievements[i]->name!=NULL) {
                     free(achievements[i]->name);
@@ -347,7 +372,6 @@ enum {
     USER_POINTS = 3,
     USER_RANK = 4,
     USER_BEACONS = 5,
-    USER_ACHIEVEMENTS = 6,
     BEACON_ID = 2,
     BEACON_NAME = 3,
     BEACON_PROXIMITY = 4,
@@ -437,8 +461,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *points = dict_find(iter,USER_POINTS);
             Tuple *rank = dict_find(iter,USER_RANK);
             Tuple *beacons = dict_find(iter,USER_BEACONS);
-            Tuple *achievements = dict_find(iter,USER_ACHIEVEMENTS);
-            if(achievements && beacons && rank && points && name) {
+            if(beacons && rank && points && name) {
                 if(user.name==NULL) {
                     char *new_name = (char*)calloc(strlen(name->value->cstring),sizeof(char));
                     strcpy(new_name,name->value->cstring);
@@ -455,8 +478,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.points = *(points->value->data);
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
-                user.achievements = *(achievements->value->data);
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u | achievements: %u",user.name,user.points,user.rank,user.beacons,user.achievements);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u",user.name,user.points,user.rank,user.beacons);
                 static char text_buffer[40];
                 snprintf(text_buffer,40,"%s",user.name);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -542,14 +564,16 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         menu_layer_reload_data(achievements_menu_layer);
                     }
                 }
+                is_downloading = false;
+                layer_mark_dirty(user_downloading_sign_layer);
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
             }
-            if(num_achievements==user.achievements) {
+            /*if(num_achievements==user.achievements) {
                 is_downloading = false;
                 layer_mark_dirty(user_downloading_sign_layer);
-            }
+            }*/
         }
     }
     else {
@@ -707,7 +731,7 @@ static void draw_achievement_row(GContext *ctx, const Layer *cell_layer, MenuInd
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_achievement_row()");
     switch (cell_index->section) {
         case 0:
-            if(achievements!=NULL)
+            if(achievements!=NULL && achievements[cell_index->row]!=NULL)
                 menu_cell_basic_draw(ctx, cell_layer, achievements[cell_index->row]->name, NULL, NULL);
             break;
     }
@@ -1210,6 +1234,7 @@ static void init() {
     num_beacons_out_of_range = 0;
     num_coworkers = 0;
     num_achievements = 0;
+    max_achievements = 2;
     last_request = 0;
     
     is_downloading = false;

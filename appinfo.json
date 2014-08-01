@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/DownloadingIcon.png",
+                "name": "ICON_DOWNLOADING",
+                "type": "png"
+            },
+            {
                 "file": "images/BeaconIcon.png",
                 "name": "ICON_BEACON",
                 "type": "png"
