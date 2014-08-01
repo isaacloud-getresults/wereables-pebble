@@ -57,6 +57,7 @@ typedef struct {
 } Coworker;
 
 typedef struct {
+    int id;
     char *name;
     char *description;
 } Achievement;
@@ -74,6 +75,7 @@ uint16_t num_beacons;
 uint16_t num_beacons_in_range;
 uint16_t num_beacons_out_of_range;
 uint16_t num_coworkers;
+uint16_t max_coworkers;
 uint16_t num_achievements;
 uint16_t max_achievements;
 
@@ -175,48 +177,68 @@ static bool update_beacons_table(Beacon *new_beacon) {
 }
 
 static bool update_coworkers_table(Coworker *new_coworker) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table()");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start");
     if(coworkers==NULL) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-        coworkers = (Coworker**)calloc(current_beacon->coworkers,sizeof(Coworker*));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+        max_coworkers = current_beacon->coworkers + 2;
+        coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
         char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
         strcpy(new_name,new_coworker->name);
         coworkers[0] = new_coworker;
         coworkers[0]->name = new_name;
         num_coworkers = 1;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
         return true;
     }
     else {
         int size = num_coworkers;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
         int i;
-        for(i=0; i<size && i<current_beacon->coworkers; ++i) {
+        for(i=0; i<size; ++i) {
             // if that coworker already exists in the table
             if(coworkers[i]->id==new_coworker->id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
                 free(new_coworker);
                 new_coworker = NULL;
                 return false;
             }
         }
-        if(size<current_beacon->coworkers) {
+        if(i<max_coworkers) {
             // add new if not found in table
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
             char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
             strcpy(new_name,new_coworker->name);
-            coworkers[size] = new_coworker;
-            coworkers[size]->name = new_name;
+            coworkers[i] = new_coworker;
+            coworkers[i]->name = new_name;
             num_coworkers++;
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
             return true;
         }
-        return false;
+        // reallocate table and increase its size if new element doesn't fit
+        else {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
+            max_coworkers += 4;
+            Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
+            if(new_table!=NULL) {
+                for(i=0; i<size; ++i)
+                    new_table[i] = coworkers[i];
+                free(coworkers);
+                coworkers = new_table;
+                char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+                strcpy(new_name,new_coworker->name);
+                coworkers[i] = new_coworker;
+                coworkers[i]->name = new_name;
+                num_coworkers++;
+            }
+        }
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+        return true;
     }
+    return false;
 }
 
 static bool update_achievements_table(Achievement *new_achievement) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table()");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() start id: %u | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
     if(achievements==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         achievements = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
@@ -237,7 +259,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
         int i;
         for(i=0; i<size && i<max_achievements; ++i) {
             // if that achievement already exists in the table
-            if(strcmp(achievements[i]->name,new_achievement->name)==0) {
+            if(achievements[i]->id==new_achievement->id) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement found, rejecting");
                 // we assume that description of the achievement doesn't change
                 free(new_achievement);
@@ -282,6 +304,30 @@ static bool update_achievements_table(Achievement *new_achievement) {
     }
 }
 
+static bool pop_coworker_from_table(int id) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() start");
+    int i=0, size = num_coworkers;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 1");
+    while(coworkers[i]->id!=id) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 2: %i",i);
+        i++;
+        if(i==size)
+            return false;
+    }
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 3");
+    free(coworkers[i]->name);
+    free(coworkers[i]);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 4");
+    for( ; i<size-1; ++i)
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 5: %i",i);
+        coworkers[i] = coworkers[i+1];
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 6");
+    coworkers[i] = NULL;
+    num_coworkers--;
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() end");
+    return true;
+}
+
 static void clear_beacons_table() {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() start");
     if(beacons!=NULL) {
@@ -311,7 +357,7 @@ static void clear_coworkers_table() {
     if(coworkers!=NULL) {
         int size = num_coworkers;
         int i;
-        for(i=0; i<size; ++i) {
+        for(i=0; i<size && i<max_coworkers; ++i) {
             if(coworkers[i]!=NULL) {
                 if(coworkers[i]->name!=NULL) {
                     free(coworkers[i]->name);
@@ -378,18 +424,20 @@ enum {
     BEACON_COWORKERS = 5,
     COWORKER_ID = 2,
     COWORKER_NAME = 3,
-    ACHIEVEMENT_NAME = 2,
-    ACHIEVEMENT_DESCRIPTION = 3,
+    ACHIEVEMENT_ID = 2,
+    ACHIEVEMENT_NAME = 3,
+    ACHIEVEMENT_DESCRIPTION = 4,
     
     // response values
     RESPONSE_USER = 1,
     RESPONSE_BEACON = 2,
     RESPONSE_COWORKER = 3,
-    RESPONSE_ACHIEVEMENT = 4
+    RESPONSE_ACHIEVEMENT = 4,
+    RESPONSE_COWORKER_POP = 5
 };
 
 ///////////////////////////////////// COMMUNICATION
-/*
+
 char * translate_result(AppMessageResult result) {
     switch (result) {
         case APP_MSG_OK: return "APP_MSG_OK";
@@ -409,7 +457,7 @@ char * translate_result(AppMessageResult result) {
         default: return "UNKNOWN ERROR";
     }
 }
-*/
+
 
 static void send_simple_request(int8_t request) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
@@ -451,9 +499,10 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
+        //is_downloading = true;
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER && window_stack_get_top_window()==login_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
@@ -520,7 +569,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER && window_stack_get_top_window()==coworkers_window) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
@@ -529,16 +578,16 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_coworker->id = *(id->value->data);
                 new_coworker->name = new_name;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
                 if(update_coworkers_table(new_coworker)) {
                     if(window_stack_get_top_window()==coworkers_window) {
-                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
                     }
                 }
             }
             else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
             }
             if(num_coworkers==current_beacon->coworkers) {
                 is_downloading = false;
@@ -547,17 +596,19 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
         else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && window_stack_get_top_window()==user_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement");
+            Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             Tuple *name = dict_find(iter,ACHIEVEMENT_NAME);
             Tuple *description = dict_find(iter,ACHIEVEMENT_DESCRIPTION);
             Achievement *new_achievement = (Achievement*)malloc(sizeof(Achievement));
-            if(new_achievement && description && name) {
+            if(new_achievement && description && name && id) {
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 char new_description[strlen(description->value->cstring)+1];
                 strncpy(new_description,description->value->cstring,sizeof(new_description));
+                new_achievement->id = *(id->value->data);
                 new_achievement->name = new_name;
                 new_achievement->description = new_description;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: %s",new_achievement->name);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
                 if(update_achievements_table(new_achievement)) {
                     if(window_stack_get_top_window()==user_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading achievements_menu_layer");
@@ -570,10 +621,24 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
             }
-            /*if(num_achievements==user.achievements) {
+        }
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+            Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
+            if(id) {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
+                if(pop_coworker_from_table(*(id->value->data))) {
+                    if(window_stack_get_top_window()==coworkers_window) {
+                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
+                        menu_layer_reload_data(coworkers_menu_layer);
+                    }
+                }
                 is_downloading = false;
-                layer_mark_dirty(user_downloading_sign_layer);
-            }*/
+                layer_mark_dirty(coworkers_downloading_sign_layer);
+            }
+            else {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker pop dictionary");
+            }
         }
     }
     else {
@@ -583,7 +648,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
 }
 /////////////////////////////////////
 
@@ -756,7 +821,7 @@ MenuLayerCallbacks achievements_menu_callbacks = {
 };
 
 static void user_window_load(Window *window) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() start");    
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() start");
     Layer *window_layer = window_get_root_layer(window);
     int text_layer_height = 52;
     GRect textbar_bounds = layer_get_bounds(window_layer);
@@ -960,14 +1025,14 @@ static void dinstance_layer_update(Layer *layer, GContext *ctx) {
 
 static void coworkers_list_select_handler(ClickRecognizerRef recognizer, void *context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() start");
-    if(current_beacon->coworkers>0) {
+    //if(current_beacon->coworkers>0) {
         if(previous_beacon!=current_beacon)
             clear_coworkers_table();
         send_query_request(REQUEST_COWORKERS,current_beacon->id);
         is_downloading = true;
         previous_beacon = current_beacon;
         window_stack_push(coworkers_window, true);
-    }
+    //}
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() end");
 }
 
@@ -1042,7 +1107,7 @@ static void beacon_details_window_unload(Window *window) {
 ///////////////////////////////////// COWORKERS WINDOW
 static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
-    if(is_downloading && last_request==REQUEST_COWORKERS) {
+    if(is_downloading && last_request==REQUEST_COWORKERS && current_beacon->coworkers>0) {
         graphics_context_set_stroke_color(ctx, GColorWhite);
         graphics_context_set_fill_color(ctx, GColorWhite);
         graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
@@ -1082,17 +1147,17 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
 static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworker_select_click() start");
     /*
-    if(cell_index->section==0) {
-    current_coworker = coworkers[cell_index->row];
-    }
-
-    if(current_coworker!=NULL)
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworker selected: %s",current_coworker->name);
-    else
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "current_coworker==NULL!");
-
-    window_stack_push(coworker_details_window, true); // or maybe user_window???
-    */
+     if(cell_index->section==0) {
+     current_coworker = coworkers[cell_index->row];
+     }
+     
+     if(current_coworker!=NULL)
+     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworker selected: %s",current_coworker->name);
+     else
+     //APP_LOG(APP_LOG_LEVEL_DEBUG, "current_coworker==NULL!");
+     
+     window_stack_push(coworker_details_window, true); // or maybe user_window???
+     */
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworker_select_click() end");
 }
 
@@ -1180,7 +1245,9 @@ static void achievement_details_window_load(Window *window) {
     achievement_details_scroll_layer = scroll_layer_create(scroll_layer_bounds);
     scroll_layer_set_click_config_onto_window(achievement_details_scroll_layer,achievement_details_window);
     GSize max_size = text_layer_get_content_size(achievement_details_text_layer);
-    text_layer_set_size(achievement_details_text_layer,max_size); 
+    max_size.w = scroll_layer_bounds.size.w;
+    max_size.h += 10;
+    text_layer_set_size(achievement_details_text_layer,max_size);
     scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_size.h));
     scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_text_layer));
     
@@ -1234,7 +1301,7 @@ static void init() {
     num_beacons_out_of_range = 0;
     num_coworkers = 0;
     num_achievements = 0;
-    max_achievements = 2;
+    max_achievements = 6;
     last_request = 0;
     
     is_downloading = false;
@@ -1275,6 +1342,7 @@ static void init() {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message initialising: %s",translate_result(app_message_open(200,outbound_size)));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message inbound size: %u",inbound_size);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message outbound size: %u",outbound_size);
+    app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
     
     window_stack_push(login_window, true);
 }
