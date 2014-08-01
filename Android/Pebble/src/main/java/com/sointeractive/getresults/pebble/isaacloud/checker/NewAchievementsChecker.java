@@ -5,6 +5,10 @@ import android.util.Log;
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
+import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
+import com.sointeractive.getresults.pebble.pebble.communication.Request;
+import com.sointeractive.getresults.pebble.pebble.communication.Responder;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -33,7 +37,8 @@ public class NewAchievementsChecker {
         final String body = getBody(newAchievements);
         final IsaacloudNotification notification = new IsaacloudNotification(title, body);
         notification.send();
-
+        final Collection<ResponseItem> responseItems = AchievementsCache.makeResponse(newAchievements);
+        Responder.sendResponseToPebble(Request.ACHIEVEMENTS.id, responseItems);
     }
 
     private static String getBody(final Iterable<AchievementIC> newAchievements) {

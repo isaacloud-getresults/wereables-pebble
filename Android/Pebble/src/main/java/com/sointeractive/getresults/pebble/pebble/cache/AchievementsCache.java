@@ -17,6 +17,22 @@ public class AchievementsCache {
         // Exists only to defeat instantiation.
     }
 
+    public static Collection<ResponseItem> makeResponse(final Iterable<AchievementIC> collection) {
+        final Collection<ResponseItem> response = new LinkedList<ResponseItem>();
+        for (final AchievementIC achievement : safe(collection)) {
+            response.add(new AchievementResponse(achievement.id, achievement.name, achievement.description));
+        }
+        return response;
+    }
+
+    private static Iterable<AchievementIC> safe(final Iterable<AchievementIC> collection) {
+        if (collection == null) {
+            return new LinkedList<AchievementIC>();
+        } else {
+            return collection;
+        }
+    }
+
     public Collection<ResponseItem> getData() {
         if (achievementsResponse == null) {
             reload();
@@ -26,18 +42,6 @@ public class AchievementsCache {
 
     public void reload() {
         final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getUpToDateData();
-
-        achievementsResponse = new LinkedList<ResponseItem>();
-        for (final AchievementIC achievement : safe(userAchievements)) {
-            achievementsResponse.add(new AchievementResponse(achievement.id, achievement.name, achievement.description));
-        }
-    }
-
-    private Iterable<AchievementIC> safe(final Iterable<AchievementIC> collection) {
-        if (collection == null) {
-            return new LinkedList<AchievementIC>();
-        } else {
-            return collection;
-        }
+        achievementsResponse = makeResponse(userAchievements);
     }
 }
