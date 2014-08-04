@@ -21,6 +21,7 @@ static TextLayer *user_textbar_layer;
 static TextLayer *user_text_layer;
 static TextLayer *beacons_textbar_layer ;
 static TextLayer *coworkers_textbar_layer;
+static TextLayer *coworkers_text_layer;
 static TextLayer *achievements_textbar_layer;
 static TextLayer *achievement_details_textbar_layer;
 static TextLayer *achievement_details_text_layer;
@@ -392,7 +393,6 @@ enum {
     USER_BEACONS = 6,
     BEACON_ID = 2,
     BEACON_NAME = 3,
-    //BEACON_PROXIMITY = 4,
     BEACON_COWORKERS = 4,
     COWORKER_ID = 2,
     COWORKER_NAME = 3,
@@ -470,12 +470,12 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
         //is_downloading = true;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
-        if(*(receiving_type->value->data)==RESPONSE_USER && window_stack_get_top_window()==login_window) {
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        if(*(receiving_type->value->data)==RESPONSE_USER) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
@@ -574,6 +574,10 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 is_downloading = false;
                 layer_mark_dirty(coworkers_downloading_sign_layer);
             }
+            if(coworkers!=NULL) {
+                layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
+                layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
+            }
         }
         else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && window_stack_get_top_window()==achievements_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement");
@@ -604,28 +608,32 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             if(id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
                 if(pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
-                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
                     }
                 }
                 is_downloading = false;
                 layer_mark_dirty(coworkers_downloading_sign_layer);
+                if(coworkers==NULL) {
+                    layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),true);
+                    layer_set_hidden(text_layer_get_layer(coworkers_text_layer),false);
+                }
             }
             else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker pop dictionary");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker pop dictionary");
             }
         }
     }
     else {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
     }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -652,8 +660,6 @@ static void login_menu_beacons_callback(int index, void *ctx) {
 static void login_menu_user_callback(int index, void *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_menu_user_callback()");
     if(user.name!=NULL) {
-        //send_simple_request(REQUEST_ACHIEVEMENTS);
-        //is_downloading = true;
         window_stack_push(user_window, true);
     }
 }
@@ -791,9 +797,7 @@ static void user_window_load(Window *window) {
     user_menu_layer = simple_menu_layer_create(menu_bounds,window,user_menu_sections,1,NULL);
     
     layer_add_child(window_layer, text_layer_get_layer(user_textbar_layer));
-    //layer_add_child(window_layer, user_downloading_sign_layer);
     layer_add_child(window_layer, text_layer_get_layer(user_text_layer));
-    //layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
     layer_add_child(window_layer, simple_menu_layer_get_layer(user_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() end");
 }
@@ -801,9 +805,7 @@ static void user_window_load(Window *window) {
 static void user_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_unload() start");
     simple_menu_layer_destroy(user_menu_layer);
-    //menu_layer_destroy(achievements_menu_layer);
     text_layer_destroy(user_text_layer);
-    //layer_destroy(user_downloading_sign_layer);
     text_layer_destroy(user_textbar_layer);
     //gbitmap_destroy(achievements_icon);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_unload() end");
@@ -842,7 +844,6 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
     if(beacons!=NULL) {
         switch (section_index) {
             case 0:
-                //menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
                 menu_cell_basic_header_draw(ctx, cell_layer, "Locations");
                 break;
         }
@@ -878,11 +879,6 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
         previous_beacon = current_beacon;
         window_stack_push(coworkers_window, true);
     }
-    /*
-    if(current_beacon!=NULL) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_select_click() current_beacon: %s",current_beacon->name);
-        window_stack_push(beacon_details_window, true);
-    }*/
 }
 
 MenuLayerCallbacks beacons_menu_callbacks = {
@@ -955,10 +951,7 @@ static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx)
 }
 
 static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
-    if(coworkers!=NULL)
-        return 1;
-    else
-        return 0;
+    return 1;
 }
 
 static int16_t get_header_height_coworkers(MenuLayer *menu_layer, uint16_t section_index, void *data) {
@@ -990,8 +983,8 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
                 break;
         }
     }
-    else
-        menu_cell_basic_draw(ctx, cell_layer, "NOBODY...", NULL, NULL);
+    //else
+        //menu_cell_basic_draw(ctx, cell_layer, "NOBODY...", NULL, NULL);
 }
 
 static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
@@ -1050,14 +1043,31 @@ static void coworkers_window_load(Window *window) {
     menu_layer_set_callbacks(coworkers_menu_layer, NULL, coworkers_menu_callbacks);
     menu_layer_set_click_config_onto_window(coworkers_menu_layer, window);
     
+    coworkers_text_layer = text_layer_create(menu_bounds);
+    text_layer_set_text(coworkers_text_layer,"This room is empty");
+    text_layer_set_font(coworkers_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(coworkers_text_layer, GTextAlignmentLeft);
+    
+    if(current_beacon->coworkers!=0) {
+        layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
+        layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
+    } 
+    else {
+        layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),true);
+        layer_set_hidden(text_layer_get_layer(coworkers_text_layer),false);
+    }
+        
+    
     layer_add_child(window_layer, text_layer_get_layer(coworkers_textbar_layer));
     layer_add_child(window_layer, coworkers_downloading_sign_layer);
     layer_add_child(window_layer, menu_layer_get_layer(coworkers_menu_layer));
+    layer_add_child(window_layer, text_layer_get_layer(coworkers_text_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_load() end");
 }
 
 static void coworkers_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_unload() start");
+    text_layer_destroy(coworkers_text_layer);
     menu_layer_destroy(coworkers_menu_layer);
     layer_destroy(coworkers_downloading_sign_layer);
     text_layer_destroy(coworkers_textbar_layer);
