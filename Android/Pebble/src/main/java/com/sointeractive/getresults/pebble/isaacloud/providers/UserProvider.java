@@ -49,11 +49,21 @@ public class UserProvider {
             return userIC.id;
         } else {
             final GetUserIdTask getLoginId = new GetUserIdTask();
-            return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+            final Integer userId = getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+
+            if (userId == null) {
+                return 0;
+            } else {
+                return userId;
+            }
         }
     }
 
     private boolean isLoaded() {
         return userIC != null;
+    }
+
+    public void logOut() {
+        userIC = null;
     }
 }

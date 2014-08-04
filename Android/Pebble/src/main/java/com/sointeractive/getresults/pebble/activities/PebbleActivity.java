@@ -11,6 +11,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.sointeractive.getresults.pebble.R;
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
 import com.sointeractive.getresults.pebble.utils.Application;
 import com.sointeractive.getresults.pebble.utils.CacheReloader;
 import com.sointeractive.getresults.pebble.utils.PebbleConnector;
@@ -23,9 +25,11 @@ public class PebbleActivity extends Activity implements Observer {
 
     private Context context;
     private CheckBox checkBox;
+    private Button login_button;
     private Button notification_send_button;
     private TextView notification_title_text_view;
     private TextView notification_body_text_view;
+    private TextView email_text_view;
 
     private PebbleConnector pebbleConnector;
 
@@ -49,11 +53,16 @@ public class PebbleActivity extends Activity implements Observer {
     private void initInstance() {
         Log.i(TAG, "Init: Initializing instance");
         setContentView(R.layout.pebble_activity);
+
         context = getApplicationContext();
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
         notification_title_text_view = (TextView) findViewById(R.id.notification_title_text_view);
         notification_body_text_view = (TextView) findViewById(R.id.notification_body_text_view);
+        login_button = (Button) findViewById(R.id.login_button);
+        email_text_view = (TextView) findViewById(R.id.email_text_view);
+
+        email_text_view.setText(IsaaCloudSettings.LOGIN_EMAIL);
     }
 
     private void registerPebbleConnector() {
@@ -84,6 +93,15 @@ public class PebbleActivity extends Activity implements Observer {
                 final String title = notification_title_text_view.getText().toString();
                 final String body = notification_body_text_view.getText().toString();
                 pebbleConnector.sendNotification(title, body);
+            }
+        });
+
+        login_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(final View v) {
+                IsaaCloudSettings.LOGIN_EMAIL = email_text_view.getText().toString();
+                UserProvider.INSTANCE.logOut();
+                CacheReloader.INSTANCE.reload();
             }
         });
     }
