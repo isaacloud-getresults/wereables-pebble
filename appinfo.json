@@ -9,6 +9,11 @@
     "resources": {
         "media": [
             {
+                "file": "images/AchievementIcon.png",
+                "name": "ICON_ACHIEVEMENT",
+                "type": "png"
+            },
+            {
                 "file": "images/DownloadingIcon.png",
                 "name": "ICON_DOWNLOADING",
                 "type": "png"

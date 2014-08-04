@@ -4,41 +4,36 @@
 
 #include "pebble.h"
 
-static Window *login_window = NULL;
-static Window *user_window = NULL;
-static Window *beacons_window = NULL;
-static Window *beacon_details_window = NULL;
-static Window *coworkers_window = NULL;
-static Window *achievement_details_window = NULL;
-static SimpleMenuLayer *login_menu_layer = NULL;
-static MenuLayer *achievements_menu_layer = NULL;
-static MenuLayer *beacons_menu_layer = NULL;
-static MenuLayer *coworkers_menu_layer = NULL;
-static TextLayer *login_uppertext_layer = NULL;
-static TextLayer *login_lowertext_layer = NULL;
-static TextLayer *user_textbar_layer = NULL;
-static TextLayer *user_text_layer = NULL;
-static TextLayer *beacons_textbar_layer = NULL;
-static TextLayer *beacon_details_textbar_layer = NULL;
-static TextLayer *beacon_details_uppertext_layer = NULL;
-static TextLayer *beacon_details_lowertext_layer = NULL;
-static TextLayer *coworkers_textbar_layer = NULL;
-static TextLayer *achievement_details_textbar_layer = NULL;
-static TextLayer *achievement_details_text_layer = NULL;
-static InverterLayer *user_textbar_inverter_layer = NULL;
-static InverterLayer *beacons_textbar_inverter_layer = NULL;
-static InverterLayer *beacon_details_textbar_inverter_layer = NULL;
-static InverterLayer *coworkers_textbar_inverter_layer = NULL;
-static InverterLayer *achievement_details_textbar_inverter_layer = NULL;
-static Layer *user_downloading_sign_layer = NULL;
-static Layer *beacon_details_proximity_layer = NULL;
-static Layer *beacons_downloading_sign_layer = NULL;
-static Layer *coworkers_downloading_sign_layer = NULL;
-static ScrollLayer *achievement_details_scroll_layer = NULL;
-static AppTimer *timer = NULL;
+static Window *login_window;
+static Window *user_window;
+static Window *beacons_window;
+static Window *coworkers_window;
+static Window *achievements_window;
+static Window *achievement_details_window;
+static SimpleMenuLayer *login_menu_layer;
+static SimpleMenuLayer *user_menu_layer;
+static MenuLayer *achievements_menu_layer;
+static MenuLayer *beacons_menu_layer;
+static MenuLayer *coworkers_menu_layer;
+static TextLayer *login_uppertext_layer;
+static TextLayer *login_lowertext_layer;
+static TextLayer *user_textbar_layer;
+static TextLayer *user_text_layer;
+static TextLayer *beacons_textbar_layer ;
+static TextLayer *coworkers_textbar_layer;
+static TextLayer *achievements_textbar_layer;
+static TextLayer *achievement_details_textbar_layer;
+static TextLayer *achievement_details_text_layer;
+static Layer *user_downloading_sign_layer;
+static Layer *beacons_downloading_sign_layer;
+static Layer *coworkers_downloading_sign_layer;
+static Layer *achievements_downloading_sign_layer;
+static ScrollLayer *achievement_details_scroll_layer;
+static AppTimer *timer;
 
 typedef struct {
     char *name;
+    char *location;
     int points;
     int rank;
     int beacons;
@@ -47,7 +42,6 @@ typedef struct {
 typedef struct {
     int id;
     char *name;
-    int proximity;
     int coworkers;
 } Beacon;
 
@@ -62,14 +56,14 @@ typedef struct {
     char *description;
 } Achievement;
 
-static Beacon *current_beacon = NULL;
-static Beacon *previous_beacon = NULL;
-static Achievement *current_achievement = NULL;
+static Beacon *current_beacon;
+static Beacon *previous_beacon;
+static Achievement *current_achievement;
 
 static User user;
-static Beacon **beacons = NULL;
-static Coworker **coworkers = NULL;
-static Achievement **achievements = NULL;
+static Beacon **beacons;
+static Coworker **coworkers;
+static Achievement **achievements;
 
 uint16_t num_beacons;
 uint16_t num_beacons_in_range;
@@ -86,22 +80,8 @@ static bool is_downloading;
 static int textbar_height = 24;
 
 static uint16_t get_num_beacons(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_beacons() start");
-    int i;
-    num_beacons_in_range = num_beacons_out_of_range = 0;
-    for(i=0; i<num_beacons; ++i) {
-        if(beacons[i]->proximity>0)
-            num_beacons_in_range++;
-        else
-            num_beacons_out_of_range++;
-    }
-    uint16_t num = 0;
-    if(section_index==0)
-        num = num_beacons_in_range;
-    else if(section_index==1)
-        num = num_beacons_out_of_range;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_beacons() end, return: %u",num);
-    return num;
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_beacons() return: %u",num_beacons);
+    return num_beacons;
 }
 
 static uint16_t get_num_coworkers(struct MenuLayer* menu_layer, uint16_t section_index, void *callback_context) {
@@ -117,10 +97,10 @@ static uint16_t get_num_achievements(struct MenuLayer* menu_layer, uint16_t sect
 static int beacons_compare(const void *b1, const void *b2) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_compare()");
     // beacons closer to user (proximity value higher) are placed in the table first
-    int d1 = (*(Beacon**)b1)->proximity;
-    int d2 = (*(Beacon**)b2)->proximity;
+    char *n1 = (*(Beacon**)b1)->name;
+    char *n2 = (*(Beacon**)b2)->name;
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "    d1: %i | d2: %i",d1,d2);
-    return d2-d1;
+    return strcmp(n1,n2);
 }
 
 static bool update_beacons_table(Beacon *new_beacon) {
@@ -146,21 +126,10 @@ static bool update_beacons_table(Beacon *new_beacon) {
             if(beacons[i]->id==new_beacon->id) {
                 // overwrite coworkers counter (probably faster than checking them and overwriting if changed)
                 beacons[i]->coworkers=new_beacon->coworkers;
-                // if proximity changed
-                if(beacons[i]->proximity!=new_beacon->proximity) {
-                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, proximity changed");
-                    beacons[i]->proximity = new_beacon->proximity;
-                    free(new_beacon);
-                    new_beacon = NULL;
-                    qsort(beacons,size,sizeof(Beacon*),beacons_compare);
-                    return true;
-                }
-                else {
-                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, proximity not changed, rejecting");
-                    free(new_beacon);
-                    new_beacon = NULL;
-                    return false;
-                }
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, rejecting");
+                free(new_beacon);
+                new_beacon = NULL;
+                return false;
             }
         }
         // add new if not found in table
@@ -177,9 +146,9 @@ static bool update_beacons_table(Beacon *new_beacon) {
 }
 
 static bool update_coworkers_table(Coworker *new_coworker) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start");
     if(coworkers==NULL) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         max_coworkers = current_beacon->coworkers + 2;
         coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
         char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
@@ -187,17 +156,17 @@ static bool update_coworkers_table(Coworker *new_coworker) {
         coworkers[0] = new_coworker;
         coworkers[0]->name = new_name;
         num_coworkers = 1;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
         return true;
     }
     else {
         int size = num_coworkers;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
         int i;
         for(i=0; i<size; ++i) {
             // if that coworker already exists in the table
             if(coworkers[i]->id==new_coworker->id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
                 free(new_coworker);
                 new_coworker = NULL;
                 return false;
@@ -205,18 +174,18 @@ static bool update_coworkers_table(Coworker *new_coworker) {
         }
         if(i<max_coworkers) {
             // add new if not found in table
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
             char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
             strcpy(new_name,new_coworker->name);
             coworkers[i] = new_coworker;
             coworkers[i]->name = new_name;
             num_coworkers++;
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
             return true;
         }
         // reallocate table and increase its size if new element doesn't fit
         else {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
             max_coworkers += 4;
             Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
             if(new_table!=NULL) {
@@ -231,7 +200,7 @@ static bool update_coworkers_table(Coworker *new_coworker) {
                 num_coworkers++;
             }
         }
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
         return true;
     }
     return false;
@@ -302,30 +271,6 @@ static bool update_achievements_table(Achievement *new_achievement) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() end");
         return true;
     }
-}
-
-static bool pop_coworker_from_table(int id) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() start");
-    int i=0, size = num_coworkers;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 1");
-    while(coworkers[i]->id!=id) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 2: %i",i);
-        i++;
-        if(i==size)
-            return false;
-    }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 3");
-    free(coworkers[i]->name);
-    free(coworkers[i]);
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 4");
-    for( ; i<size-1; ++i)
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 5: %i",i);
-        coworkers[i] = coworkers[i+1];
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 6");
-    coworkers[i] = NULL;
-    num_coworkers--;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() end");
-    return true;
 }
 
 static void clear_beacons_table() {
@@ -401,6 +346,32 @@ static void clear_achievements_table() {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_achievements_table() end");
 }
 
+static bool pop_coworker_from_table(int id) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() start");
+    int i=0, size = num_coworkers;
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 1");
+    while(coworkers[i]->id!=id) {
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 2: %i",i);
+        i++;
+        if(i==size)
+            return false;
+    }
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 3");
+    free(coworkers[i]->name);
+    free(coworkers[i]);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 4");
+    for( ; i<size-1; ++i)
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 5: %i",i);
+        coworkers[i] = coworkers[i+1];
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() 6");
+    coworkers[i] = NULL;
+    num_coworkers--;
+    if(coworkers[0]==NULL)
+        clear_coworkers_table();
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "pop_coworker_from_table() end");
+    return true;
+}
+
 enum {
     // request keys
     REQUEST_TYPE = 1,
@@ -415,13 +386,14 @@ enum {
     // response keys
     RESPONSE_TYPE = 1,
     USER_NAME = 2,
-    USER_POINTS = 3,
-    USER_RANK = 4,
-    USER_BEACONS = 5,
+    USER_LOCATION = 3,
+    USER_POINTS = 4,
+    USER_RANK = 5,
+    USER_BEACONS = 6,
     BEACON_ID = 2,
     BEACON_NAME = 3,
-    BEACON_PROXIMITY = 4,
-    BEACON_COWORKERS = 5,
+    //BEACON_PROXIMITY = 4,
+    BEACON_COWORKERS = 4,
     COWORKER_ID = 2,
     COWORKER_NAME = 3,
     ACHIEVEMENT_ID = 2,
@@ -457,7 +429,6 @@ char * translate_result(AppMessageResult result) {
         default: return "UNKNOWN ERROR";
     }
 }
-
 
 static void send_simple_request(int8_t request) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
@@ -507,14 +478,18 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         if(*(receiving_type->value->data)==RESPONSE_USER && window_stack_get_top_window()==login_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
+            Tuple *location = dict_find(iter,USER_LOCATION);
             Tuple *points = dict_find(iter,USER_POINTS);
             Tuple *rank = dict_find(iter,USER_RANK);
             Tuple *beacons = dict_find(iter,USER_BEACONS);
-            if(beacons && rank && points && name) {
+            if(beacons && rank && points && location && name) {
                 if(user.name==NULL) {
                     char *new_name = (char*)calloc(strlen(name->value->cstring),sizeof(char));
                     strcpy(new_name,name->value->cstring);
                     user.name = new_name;
+                    char *new_location = (char*)calloc(strlen(location->value->cstring),sizeof(char));
+                    strcpy(new_location,location->value->cstring);
+                    user.location = new_location;
                 }
                 else {
                     if(strcmp(user.name,name->value->cstring)!=0) {
@@ -523,13 +498,19 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         free(user.name);
                         user.name = new_name;
                     }
+                    if(strcmp(user.location,location->value->cstring)!=0) {
+                        char *new_location = (char*)calloc(strlen(location->value->cstring),sizeof(char));
+                        strcpy(new_location,location->value->cstring);
+                        free(user.location);
+                        user.location = new_location;
+                    }
                 }
                 user.points = *(points->value->data);
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u",user.name,user.points,user.rank,user.beacons);
-                static char text_buffer[40];
-                snprintf(text_buffer,40,"%s",user.name);
+                static char text_buffer[50];
+                snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
                 layer_set_hidden(simple_menu_layer_get_layer(login_menu_layer),false);
             }
@@ -541,16 +522,16 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
             Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
-            Tuple *proximity = dict_find(iter,BEACON_PROXIMITY);
+            //Tuple *proximity = dict_find(iter,BEACON_PROXIMITY);
             Tuple *coworkers = dict_find(iter,BEACON_COWORKERS);
             Beacon *new_beacon = (Beacon*)malloc(sizeof(Beacon));
-            if(new_beacon && coworkers && proximity && name && id) {
+            if(new_beacon && coworkers /*&& proximity */&& name && id) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_beacon->id = *(id->value->data);
                 new_beacon->name = new_name;
-                new_beacon->proximity = *(proximity->value->data);
+                //new_beacon->proximity = *(proximity->value->data);
                 new_beacon->coworkers = *(coworkers->value->data);
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | proximity: %u | coworkers: %u",new_beacon->name,new_beacon->proximity,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
@@ -569,7 +550,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER && window_stack_get_top_window()==coworkers_window) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
@@ -578,23 +559,23 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_coworker->id = *(id->value->data);
                 new_coworker->name = new_name;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
                 if(update_coworkers_table(new_coworker)) {
                     if(window_stack_get_top_window()==coworkers_window) {
-                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
+                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
                     }
                 }
             }
             else {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
             }
             if(num_coworkers==current_beacon->coworkers) {
                 is_downloading = false;
                 layer_mark_dirty(coworkers_downloading_sign_layer);
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && window_stack_get_top_window()==user_window) {
+        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && window_stack_get_top_window()==achievements_window) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             Tuple *name = dict_find(iter,ACHIEVEMENT_NAME);
@@ -610,23 +591,23 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_achievement->description = new_description;
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
                 if(update_achievements_table(new_achievement)) {
-                    if(window_stack_get_top_window()==user_window) {
+                    if(window_stack_get_top_window()==achievements_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading achievements_menu_layer");
                         menu_layer_reload_data(achievements_menu_layer);
                     }
                 }
                 is_downloading = false;
-                layer_mark_dirty(user_downloading_sign_layer);
+                layer_mark_dirty(achievements_downloading_sign_layer);
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             if(id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
                 if(pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
@@ -637,7 +618,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 layer_mark_dirty(coworkers_downloading_sign_layer);
             }
             else {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker pop dictionary");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker pop dictionary");
             }
         }
     }
@@ -648,7 +629,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
 }
 /////////////////////////////////////
 
@@ -671,8 +652,8 @@ static void login_menu_beacons_callback(int index, void *ctx) {
 static void login_menu_user_callback(int index, void *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_menu_user_callback()");
     if(user.name!=NULL) {
-        send_simple_request(REQUEST_ACHIEVEMENTS);
-        is_downloading = true;
+        //send_simple_request(REQUEST_ACHIEVEMENTS);
+        //is_downloading = true;
         window_stack_push(user_window, true);
     }
 }
@@ -694,14 +675,14 @@ static void login_window_load(Window *window) {
     user_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_USER);
     
     Layer *window_layer = window_get_root_layer(window);
-    int uppertext_height = 40;
-    int lowertext_height = 39;
+    int uppertext_height = 26;
+    int lowertext_height = 53;
     
     GRect uppertext_bounds = layer_get_bounds(window_layer);
     uppertext_bounds.size.h = uppertext_height;
     login_uppertext_layer = text_layer_create(uppertext_bounds);
     text_layer_set_text(login_uppertext_layer,"Get Results!");
-    text_layer_set_font(login_uppertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD));
+    text_layer_set_font(login_uppertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(login_uppertext_layer, GTextAlignmentCenter);
     
     GRect lowertext_bounds = layer_get_bounds(window_layer);
@@ -713,7 +694,7 @@ static void login_window_load(Window *window) {
     text_layer_set_text_alignment(login_lowertext_layer, GTextAlignmentCenter);
     
     login_menu_first_section_items[0] = (SimpleMenuItem) {
-        .title = "Beacons list",
+        .title = "Locations",
         .callback = login_menu_beacons_callback,
         .icon = beacons_icon
     };
@@ -754,76 +735,24 @@ static void login_window_unload(Window *window) {
 /////////////////////////////////////
 
 ///////////////////////////////////// USER WINDOW
-static void user_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
-    if(is_downloading && last_request==REQUEST_ACHIEVEMENTS) {
-        graphics_context_set_stroke_color(ctx, GColorWhite);
-        graphics_context_set_fill_color(ctx, GColorWhite);
-        graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
-    }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
-}
+static SimpleMenuSection user_menu_sections[1];
+static SimpleMenuItem user_menu_first_section_items[1];
 
-static uint16_t get_num_sections_achievements(MenuLayer *menu_layer, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_sections_achievements()");
-    return 1;
-}
+//static GBitmap *achievements_icon;
 
-static int16_t get_header_height_achievements(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_header_height_achievements()");
-    return MENU_CELL_BASIC_HEADER_HEIGHT;
+static void user_menu_achievements_callback(int index, void *ctx) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_menu_achievements_callback()");
+    send_simple_request(REQUEST_ACHIEVEMENTS);
+    is_downloading = true;
+    window_stack_push(achievements_window, true);
 }
-
-static int16_t get_cell_height_achievements(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_cell_height_achievements()");
-    return 26;
-}
-
-static void draw_achievement_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_achievement_header()");
-    if(achievements!=NULL) {
-        switch (section_index) {
-            case 0:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Achievements");
-                break;
-        }
-    }
-    else
-        menu_cell_basic_header_draw(ctx, cell_layer, "No achievements");
-}
-
-static void draw_achievement_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_achievement_row()");
-    switch (cell_index->section) {
-        case 0:
-            if(achievements!=NULL && achievements[cell_index->row]!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, achievements[cell_index->row]->name, NULL, NULL);
-            break;
-    }
-}
-
-static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_select_click()");
-    if(cell_index->section==0 && achievements!=NULL)
-        current_achievement = achievements[cell_index->row];
-    if(current_achievement!=NULL)
-        window_stack_push(achievement_details_window, true);
-}
-
-MenuLayerCallbacks achievements_menu_callbacks = {
-    .get_num_sections = get_num_sections_achievements,
-    .get_num_rows = get_num_achievements,
-    .get_header_height = get_header_height_achievements,
-    .get_cell_height = get_cell_height_achievements,
-    .draw_header = draw_achievement_header,
-    .draw_row = draw_achievement_row,
-    .select_click = achievement_select_click
-};
 
 static void user_window_load(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() start");
+    //achievements_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_BEACON);
+    
     Layer *window_layer = window_get_root_layer(window);
-    int text_layer_height = 52;
+    int text_layer_height = 100;
     GRect textbar_bounds = layer_get_bounds(window_layer);
     textbar_bounds.size.h = textbar_height;
     user_textbar_layer = text_layer_create(textbar_bounds);
@@ -832,16 +761,9 @@ static void user_window_load(Window *window) {
     text_layer_set_text(user_textbar_layer,text_buffer1);
     text_layer_set_font(user_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(user_textbar_layer, GTextAlignmentCenter);
-    
-    user_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
-    
-    GRect user_sign_layer_bounds = layer_get_bounds(window_layer);
-    user_sign_layer_bounds.size.h = textbar_height;
-    user_sign_layer_bounds.size.w = textbar_height;
-    user_sign_layer_bounds.origin.x = textbar_bounds.size.w-textbar_height;
-    user_downloading_sign_layer = layer_create(user_sign_layer_bounds);
-    layer_set_update_proc(user_downloading_sign_layer, user_downloading_sign_layer_update);
-    
+    text_layer_set_background_color(user_textbar_layer,GColorBlack);
+    text_layer_set_text_color(user_textbar_layer,GColorWhite);
+
     GRect text_bounds = layer_get_bounds(window_layer);
     text_bounds.size.h = text_layer_height;
     text_bounds.origin.y += textbar_height;
@@ -852,28 +774,38 @@ static void user_window_load(Window *window) {
     text_layer_set_font(user_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(user_text_layer, GTextAlignmentLeft);
     
+    user_menu_first_section_items[0] = (SimpleMenuItem) {
+        .title = "Achievements",
+        .callback = user_menu_achievements_callback
+        //.icon = achievements_icon
+    };
+    
+    user_menu_sections[0] = (SimpleMenuSection) {
+        .num_items = 1,
+        .items = user_menu_first_section_items
+    };
+    
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height + text_layer_height;
     menu_bounds.origin.y += textbar_height + text_layer_height;
-    achievements_menu_layer = menu_layer_create(menu_bounds);
-    menu_layer_set_callbacks(achievements_menu_layer, NULL, achievements_menu_callbacks);
-    menu_layer_set_click_config_onto_window(achievements_menu_layer, window);
+    user_menu_layer = simple_menu_layer_create(menu_bounds,window,user_menu_sections,1,NULL);
     
     layer_add_child(window_layer, text_layer_get_layer(user_textbar_layer));
-    layer_add_child(window_layer, inverter_layer_get_layer(user_textbar_inverter_layer));
-    layer_add_child(window_layer, user_downloading_sign_layer);
+    //layer_add_child(window_layer, user_downloading_sign_layer);
     layer_add_child(window_layer, text_layer_get_layer(user_text_layer));
-    layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
+    //layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
+    layer_add_child(window_layer, simple_menu_layer_get_layer(user_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() end");
 }
 
 static void user_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_unload() start");
-    menu_layer_destroy(achievements_menu_layer);
+    simple_menu_layer_destroy(user_menu_layer);
+    //menu_layer_destroy(achievements_menu_layer);
     text_layer_destroy(user_text_layer);
-    layer_destroy(user_downloading_sign_layer);
-    inverter_layer_destroy(user_textbar_inverter_layer);
+    //layer_destroy(user_downloading_sign_layer);
     text_layer_destroy(user_textbar_layer);
+    //gbitmap_destroy(achievements_icon);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_unload() end");
 }
 /////////////////////////////////////
@@ -891,7 +823,8 @@ static void beacons_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
 
 static uint16_t get_num_sections_beacons(MenuLayer *menu_layer, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_sections_beacons()");
-    return 2;
+    //return 2;
+    return 1;
 }
 
 static int16_t get_header_height_beacons(MenuLayer *menu_layer, uint16_t section_index, void *data) {
@@ -909,27 +842,24 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
     if(beacons!=NULL) {
         switch (section_index) {
             case 0:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
-                break;
-            case 1:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Beacons out of range");
+                //menu_cell_basic_header_draw(ctx, cell_layer, "Beacons in range");
+                menu_cell_basic_header_draw(ctx, cell_layer, "Locations");
                 break;
         }
     }
     else
-        menu_cell_basic_header_draw(ctx, cell_layer, "Looking for beacons...");
+        menu_cell_basic_header_draw(ctx, cell_layer, "Downloading locations...");
 }
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_row()");
+    static char text_buffer[40];
     switch (cell_index->section) {
         case 0:
-            if(beacons!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, beacons[cell_index->row]->name, NULL, NULL);
-            break;
-        case 1:
-            if(beacons!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, beacons[num_beacons_in_range+cell_index->row]->name, NULL, NULL);
+            if(beacons!=NULL) {
+                snprintf(text_buffer,40,"(%i) %s",beacons[cell_index->row]->coworkers,beacons[cell_index->row]->name);
+                menu_cell_basic_draw(ctx, cell_layer, text_buffer, NULL, NULL);
+            }
             break;
     }
 }
@@ -939,13 +869,20 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
     if(cell_index->section==0 && beacons!=NULL) {
         current_beacon = beacons[cell_index->row];
     }
-    else if(cell_index->section==1  && beacons!=NULL) {
-        current_beacon = beacons[num_beacons_in_range+cell_index->row];
+    
+    if(current_beacon!=NULL /*&& current_beacon->coworkers>0*/) {
+        if(previous_beacon!=current_beacon)
+            clear_coworkers_table();
+        send_query_request(REQUEST_COWORKERS,current_beacon->id);
+        is_downloading = true;
+        previous_beacon = current_beacon;
+        window_stack_push(coworkers_window, true);
     }
+    /*
     if(current_beacon!=NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_select_click() current_beacon: %s",current_beacon->name);
         window_stack_push(beacon_details_window, true);
-    }
+    }*/
 }
 
 MenuLayerCallbacks beacons_menu_callbacks = {
@@ -968,8 +905,8 @@ static void beacons_window_load(Window *window) {
     text_layer_set_text(beacons_textbar_layer,user.name);
     text_layer_set_font(beacons_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(beacons_textbar_layer, GTextAlignmentCenter);
-    
-    beacons_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    text_layer_set_background_color(beacons_textbar_layer,GColorBlack);
+    text_layer_set_text_color(beacons_textbar_layer,GColorWhite);
     
     GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
     downloading_sign_layer_bounds.size.h = textbar_height;
@@ -986,7 +923,6 @@ static void beacons_window_load(Window *window) {
     menu_layer_set_click_config_onto_window(beacons_menu_layer, window);
     
     layer_add_child(window_layer, text_layer_get_layer(beacons_textbar_layer));
-    layer_add_child(window_layer, inverter_layer_get_layer(beacons_textbar_inverter_layer));
     layer_add_child(window_layer, beacons_downloading_sign_layer);
     layer_add_child(window_layer, menu_layer_get_layer(beacons_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_load() end");
@@ -996,7 +932,6 @@ static void beacons_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_unload() start");
     menu_layer_destroy(beacons_menu_layer);
     layer_destroy(beacons_downloading_sign_layer);
-    inverter_layer_destroy(beacons_textbar_inverter_layer);
     text_layer_destroy(beacons_textbar_layer);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_unload() start");
 }
@@ -1005,102 +940,6 @@ static void beacons_window_appear(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_appear() start");
     send_simple_request(REQUEST_BEACONS);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_appear() end");
-}
-/////////////////////////////////////
-
-///////////////////////////////////// BEACON DETAILS WINDOW
-static void dinstance_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "dinstance_layer_update() start");
-    int height = 34;
-    int width = 136;
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_draw_round_rect(ctx,GRect(4,3,width,height),8);
-    graphics_context_set_fill_color(ctx, GColorBlack);
-    if(current_beacon->proximity<96)
-        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon->proximity/100.0,height),8,GCornersLeft);
-    else if(current_beacon->proximity>=96)
-        graphics_fill_rect(ctx,GRect(4,3,width*current_beacon->proximity/100.0,height),8,GCornersAll);
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "dinstance_layer_update() end");
-}
-
-static void coworkers_list_select_handler(ClickRecognizerRef recognizer, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() start");
-    //if(current_beacon->coworkers>0) {
-        if(previous_beacon!=current_beacon)
-            clear_coworkers_table();
-        send_query_request(REQUEST_COWORKERS,current_beacon->id);
-        is_downloading = true;
-        previous_beacon = current_beacon;
-        window_stack_push(coworkers_window, true);
-    //}
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_list_select_handler() end");
-}
-
-static void beacon_details_click_config_provider(void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_click_config_provider() start");
-    window_single_click_subscribe(BUTTON_ID_SELECT,(ClickHandler)coworkers_list_select_handler);
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_click_config_provider() end");
-}
-
-static void beacon_details_window_load(Window *window) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_window_load() start");
-    Layer *window_layer = window_get_root_layer(window);
-    int uppertext_layer_height = 30;
-    int proximity_layer_height = 40;
-    
-    GRect textbar_bounds = layer_get_bounds(window_layer);
-    textbar_bounds.size.h = textbar_height;
-    beacon_details_textbar_layer = text_layer_create(textbar_bounds);
-    text_layer_set_text(beacon_details_textbar_layer,current_beacon->name);
-    text_layer_set_font(beacon_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(beacon_details_textbar_layer, GTextAlignmentCenter);
-    
-    beacon_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
-    
-    GRect uppertext_bounds = layer_get_bounds(window_layer);
-    uppertext_bounds.size.h = uppertext_layer_height;
-    uppertext_bounds.origin.y = textbar_height;
-    beacon_details_uppertext_layer = text_layer_create(uppertext_bounds);
-    text_layer_set_text(beacon_details_uppertext_layer,"Proximity:");
-    text_layer_set_font(beacon_details_uppertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(beacon_details_uppertext_layer, GTextAlignmentCenter);
-    
-    GRect proximity_layer_bounds = layer_get_bounds(window_layer);
-    proximity_layer_bounds.size.h = proximity_layer_height;
-    proximity_layer_bounds.origin.y = textbar_height + uppertext_layer_height;
-    beacon_details_proximity_layer = layer_create(proximity_layer_bounds);
-    layer_set_update_proc(beacon_details_proximity_layer, dinstance_layer_update);
-    
-    GRect lowertext_bounds = layer_get_bounds(window_layer);
-    lowertext_bounds.size.h -= textbar_height + uppertext_layer_height + proximity_layer_height;
-    lowertext_bounds.origin.y = textbar_height + uppertext_layer_height + proximity_layer_height;
-    beacon_details_lowertext_layer = text_layer_create(lowertext_bounds);
-    static char text_buffer2[70];
-    if(current_beacon->coworkers>0)
-        snprintf(text_buffer2,70," Coworkers near: %i\n\n Click SELECT to see\n who they are",current_beacon->coworkers);
-    else
-        snprintf(text_buffer2,70," Coworkers near: %i",current_beacon->coworkers);
-    text_layer_set_text(beacon_details_lowertext_layer,text_buffer2);
-    text_layer_set_font(beacon_details_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(beacon_details_lowertext_layer, GTextAlignmentLeft);
-    
-    layer_add_child(window_layer, text_layer_get_layer(beacon_details_textbar_layer));
-    layer_add_child(window_layer, inverter_layer_get_layer(beacon_details_textbar_inverter_layer));
-    layer_add_child(window_layer, text_layer_get_layer(beacon_details_uppertext_layer));
-    layer_add_child(window_layer, beacon_details_proximity_layer);
-    layer_add_child(window_layer, text_layer_get_layer(beacon_details_lowertext_layer));
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_window_load() end");
-}
-
-static void beacon_details_window_unload(Window *window) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_window_unload() start");
-    text_layer_destroy(beacon_details_lowertext_layer);
-    layer_destroy(beacon_details_proximity_layer);
-    text_layer_destroy(beacon_details_uppertext_layer);
-    inverter_layer_destroy(beacon_details_textbar_inverter_layer);
-    text_layer_destroy(beacon_details_textbar_layer);
-    current_beacon = NULL;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacon_details_window_unload() end");
 }
 /////////////////////////////////////
 
@@ -1116,7 +955,10 @@ static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx)
 }
 
 static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
-    return 1;
+    if(coworkers!=NULL)
+        return 1;
+    else
+        return 0;
 }
 
 static int16_t get_header_height_coworkers(MenuLayer *menu_layer, uint16_t section_index, void *data) {
@@ -1128,20 +970,28 @@ static int16_t get_cell_height_coworkers(MenuLayer *menu_layer, MenuIndex *cell_
 }
 
 static void draw_coworker_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-    switch (section_index) {
-        case 0:
-            menu_cell_basic_header_draw(ctx, cell_layer, "Coworkers in room");
-            break;
+    if(coworkers!=NULL) {
+        switch (section_index) {
+            case 0:
+                menu_cell_basic_header_draw(ctx, cell_layer, "Coworkers in room");
+                break;
+        }
     }
+    else
+        menu_cell_basic_header_draw(ctx, cell_layer, "This room is empty");
 }
 
 static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
-    switch (cell_index->section) {
-        case 0:
-            if(coworkers!=NULL)
-                menu_cell_basic_draw(ctx, cell_layer, coworkers[cell_index->row]->name, NULL, NULL);
-            break;
+    if(coworkers!=NULL) {
+        switch (cell_index->section) {
+            case 0:
+                if(coworkers!=NULL)
+                    menu_cell_basic_draw(ctx, cell_layer, coworkers[cell_index->row]->name, NULL, NULL);
+                break;
+        }
     }
+    else
+        menu_cell_basic_draw(ctx, cell_layer, "NOBODY...", NULL, NULL);
 }
 
 static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
@@ -1183,8 +1033,8 @@ static void coworkers_window_load(Window *window) {
     text_layer_set_text(coworkers_textbar_layer,text_buffer);
     text_layer_set_font(coworkers_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(coworkers_textbar_layer, GTextAlignmentCenter);
-    
-    coworkers_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    text_layer_set_background_color(coworkers_textbar_layer,GColorBlack);
+    text_layer_set_text_color(coworkers_textbar_layer,GColorWhite);
     
     GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
     downloading_sign_layer_bounds.size.h = textbar_height;
@@ -1201,7 +1051,6 @@ static void coworkers_window_load(Window *window) {
     menu_layer_set_click_config_onto_window(coworkers_menu_layer, window);
     
     layer_add_child(window_layer, text_layer_get_layer(coworkers_textbar_layer));
-    layer_add_child(window_layer, inverter_layer_get_layer(coworkers_textbar_inverter_layer));
     layer_add_child(window_layer, coworkers_downloading_sign_layer);
     layer_add_child(window_layer, menu_layer_get_layer(coworkers_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_load() end");
@@ -1211,9 +1060,120 @@ static void coworkers_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_unload() start");
     menu_layer_destroy(coworkers_menu_layer);
     layer_destroy(coworkers_downloading_sign_layer);
-    inverter_layer_destroy(coworkers_textbar_inverter_layer);
     text_layer_destroy(coworkers_textbar_layer);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_unload() end");
+}
+/////////////////////////////////////
+
+///////////////////////////////////// ACHIEVEMENTS WINDOW
+static void achievements_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_downloading_sign_layer_update() start");
+    if(is_downloading && last_request==REQUEST_ACHIEVEMENTS) {
+        graphics_context_set_stroke_color(ctx, GColorWhite);
+        graphics_context_set_fill_color(ctx, GColorWhite);
+        graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
+    }
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_downloading_sign_layer_update() end");
+}
+
+static uint16_t get_num_sections_achievements(MenuLayer *menu_layer, void *data) {
+    if(achievements!=NULL)
+        return 1;
+    else
+        return 0;
+}
+
+static int16_t get_header_height_achievements(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
+static int16_t get_cell_height_achievements(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+    return 26;
+}
+
+static void draw_achievement_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
+    if(achievements!=NULL) {
+        switch (section_index) {
+            case 0:
+                menu_cell_basic_header_draw(ctx, cell_layer, "Achievements");
+                break;
+        }
+    }
+    else
+        menu_cell_basic_header_draw(ctx, cell_layer, "You haven't gained any achievement");
+}
+
+static void draw_achievement_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
+    if(achievements!=NULL) {
+        switch (cell_index->section) {
+            case 0:
+                menu_cell_basic_draw(ctx, cell_layer, achievements[cell_index->row]->name, NULL, NULL);
+                break;
+        }
+    }
+    else
+        menu_cell_basic_draw(ctx, cell_layer, "NOTHING...", NULL, NULL);
+}
+
+static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_select_click()");
+    if(cell_index->section==0 && achievements!=NULL)
+        current_achievement = achievements[cell_index->row];
+    if(current_achievement!=NULL)
+        window_stack_push(achievement_details_window, true);
+}
+
+MenuLayerCallbacks achievements_menu_callbacks = {
+    .get_num_sections = get_num_sections_achievements,
+    .get_num_rows = get_num_achievements,
+    .get_header_height = get_header_height_achievements,
+    .get_cell_height = get_cell_height_achievements,
+    .draw_header = draw_achievement_header,
+    .draw_row = draw_achievement_row,
+    .select_click = achievement_select_click
+};
+
+static void achievements_window_load(Window *window) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_load() start");
+    Layer *window_layer = window_get_root_layer(window);
+    
+    GRect textbar_bounds = layer_get_bounds(window_layer);
+    textbar_bounds.size.h = textbar_height;
+    achievements_textbar_layer = text_layer_create(textbar_bounds);
+    static char text_buffer[30];
+    snprintf(text_buffer,30,"%s",user.name);
+    text_layer_set_text(achievements_textbar_layer,text_buffer);
+    text_layer_set_font(achievements_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(achievements_textbar_layer, GTextAlignmentCenter);
+    text_layer_set_background_color(achievements_textbar_layer,GColorBlack);
+    text_layer_set_text_color(achievements_textbar_layer,GColorWhite);
+    
+    GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
+    downloading_sign_layer_bounds.size.h = textbar_height;
+    downloading_sign_layer_bounds.size.w = textbar_height;
+    downloading_sign_layer_bounds.origin.x = textbar_bounds.size.w-textbar_height;
+    achievements_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
+    layer_set_update_proc(achievements_downloading_sign_layer, achievements_downloading_sign_layer_update);
+    
+    GRect menu_bounds = layer_get_bounds(window_layer);
+    menu_bounds.size.h -= textbar_height;
+    menu_bounds.origin.y += textbar_height;
+    achievements_menu_layer = menu_layer_create(menu_bounds);
+    menu_layer_set_callbacks(achievements_menu_layer, NULL, achievements_menu_callbacks);
+    menu_layer_set_click_config_onto_window(achievements_menu_layer, window);
+    
+    layer_add_child(window_layer, text_layer_get_layer(achievements_textbar_layer));
+    layer_add_child(window_layer, achievements_downloading_sign_layer);
+    layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_load() end");
+}
+
+static void achievements_window_unload(Window *window) {
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_unload() start");
+    menu_layer_destroy(achievements_menu_layer);
+    layer_destroy(achievements_downloading_sign_layer);
+    text_layer_destroy(achievements_textbar_layer);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_unload() end");
 }
 /////////////////////////////////////
 
@@ -1230,8 +1190,8 @@ static void achievement_details_window_load(Window *window) {
     text_layer_set_text(achievement_details_textbar_layer,text_buffer1);
     text_layer_set_font(achievement_details_textbar_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(achievement_details_textbar_layer, GTextAlignmentCenter);
-    
-    achievement_details_textbar_inverter_layer = inverter_layer_create(textbar_bounds);
+    text_layer_set_background_color(achievement_details_textbar_layer,GColorBlack);
+    text_layer_set_text_color(achievement_details_textbar_layer,GColorWhite);
     
     GRect max_text_bounds = GRect(0,0,textbar_bounds.size.w,500);
     achievement_details_text_layer = text_layer_create(max_text_bounds);
@@ -1252,7 +1212,6 @@ static void achievement_details_window_load(Window *window) {
     scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_text_layer));
     
     layer_add_child(window_layer, text_layer_get_layer(achievement_details_textbar_layer));
-    layer_add_child(window_layer, inverter_layer_get_layer(achievement_details_textbar_inverter_layer));
     layer_add_child(window_layer,scroll_layer_get_layer(achievement_details_scroll_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_load() end");
 }
@@ -1261,7 +1220,6 @@ static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() start");
     text_layer_destroy(achievement_details_text_layer);
     scroll_layer_destroy(achievement_details_scroll_layer);
-    inverter_layer_destroy(achievement_details_textbar_inverter_layer);
     text_layer_destroy(achievement_details_textbar_layer);
     current_achievement = NULL;
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() end");
@@ -1282,13 +1240,13 @@ static WindowHandlers beacons_window_handlers = {
     .unload = beacons_window_unload,
     .appear = beacons_window_appear
 };
-static WindowHandlers beacon_details_window_handlers = {
-    .load = beacon_details_window_load,
-    .unload = beacon_details_window_unload
-};
 static WindowHandlers coworkers_window_handlers = {
     .load = coworkers_window_load,
     .unload = coworkers_window_unload
+};
+static WindowHandlers achievements_window_handlers = {
+    .load = achievements_window_load,
+    .unload = achievements_window_unload
 };
 static WindowHandlers achievement_details_window_handlers = {
     .load = achievement_details_window_load,
@@ -1301,7 +1259,7 @@ static void init() {
     num_beacons_out_of_range = 0;
     num_coworkers = 0;
     num_achievements = 0;
-    max_achievements = 6;
+    max_achievements = 2;
     last_request = 0;
     
     is_downloading = false;
@@ -1318,14 +1276,13 @@ static void init() {
     window_set_fullscreen(beacons_window, true);
     window_set_window_handlers(beacons_window, beacons_window_handlers);
     
-    beacon_details_window = window_create();
-    window_set_fullscreen(beacon_details_window, true);
-    window_set_window_handlers(beacon_details_window, beacon_details_window_handlers);
-    window_set_click_config_provider(beacon_details_window, beacon_details_click_config_provider);
-    
     coworkers_window = window_create();
     window_set_fullscreen(coworkers_window, true);
     window_set_window_handlers(coworkers_window, coworkers_window_handlers);
+
+    achievements_window = window_create();
+    window_set_fullscreen(achievements_window, true);
+    window_set_window_handlers(achievements_window, achievements_window_handlers);
     
     achievement_details_window = window_create();
     window_set_fullscreen(achievement_details_window, true);
@@ -1338,7 +1295,7 @@ static void init() {
     
     const int inbound_size = app_message_inbox_size_maximum();
     const int outbound_size = 128;
-    app_message_open(200,outbound_size);
+    app_message_open(inbound_size,outbound_size);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message initialising: %s",translate_result(app_message_open(200,outbound_size)));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message inbound size: %u",inbound_size);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message outbound size: %u",outbound_size);
@@ -1349,8 +1306,8 @@ static void init() {
 
 static void deinit() {
     window_destroy(achievement_details_window);
+    window_destroy(achievements_window);
     window_destroy(coworkers_window);
-    window_destroy(beacon_details_window);
     window_destroy(beacons_window);
     window_destroy(user_window);
     window_destroy(login_window);
@@ -1358,6 +1315,10 @@ static void deinit() {
     if(user.name!=NULL) {
         free(user.name);
         user.name = NULL;
+    }
+    if(user.location!=NULL) {
+        free(user.location);
+        user.location = NULL;
     }
     clear_beacons_table();
     clear_coworkers_table();
