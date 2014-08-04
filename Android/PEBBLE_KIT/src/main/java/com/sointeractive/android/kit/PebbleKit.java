@@ -125,14 +125,17 @@ public final class PebbleKit {
      * false if the Pebble application is not installed on the user's handset.
      */
     public static boolean isWatchConnected(final Context context) {
-        Cursor c =
+        final Cursor c =
                 context.getContentResolver().query(
                         Uri.parse("content://com.getpebble.android.provider/state"), null, null,
                         null, null);
-        if (c == null || !c.moveToNext()) {
-            return false;
+        try {
+            return !(c == null || !c.moveToNext()) && c.getInt(KIT_STATE_COLUMN_CONNECTED) == 1;
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
-        return c.getInt(KIT_STATE_COLUMN_CONNECTED) == 1;
     }
 
     /**
@@ -146,14 +149,17 @@ public final class PebbleKit {
      * no Pebble is currently connected to the handset.
      */
     public static boolean areAppMessagesSupported(final Context context) {
-        Cursor c =
+        final Cursor c =
                 context.getContentResolver().query(
                         Uri.parse("content://com.getpebble.android.provider/state"), null, null,
                         null, null);
-        if (c == null || !c.moveToNext()) {
-            return false;
+        try {
+            return !(c == null || !c.moveToNext()) && c.getInt(KIT_STATE_COLUMN_APPMSG_SUPPORT) == 1;
+        } finally {
+            if (c != null) {
+                c.close();
+            }
         }
-        return c.getInt(KIT_STATE_COLUMN_APPMSG_SUPPORT) == 1;
     }
 
 
