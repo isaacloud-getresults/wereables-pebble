@@ -69,7 +69,7 @@ public class PeopleCache {
 
     private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
         if (oldResponses != null) {
-            Log.i(TAG, "Check: Changes in room: " + observedRoom);
+            Log.d(TAG, "Check: Changes in room " + observedRoom);
             NewPeopleChecker.checkSafe(oldResponses.get(observedRoom), peopleResponses.get(observedRoom));
         }
     }

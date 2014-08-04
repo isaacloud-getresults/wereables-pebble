@@ -58,8 +58,7 @@ public class PebbleConnector extends Observable {
                 Log.i(TAG, "Event: Nothing to send, sendingQueue is empty");
             } else {
                 final PebbleDictionary data = sendingQueue.peek();
-                Log.i(TAG, "Action: Sending response");
-                Log.d(TAG, "Response data:" + data.toJsonString());
+                Log.d(TAG, "Action: Sending response: " + data.toJsonString());
                 PebbleKit.sendDataToPebble(context, PebbleSettings.PEBBLE_APP_UUID, data);
             }
         }

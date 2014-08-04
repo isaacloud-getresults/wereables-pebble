@@ -27,7 +27,7 @@ public enum Query {
     }
 
     static HttpResponse getUserIdResponse(final String email) throws IOException, IsaaCloudConnectionException {
-        Log.i(TAG, "Action: Query for user id");
+        Log.d(TAG, "Action: Query for user id");
 
         final Map<String, Object> query = new HashMap<String, Object>();
         query.put("email", email);
@@ -45,7 +45,7 @@ public enum Query {
 
     HttpResponse getResponse(final String param) throws IOException, IsaaCloudConnectionException {
         final String path = String.format(query, param);
-        Log.i(TAG, "Action: Query to path: " + path);
+        Log.d(TAG, "Action: Query to path: " + path);
         return Application.isaacloudConnector
                 .path(path)
                 .withFields(fields)

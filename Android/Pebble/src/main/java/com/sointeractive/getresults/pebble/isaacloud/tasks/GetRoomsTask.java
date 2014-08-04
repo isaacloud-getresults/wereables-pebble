@@ -21,7 +21,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
 
     @Override
     protected Collection<RoomIC> doInBackground(final Void... params) {
-        Log.i(TAG, "Action: Get beacons in background");
+        Log.d(TAG, "Action: Get beacons in background");
 
         try {
             return getBeacons();
@@ -44,12 +44,13 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
         for (int i = 0; i < beacons.length(); i++) {
             final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
             final RoomIC roomFound = new RoomIC(beaconsJSON);
+            // TODO: Replace this by id's to skip
             if (!roomFound.name.equals("skip this room")) {
                 result.add(roomFound);
             }
         }
 
-        Log.i(TAG, "Event: " + result.size() + " rooms found");
+        Log.d(TAG, "Event: " + result.size() + " rooms found");
         return result;
     }
 

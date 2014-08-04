@@ -21,7 +21,7 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
 
     @Override
     protected Collection<PersonIC> doInBackground(final Void... params) {
-        Log.i(TAG, "Action: Get people in background");
+        Log.d(TAG, "Action: Get people in background");
 
         try {
             return getPeople();
@@ -46,7 +46,7 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
             people.add(new PersonIC(personJSON));
         }
 
-        Log.i(TAG, "Event: " + people.size() + " people found");
+        Log.d(TAG, "Event: " + people.size() + " people found");
         return people;
     }
 

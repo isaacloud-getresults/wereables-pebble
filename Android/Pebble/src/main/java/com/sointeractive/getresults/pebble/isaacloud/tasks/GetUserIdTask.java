@@ -15,7 +15,7 @@ public class GetUserIdTask extends AsyncTask<String, Integer, Integer> {
 
     @Override
     protected Integer doInBackground(final String... emails) {
-        Log.i(TAG, "Action: Get user id in background");
+        Log.d(TAG, "Action: Get user id in background");
 
         try {
             return logIn(emails[0]);

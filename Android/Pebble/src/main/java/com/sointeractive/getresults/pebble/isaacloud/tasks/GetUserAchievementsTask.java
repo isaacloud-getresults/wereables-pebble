@@ -21,7 +21,7 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
 
     @Override
     protected Collection<AchievementIC> doInBackground(final Integer... userId) {
-        Log.i(TAG, "Action: Get achievements in background");
+        Log.d(TAG, "Action: Get achievements in background");
 
         try {
             return getAchievements(userId[0].toString());
@@ -46,7 +46,7 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
             result.add(new AchievementIC(achievementJSON));
         }
 
-        Log.i(TAG, "Event: " + result.size() + " achievements found");
+        Log.d(TAG, "Event: " + result.size() + " achievements found");
         return result;
     }
 
