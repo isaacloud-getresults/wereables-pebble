@@ -4,10 +4,12 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
 public class AchievementResponse implements ResponseItem {
+    private final int id;
     private final String name;
     private final String description;
 
-    public AchievementResponse(final String name, final String description) {
+    public AchievementResponse(final int id, final String name, final String description) {
+        this.id = id;
         this.name = name;
         this.description = description;
     }
@@ -15,6 +17,7 @@ public class AchievementResponse implements ResponseItem {
     @Override
     public PebbleDictionary getData(final int responseType) {
         return new DictionaryBuilder(responseType)
+                .addInt(id)
                 .addString(name)
                 .addString(description)
                 .build();

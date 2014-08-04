@@ -8,7 +8,6 @@ import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
-import java.util.LinkedList;
 
 public enum Request implements Sendable {
     UNKNOWN(0, "UNKNOWN") {
@@ -35,6 +34,7 @@ public enum Request implements Sendable {
     PEOPLE_IN_ROOM(3, "People list") {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
+            PeopleCache.INSTANCE.observedRoom = query;
             return PeopleCache.INSTANCE.getData(query);
         }
     },
@@ -52,8 +52,8 @@ public enum Request implements Sendable {
     static final int REQUEST_TYPE = 1;
     static final int REQUEST_QUERY = 2;
 
-    final int id;
-    final String logMessage;
+    public final int id;
+    public final String logMessage;
 
     private int query;
 
@@ -62,12 +62,8 @@ public enum Request implements Sendable {
         this.logMessage = logMessage;
     }
 
-    public Collection<PebbleDictionary> getDataToSend() {
-        final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
-        for (final ResponseItem responseItem : getSendable(query)) {
-            list.add(responseItem.getData(id));
-        }
-        return list;
+    public void sendResponse() {
+        Responder.sendResponseItemsToPebble(id, getSendable(query));
     }
 
     public void setQuery(final PebbleDictionary data) {

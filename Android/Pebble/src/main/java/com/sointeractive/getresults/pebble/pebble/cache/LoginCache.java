@@ -2,7 +2,6 @@ package com.sointeractive.getresults.pebble.pebble.cache;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
-import com.sointeractive.getresults.pebble.isaacloud.providers.UserAchievementsProvider;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
@@ -23,19 +22,26 @@ public class LoginCache {
         if (loginResponse == null) {
             reload();
         }
-        return loginResponse;
+        return safeLogin();
+    }
+
+    private Collection<ResponseItem> safeLogin() {
+        if (loginResponse == null) {
+            return new LinkedList<ResponseItem>();
+        } else {
+            return loginResponse;
+        }
     }
 
     public void reload() {
         final UserIC userIC = UserProvider.INSTANCE.getUpToDateData();
-        final int roomsNumber = RoomsProvider.INSTANCE.getSize();
-        final int achievementsNumber = UserAchievementsProvider.INSTANCE.getSize();
-
-        loginResponse = new LinkedList<ResponseItem>();
 
         if (userIC != null) {
-            final ResponseItem login = new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomsNumber, achievementsNumber);
-            loginResponse.add(login);
+            final int roomsNumber = RoomsProvider.INSTANCE.getSize();
+            final String roomName = RoomsProvider.INSTANCE.getRoomName(userIC.beacon);
+
+            loginResponse = new LinkedList<ResponseItem>();
+            loginResponse.add(new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomName, roomsNumber));
         }
     }
 }

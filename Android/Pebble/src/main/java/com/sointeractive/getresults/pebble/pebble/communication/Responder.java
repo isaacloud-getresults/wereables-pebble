@@ -3,28 +3,40 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 public class Responder {
+    public static final int PERSON_POP = 5;
     private static final String TAG = Responder.class.getSimpleName();
-
     private final PebbleDictionary data;
 
-    private Responder(final PebbleDictionary data) {
+    public Responder(final PebbleDictionary data) {
         this.data = data;
     }
 
-    public static void response(final PebbleDictionary data) {
-        final Responder responder = new Responder(data);
-        responder.processRequest();
+    public static void sendResponseItemsToPebble(final int id, final Collection<ResponseItem> data) {
+        if (!data.isEmpty()) {
+            final Collection<PebbleDictionary> responseData = makeResponseDictionary(id, data);
+            Application.pebbleConnector.sendNewDataToPebble(responseData);
+        }
     }
 
-    private void processRequest() {
+    private static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
+        final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
+        for (final ResponseItem responseItem : data) {
+            list.add(responseItem.getData(id));
+        }
+        return list;
+    }
+
+    public void sendRequestedResponse() {
         final Request request = getRequest();
         if (request != Request.UNKNOWN) {
-            sendResponseToPebble(request.getDataToSend());
+            request.sendResponse();
         }
     }
 
@@ -51,11 +63,5 @@ public class Responder {
                 return e;
         }
         return Request.UNKNOWN;
-    }
-
-    private void sendResponseToPebble(final Collection<PebbleDictionary> data) {
-        if (!data.isEmpty()) {
-            Application.pebbleConnector.sendNewDataToPebble(data);
-        }
     }
 }

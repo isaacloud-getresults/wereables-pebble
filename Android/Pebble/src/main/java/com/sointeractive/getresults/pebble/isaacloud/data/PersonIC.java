@@ -18,7 +18,7 @@ public class PersonIC {
         firstName = json.getString("firstName");
         lastName = json.getString("lastName");
         setCounterValues(json.getJSONArray("counterValues"));
-        beacon = counters.get(6, 0);
+        beacon = counters.get(1, 0);
     }
 
     void setCounterValues(final JSONArray jsonArray) throws JSONException {

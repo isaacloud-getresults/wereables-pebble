@@ -50,4 +50,15 @@ public class RoomsProvider {
             return roomsIC.size();
         }
     }
+
+    public String getRoomName(final int id) {
+        final Collection<RoomIC> roomsIC = getData();
+        for (final RoomIC roomIC : roomsIC) {
+            if (roomIC.id == id) {
+                return roomIC.name;
+            }
+        }
+
+        return "No room info";
+    }
 }

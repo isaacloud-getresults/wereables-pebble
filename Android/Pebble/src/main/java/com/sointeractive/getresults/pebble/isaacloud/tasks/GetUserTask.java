@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,15 +13,15 @@ import java.io.IOException;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
+public class GetUserTask extends AsyncTask<Integer, Integer, UserIC> {
     private static final String TAG = GetUserTask.class.getSimpleName();
 
     @Override
-    protected UserIC doInBackground(final String... emails) {
+    protected UserIC doInBackground(final Integer... ids) {
         Log.i(TAG, "Action: Login in background");
 
         try {
-            return logIn(emails[0]);
+            return logIn(ids[0].toString());
         } catch (final JSONException e) {
             Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
@@ -34,27 +33,16 @@ public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
         return null;
     }
 
-    private UserIC logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.USER.getResponse();
-
-        final JSONArray users = response.getJSONArray();
-        for (int i = 0; i < users.length(); i++) {
-            final JSONObject userJSON = (JSONObject) users.get(i);
-
-            if (email.equals(userJSON.get("email"))) {
-                Log.i(TAG, "Event: User found: " + userJSON.toString());
-                return new UserIC(userJSON);
-            }
-        }
-
-        Log.i(TAG, "Event: user not found");
-        return null;
+    private UserIC logIn(final String id) throws IOException, IsaaCloudConnectionException, JSONException {
+        final HttpResponse response = Query.USER.getResponse(id);
+        final JSONObject userJSON = response.getJSONObject();
+        return new UserIC(userJSON);
     }
 
     @Override
     protected void onPostExecute(final UserIC result) {
-        if (result != null) {
-            Log.i(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: GetUserTask returned null");
         }
     }
 }

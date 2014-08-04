@@ -52,8 +52,8 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
 
     @Override
     protected void onPostExecute(final Collection<AchievementIC> result) {
-        if (result != null) {
-            Log.i(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: GetUserAchievement returned null");
         }
     }
 }
