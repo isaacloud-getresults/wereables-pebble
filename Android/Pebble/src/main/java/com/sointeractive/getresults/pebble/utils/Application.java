@@ -18,6 +18,7 @@ public class Application extends android.app.Application {
     public static PebbleConnector pebbleConnector;
     public static Context context;
 
+    @SuppressWarnings("WeakerAccess")
     public Application() {
         context = this;
         pebbleConnector = new PebbleConnector(this);

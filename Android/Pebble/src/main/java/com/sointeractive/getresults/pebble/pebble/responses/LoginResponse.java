@@ -31,16 +31,19 @@ public class LoginResponse implements ResponseItem {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         final LoginResponse that = (LoginResponse) o;
-        if (points != that.points) return false;
-        if (rank != that.rank) return false;
-        if (!name.equals(that.name)) return false;
-        if (!roomName.equals(that.roomName)) return false;
-
-        return true;
+        return rank == that.rank &&
+                points == that.points &&
+                name.equals(that.name) &&
+                roomName.equals(that.roomName);
     }
 
     @Override

@@ -26,7 +26,7 @@ public enum Query {
         this.fields = fields;
     }
 
-    static HttpResponse getUserId(final String email) throws IOException, IsaaCloudConnectionException {
+    static HttpResponse getUserIdResponse(final String email) throws IOException, IsaaCloudConnectionException {
         Log.i(TAG, "Action: Query for user id");
 
         final Map<String, Object> query = new HashMap<String, Object>();

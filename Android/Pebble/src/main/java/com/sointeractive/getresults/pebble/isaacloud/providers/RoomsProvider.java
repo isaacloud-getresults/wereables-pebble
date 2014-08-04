@@ -17,7 +17,7 @@ public class RoomsProvider {
         // Exists only to defeat instantiation.
     }
 
-    public Collection<RoomIC> getData() {
+    Collection<RoomIC> getData() {
         if (roomsIC == null) {
             reload();
         }

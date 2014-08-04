@@ -31,7 +31,7 @@ public class GetUserIdTask extends AsyncTask<String, Integer, Integer> {
     }
 
     private Integer logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.getUserId(email);
+        final HttpResponse response = Query.getUserIdResponse(email);
         final int id = response.getJSONArray().getJSONObject(0).getInt("id");
         Log.i(TAG, "Event: User: " + email + " logged in with id: " + id);
         return id;
