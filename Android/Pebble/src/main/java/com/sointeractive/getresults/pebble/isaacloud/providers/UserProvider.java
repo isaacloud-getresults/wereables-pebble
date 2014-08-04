@@ -2,7 +2,7 @@ package com.sointeractive.getresults.pebble.isaacloud.providers;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.GetLoginTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
 
 import java.util.concurrent.ExecutionException;
@@ -30,20 +30,26 @@ public class UserProvider {
 
     private void reload() {
         try {
-            if (isLoaded()) {
-                final GetUserTask getUser = new GetUserTask();
-                final UserIC newUserData = getUser.execute(userIC.id).get();
-                if (newUserData != null) {
-                    userIC = newUserData;
-                }
-            } else {
-                final GetLoginTask getLogin = new GetLoginTask();
-                userIC = getLogin.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+            final int userId = getUserId();
+            final GetUserTask getUser = new GetUserTask();
+            final UserIC newUserData = getUser.execute(userId).get();
+
+            if (newUserData != null) {
+                userIC = newUserData;
             }
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
             e.printStackTrace();
+        }
+    }
+
+    private int getUserId() throws ExecutionException, InterruptedException {
+        if (isLoaded()) {
+            return userIC.id;
+        } else {
+            final GetUserIdTask getLoginId = new GetUserIdTask();
+            return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
         }
     }
 

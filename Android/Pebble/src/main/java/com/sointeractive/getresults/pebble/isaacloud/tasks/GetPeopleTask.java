@@ -53,7 +53,7 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
     @Override
     protected void onPostExecute(final Collection<PersonIC> result) {
         if (result == null) {
-            Log.e(TAG, "Error: GetPeopleTask returned null");
+            Log.e(TAG, "Error: Returned null");
         }
     }
 }
