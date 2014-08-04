@@ -1,6 +1,6 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetLoginTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
@@ -38,7 +38,7 @@ public class UserProvider {
                 }
             } else {
                 final GetLoginTask getLogin = new GetLoginTask();
-                userIC = getLogin.execute(Settings.LOGIN_EMAIL).get();
+                userIC = getLogin.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
             }
         } catch (final InterruptedException e) {
             e.printStackTrace();

@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.isaacloud.data;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +24,7 @@ public class UserIC extends PersonIC {
         for (int i = 0; i < jsonArray.length(); i++) {
             if (!jsonArray.isNull(i)) {
                 final JSONObject leaderboard = jsonArray.getJSONObject(i);
-                if (leaderboard.getInt("id") == 1) {
+                if (leaderboard.getInt("id") == IsaaCloudSettings.LEADERBOARD_ID) {
                     return leaderboard;
                 }
             }

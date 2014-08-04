@@ -70,7 +70,7 @@ public enum Request implements Sendable {
         if (data.contains(REQUEST_QUERY)) {
             query = data.getInteger(REQUEST_QUERY).intValue();
         } else {
-            query = -1;
+            query = 0;
         }
     }
 }

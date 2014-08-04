@@ -44,9 +44,6 @@ public class PebbleActivity extends Activity implements Observer {
         registerPebbleConnector();
         checkPebbleConnection();
         registerButtonHandlers();
-
-        // TODO: Remove this, it exists for debug without Pebble purpose
-        CacheReloader.INSTANCE.setAutoReload(context);
     }
 
     private void initInstance() {

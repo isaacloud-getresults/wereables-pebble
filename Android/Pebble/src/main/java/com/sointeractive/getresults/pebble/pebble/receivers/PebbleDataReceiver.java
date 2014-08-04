@@ -6,7 +6,7 @@ import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
@@ -15,7 +15,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private final Handler handler = new Handler();
 
     public PebbleDataReceiver() {
-        super(Settings.PEBBLE_APP_UUID);
+        super(PebbleSettings.PEBBLE_APP_UUID);
     }
 
     @Override

@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.utils;
 import android.content.Context;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,8 +37,8 @@ public class Application extends android.app.Application {
     private Map<String, String> getIsaacloudConfig() {
         final Map<String, String> config = new HashMap<String, String>();
 
-        config.put("instanceId", Settings.INSTANCE_ID);
-        config.put("appSecret", Settings.APP_SECRET);
+        config.put("instanceId", IsaaCloudSettings.INSTANCE_ID);
+        config.put("appSecret", IsaaCloudSettings.APP_SECRET);
 
         return config;
     }

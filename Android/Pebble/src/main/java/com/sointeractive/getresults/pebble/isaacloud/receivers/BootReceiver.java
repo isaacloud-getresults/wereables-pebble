@@ -11,7 +11,6 @@ public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.i(TAG, "Event: System boot completed");
-        // TODO: Implement onBoot event
     }
 }
 

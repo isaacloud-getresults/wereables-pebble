@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.receivers.AlarmReceiver;
 import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
@@ -17,7 +18,7 @@ public class CacheReloader {
     public static final CacheReloader INSTANCE = new CacheReloader();
     private static final String TAG = CacheReloader.class.getSimpleName();
     private static final int SECOND = 1000;
-    private static final int INTERVAL = 10 * SECOND;
+    private static final int INTERVAL = IsaaCloudSettings.CACHE_RELOAD_INTERVAL_SECONDS * SECOND;
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
@@ -35,13 +36,15 @@ public class CacheReloader {
     }
 
     public void setAutoReload(final Context context) {
-        Log.i(TAG, "Action: Set cache auto reload");
+        if (alarmManager == null) {
+            Log.i(TAG, "Action: Set cache auto reload");
 
-        final Intent intent = new Intent(context, AlarmReceiver.class);
-        alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            final Intent intent = new Intent(context, AlarmReceiver.class);
+            alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), INTERVAL, alarmIntent);
+            alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), INTERVAL, alarmIntent);
+        }
     }
 
     public void stopAutoReload() {
@@ -49,6 +52,7 @@ public class CacheReloader {
 
         if (alarmManager != null) {
             alarmManager.cancel(alarmIntent);
+            alarmManager = null;
         }
     }
 }

@@ -4,13 +4,13 @@ import android.content.Context;
 import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
 
 public class PebbleNackReceiver extends PebbleKit.PebbleNackReceiver {
     private static final String TAG = PebbleNackReceiver.class.getSimpleName();
 
     public PebbleNackReceiver() {
-        super(Settings.PEBBLE_APP_UUID);
+        super(PebbleSettings.PEBBLE_APP_UUID);
     }
 
     @Override

@@ -5,7 +5,7 @@ import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
 import com.sointeractive.getresults.pebble.pebble.communication.NotificationSender;
 
 import java.util.Collection;
@@ -60,7 +60,7 @@ public class PebbleConnector extends Observable {
             } else {
                 final PebbleDictionary data = sendingQueue.poll();
                 Log.i(TAG, "Action: sending response: " + data.toJsonString());
-                PebbleKit.sendDataToPebble(context, Settings.PEBBLE_APP_UUID, data);
+                PebbleKit.sendDataToPebble(context, PebbleSettings.PEBBLE_APP_UUID, data);
             }
         }
     }

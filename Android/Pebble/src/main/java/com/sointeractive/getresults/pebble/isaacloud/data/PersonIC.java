@@ -2,6 +2,8 @@ package com.sointeractive.getresults.pebble.isaacloud.data;
 
 import android.util.SparseIntArray;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,7 +20,7 @@ public class PersonIC {
         firstName = json.getString("firstName");
         lastName = json.getString("lastName");
         setCounterValues(json.getJSONArray("counterValues"));
-        beacon = counters.get(1, 0);
+        beacon = counters.get(IsaaCloudSettings.ROOM_COUNTER_ID, 0);
     }
 
     void setCounterValues(final JSONArray jsonArray) throws JSONException {
