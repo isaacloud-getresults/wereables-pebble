@@ -15,7 +15,7 @@ import java.util.Set;
 public class NewPeopleChecker {
     private static final String TAG = NewPeopleChecker.class.getSimpleName();
 
-    public static void check(Collection<ResponseItem> oldPeople, Collection<ResponseItem> newPeople) {
+    public static void checkSafe(Collection<ResponseItem> oldPeople, Collection<ResponseItem> newPeople) {
         if (oldPeople == null) {
             oldPeople = new LinkedList<ResponseItem>();
         }
@@ -24,6 +24,10 @@ public class NewPeopleChecker {
             newPeople = new LinkedList<ResponseItem>();
         }
 
+        check(oldPeople, newPeople);
+    }
+
+    private static void check(final Collection<ResponseItem> oldPeople, final Collection<ResponseItem> newPeople) {
         final Set<ResponseItem> oldPeopleSet = new HashSet<ResponseItem>(oldPeople);
         final Set<ResponseItem> newPeopleSet = new HashSet<ResponseItem>(newPeople);
         final Set<ResponseItem> peopleIn = Sets.difference(newPeopleSet, oldPeopleSet).immutableCopy();
@@ -35,15 +39,15 @@ public class NewPeopleChecker {
 
     private static void notifyPeopleIn(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
-            Log.i(TAG, "Event: New people in room");
-            Responder.sendResponseToPebble(Request.PEOPLE_IN_ROOM.id, people);
+            Log.i(TAG, "Event: New people in the room");
+            Responder.sendResponseItemsToPebble(Request.PEOPLE_IN_ROOM.id, people);
         }
     }
 
     private static void notifyPeopleOut(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
-            Log.i(TAG, "Event: New people out of room");
-            Responder.sendResponseToPebble(Responder.PERSON_POP, people);
+            Log.i(TAG, "Event: New people out of the room");
+            Responder.sendResponseItemsToPebble(Responder.PERSON_POP, people);
         }
     }
 }

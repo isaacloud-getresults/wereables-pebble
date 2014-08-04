@@ -17,24 +17,25 @@ public class PeopleProvider {
     }
 
     public Collection<PersonIC> getData() {
-        if (peopleIC == null) {
-            reload();
-        }
-        return peopleIC;
+        reload();
+        return safePeople();
     }
 
-    public Collection<PersonIC> getUpToDateData() {
-        reload();
-        return peopleIC;
+    private Collection<PersonIC> safePeople() {
+        if (peopleIC == null) {
+            return new LinkedList<PersonIC>();
+        } else {
+            return peopleIC;
+        }
     }
 
     private void reload() {
         final GetPeopleTask getPeople = new GetPeopleTask();
         try {
-            peopleIC = getPeople.execute().get();
+            final Collection<PersonIC> newPeopleIC = getPeople.execute().get();
 
-            if (peopleIC == null) {
-                peopleIC = new LinkedList<PersonIC>();
+            if (newPeopleIC != null) {
+                peopleIC = newPeopleIC;
             }
         } catch (final InterruptedException e) {
             e.printStackTrace();

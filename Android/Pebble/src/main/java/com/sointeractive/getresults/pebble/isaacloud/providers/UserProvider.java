@@ -32,7 +32,10 @@ public class UserProvider {
         try {
             if (isLoaded()) {
                 final GetUserTask getUser = new GetUserTask();
-                userIC = getUser.execute(userIC.id).get();
+                final UserIC newUserData = getUser.execute(userIC.id).get();
+                if (newUserData != null) {
+                    userIC = newUserData;
+                }
             } else {
                 final GetLoginTask getLogin = new GetLoginTask();
                 userIC = getLogin.execute(Settings.LOGIN_EMAIL).get();

@@ -14,16 +14,18 @@ public class Responder {
     private static final String TAG = Responder.class.getSimpleName();
     private final PebbleDictionary data;
 
-    private Responder(final PebbleDictionary data) {
+    public Responder(final PebbleDictionary data) {
         this.data = data;
     }
 
-    public static void response(final PebbleDictionary data) {
-        final Responder responder = new Responder(data);
-        responder.processRequest();
+    public static void sendResponseItemsToPebble(final int id, final Collection<ResponseItem> data) {
+        if (!data.isEmpty()) {
+            final Collection<PebbleDictionary> responseData = makeResponseDictionary(id, data);
+            Application.pebbleConnector.sendNewDataToPebble(responseData);
+        }
     }
 
-    private static Collection<PebbleDictionary> makeResponseData(final int id, final Iterable<ResponseItem> data) {
+    private static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
         final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : data) {
             list.add(responseItem.getData(id));
@@ -31,14 +33,7 @@ public class Responder {
         return list;
     }
 
-    public static void sendResponseToPebble(final int id, final Collection<ResponseItem> data) {
-        if (!data.isEmpty()) {
-            final Collection<PebbleDictionary> responseData = makeResponseData(id, data);
-            Application.pebbleConnector.sendNewDataToPebble(responseData);
-        }
-    }
-
-    private void processRequest() {
+    public void sendRequestedResponse() {
         final Request request = getRequest();
         if (request != Request.UNKNOWN) {
             request.sendResponse();
