@@ -1,5 +1,6 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetRoomsTask;
 
@@ -59,6 +60,6 @@ public class RoomsProvider {
             }
         }
 
-        return "No room info";
+        return IsaaCloudSettings.ROOM_NOT_FOUND_NAME;
     }
 }

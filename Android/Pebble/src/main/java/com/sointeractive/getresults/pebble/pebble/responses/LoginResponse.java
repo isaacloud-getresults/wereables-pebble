@@ -28,4 +28,27 @@ public class LoginResponse implements ResponseItem {
                 .addInt(beaconsSize)
                 .build();
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        final LoginResponse that = (LoginResponse) o;
+        if (points != that.points) return false;
+        if (rank != that.rank) return false;
+        if (!name.equals(that.name)) return false;
+        if (!roomName.equals(that.roomName)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = name.hashCode();
+        result = 31 * result + points;
+        result = 31 * result + rank;
+        result = 31 * result + roomName.hashCode();
+        return result;
+    }
 }

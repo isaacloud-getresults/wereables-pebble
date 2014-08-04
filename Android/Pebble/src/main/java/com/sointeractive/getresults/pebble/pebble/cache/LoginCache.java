@@ -1,5 +1,6 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
+import com.sointeractive.getresults.pebble.isaacloud.checker.UserChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
@@ -12,7 +13,7 @@ import java.util.LinkedList;
 public class LoginCache {
     public static final LoginCache INSTANCE = new LoginCache();
 
-    private Collection<ResponseItem> loginResponse;
+    private ResponseItem loginResponse;
 
     private LoginCache() {
         // Exists only to defeat instantiation.
@@ -29,19 +30,27 @@ public class LoginCache {
         if (loginResponse == null) {
             return new LinkedList<ResponseItem>();
         } else {
-            return loginResponse;
+            final Collection<ResponseItem> responseList = new LinkedList<ResponseItem>();
+            responseList.add(loginResponse);
+            return responseList;
         }
     }
 
     public void reload() {
-        final UserIC userIC = UserProvider.INSTANCE.getUpToDateData();
+        final UserIC newUserIC = UserProvider.INSTANCE.getUpToDateData();
 
-        if (userIC != null) {
+        if (newUserIC != null) {
             final int roomsNumber = RoomsProvider.INSTANCE.getSize();
-            final String roomName = RoomsProvider.INSTANCE.getRoomName(userIC.beacon);
+            final String roomName = RoomsProvider.INSTANCE.getRoomName(newUserIC.beacon);
 
-            loginResponse = new LinkedList<ResponseItem>();
-            loginResponse.add(new LoginResponse(userIC.getFullName(), userIC.points, userIC.rank, roomName, roomsNumber));
+            final ResponseItem oldLoginResponse = loginResponse;
+            final ResponseItem newLoginResponse = new LoginResponse(newUserIC.getFullName(), newUserIC.points, newUserIC.rank, roomName, roomsNumber);
+
+            if (oldLoginResponse != null) {
+                UserChecker.check(oldLoginResponse, newLoginResponse);
+            }
+
+            loginResponse = newLoginResponse;
         }
     }
 }
