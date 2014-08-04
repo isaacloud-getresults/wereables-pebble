@@ -19,4 +19,22 @@ public class PersonResponse implements ResponseItem {
                 .addString(name)
                 .build();
     }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof PersonResponse)) {
+            return false;
+        }
+
+        final PersonResponse personResponse = (PersonResponse) obj;
+        return id == personResponse.id;
+    }
+
+    public int hashCode() {
+        return id;
+    }
 }

@@ -17,34 +17,42 @@ import java.util.Set;
 public class NewAchievementsChecker {
     private static final String TAG = NewAchievementsChecker.class.getSimpleName();
 
-    public static void check(final Collection<AchievementIC> achievements1, final Collection<AchievementIC> achievements2) {
-        if (achievements1 != null && achievements2 != null && achievements1.size() != achievements2.size()) {
+    public static void check(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
+        if (oldAchievements != null && newAchievements != null && oldAchievements.size() != newAchievements.size()) {
             Log.i(TAG, "Check: New achievements found");
 
-            final Set<AchievementIC> newAchievements = getNewAchievements(achievements1, achievements2);
-            notifyAchievements(newAchievements);
+            final Set<AchievementIC> changedAchievements = getNewAchievements(oldAchievements, newAchievements);
+            notifyAchievements(changedAchievements);
         }
     }
 
-    private static Set<AchievementIC> getNewAchievements(final Collection<AchievementIC> achievements1, final Collection<AchievementIC> achievements2) {
-        final Set<AchievementIC> set1 = new HashSet<AchievementIC>(achievements1);
-        final Set<AchievementIC> set2 = new HashSet<AchievementIC>(achievements2);
+    private static Set<AchievementIC> getNewAchievements(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
+        final Set<AchievementIC> set1 = new HashSet<AchievementIC>(oldAchievements);
+        final Set<AchievementIC> set2 = new HashSet<AchievementIC>(newAchievements);
         return Sets.symmetricDifference(set1, set2).immutableCopy();
     }
 
-    private static void notifyAchievements(final Collection<AchievementIC> newAchievements) {
-        final String title = getTitle(newAchievements);
-        final String body = getBody(newAchievements);
-        final IsaacloudNotification notification = new IsaacloudNotification(title, body);
-        notification.send();
-        final Collection<ResponseItem> responseItems = AchievementsCache.makeResponse(newAchievements);
-        Responder.sendResponseToPebble(Request.ACHIEVEMENTS.id, responseItems);
+    private static void notifyAchievements(final Collection<AchievementIC> changedAchievements) {
+        sendListItem(changedAchievements);
+        sendNotification(changedAchievements);
     }
 
-    private static String getBody(final Iterable<AchievementIC> newAchievements) {
+    private static void sendListItem(final Iterable<AchievementIC> changedAchievements) {
+        final Collection<ResponseItem> responseItems = AchievementsCache.makeResponse(changedAchievements);
+        Responder.sendResponseItemsToPebble(Request.ACHIEVEMENTS.id, responseItems);
+    }
+
+    private static void sendNotification(final Collection<AchievementIC> changedAchievements) {
+        final String title = getTitle(changedAchievements);
+        final String body = getBody(changedAchievements);
+        final IsaacloudNotification notification = new IsaacloudNotification(title, body);
+        notification.send();
+    }
+
+    private static String getBody(final Iterable<AchievementIC> changedAchievements) {
         final StringBuilder bodyBuilder = new StringBuilder();
 
-        for (final AchievementIC newAchievement : newAchievements) {
+        for (final AchievementIC newAchievement : changedAchievements) {
             bodyBuilder.append("-- ");
             bodyBuilder.append(newAchievement.name);
             bodyBuilder.append("\n");
@@ -53,11 +61,11 @@ public class NewAchievementsChecker {
         return bodyBuilder.toString();
     }
 
-    private static String getTitle(final Collection<AchievementIC> newAchievements) {
+    private static String getTitle(final Collection<AchievementIC> changedAchievements) {
         final StringBuilder titleBuilder = new StringBuilder();
 
         titleBuilder.append("New Achievement");
-        if (newAchievements.size() > 1) {
+        if (changedAchievements.size() > 1) {
             titleBuilder.append("s");
         }
 

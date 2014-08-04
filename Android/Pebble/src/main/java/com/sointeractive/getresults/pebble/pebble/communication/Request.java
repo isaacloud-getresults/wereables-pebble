@@ -34,6 +34,7 @@ public enum Request implements Sendable {
     PEOPLE_IN_ROOM(3, "People list") {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
+            PeopleCache.INSTANCE.observedRoom = query;
             return PeopleCache.INSTANCE.getData(query);
         }
     },
@@ -62,7 +63,7 @@ public enum Request implements Sendable {
     }
 
     public void sendResponse() {
-        Responder.sendResponseToPebble(id, getSendable(query));
+        Responder.sendResponseItemsToPebble(id, getSendable(query));
     }
 
     public void setQuery(final PebbleDictionary data) {

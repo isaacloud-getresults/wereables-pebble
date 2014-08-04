@@ -29,9 +29,8 @@ public class BeaconsCache {
 
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {
-            // TODO: Provide real beacon distance
             final int peopleNumber = PeopleCache.INSTANCE.getData(room.id).size();
-            beaconsResponse.add(new BeaconResponse(room.id, room.name, 0, peopleNumber));
+            beaconsResponse.add(new BeaconResponse(room.id, room.name, peopleNumber));
         }
     }
 }

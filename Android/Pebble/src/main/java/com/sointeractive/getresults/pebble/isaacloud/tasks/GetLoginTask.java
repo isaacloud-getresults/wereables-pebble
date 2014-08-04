@@ -53,8 +53,8 @@ public class GetLoginTask extends AsyncTask<String, Integer, UserIC> {
 
     @Override
     protected void onPostExecute(final UserIC result) {
-        if (result != null) {
-            Log.i(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: GetLoginTask returned null");
         }
     }
 }

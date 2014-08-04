@@ -41,8 +41,8 @@ public class GetUserTask extends AsyncTask<Integer, Integer, UserIC> {
 
     @Override
     protected void onPostExecute(final UserIC result) {
-        if (result != null) {
-            Log.i(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: GetUserTask returned null");
         }
     }
 }

@@ -41,7 +41,7 @@ public class AchievementsCache {
     }
 
     public void reload() {
-        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getUpToDateData();
+        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
         achievementsResponse = makeResponse(userAchievements);
     }
 }

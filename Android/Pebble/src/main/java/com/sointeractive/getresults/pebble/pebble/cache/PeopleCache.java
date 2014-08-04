@@ -1,7 +1,9 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
+import android.util.Log;
 import android.util.SparseArray;
 
+import com.sointeractive.getresults.pebble.isaacloud.checker.NewPeopleChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.PersonIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.PeopleProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
@@ -13,6 +15,10 @@ import java.util.LinkedList;
 
 public class PeopleCache {
     public static final PeopleCache INSTANCE = new PeopleCache();
+
+    private static final String TAG = PeopleCache.class.getSimpleName();
+
+    public int observedRoom = 0;
 
     private SparseArray<Collection<ResponseItem>> peopleResponses;
 
@@ -38,16 +44,33 @@ public class PeopleCache {
     }
 
     public void reload() {
-        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getUpToDateData();
-
+        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
+        final SparseArray<Collection<ResponseItem>> oldResponses = peopleResponses;
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
-        int id;
+
+        updatePeopleList(people);
+        findChanges(oldResponses);
+    }
+
+    private void addPersonToRoom(final int room, final PersonIC person) {
+        if (peopleResponses.get(room) == null) {
+            peopleResponses.put(room, new ArrayList<ResponseItem>());
+        }
+        peopleResponses.get(room).add(new PersonResponse(person.id, person.getFullName()));
+    }
+
+    private void updatePeopleList(final Iterable<PersonIC> people) {
+        int room;
         for (final PersonIC person : people) {
-            id = person.beacon;
-            if (peopleResponses.get(id) == null) {
-                peopleResponses.put(id, new ArrayList<ResponseItem>());
-            }
-            peopleResponses.get(id).add(new PersonResponse(person.id, person.getFullName()));
+            room = person.beacon;
+            addPersonToRoom(room, person);
+        }
+    }
+
+    private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
+        if (oldResponses != null) {
+            Log.i(TAG, "Check: Changes in room: " + observedRoom);
+            NewPeopleChecker.checkSafe(oldResponses.get(observedRoom), peopleResponses.get(observedRoom));
         }
     }
 }
