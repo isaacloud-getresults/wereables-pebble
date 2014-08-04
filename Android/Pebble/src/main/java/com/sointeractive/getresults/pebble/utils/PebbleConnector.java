@@ -35,7 +35,7 @@ public class PebbleConnector extends Observable {
     }
 
     public void onReceived() {
-        Log.i(TAG, "Action: Poll queue");
+        Log.d(TAG, "Action: Poll queue");
         sendingQueue.poll();
     }
 
@@ -66,7 +66,11 @@ public class PebbleConnector extends Observable {
 
     public boolean isPebbleConnected() {
         final boolean currentState = PebbleKit.isWatchConnected(context);
-        Log.i(TAG, "Check: Pebble is " + (currentState ? "connected" : "not connected"));
+        if (currentState) {
+            Log.d(TAG, "Check: Pebble is connected");
+        } else {
+            Log.w(TAG, "Check: Pebble is not connected");
+        }
 
         if (connectionState != currentState) {
             connectionState = currentState;
@@ -79,7 +83,11 @@ public class PebbleConnector extends Observable {
 
     public boolean areAppMessagesSupported() {
         final boolean appMessagesSupported = PebbleKit.areAppMessagesSupported(context);
-        Log.i(TAG, "Check: AppMessages " + (appMessagesSupported ? "are supported" : "are not supported"));
+        if (appMessagesSupported) {
+            Log.d(TAG, "Check: AppMessages are supported");
+        } else {
+            Log.e(TAG, "Check: AppMessages are not supported");
+        }
 
         return appMessagesSupported;
     }

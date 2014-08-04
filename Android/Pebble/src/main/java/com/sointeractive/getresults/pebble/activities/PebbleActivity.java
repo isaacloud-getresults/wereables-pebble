@@ -41,7 +41,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        Log.i(TAG, "Event: onCreate");
+        Log.d(TAG, "Event: onCreate");
         super.onCreate(savedInstanceState);
 
         initInstance();
@@ -51,7 +51,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void initInstance() {
-        Log.i(TAG, "Init: Initializing instance");
+        Log.d(TAG, "Init: Initializing instance");
         setContentView(R.layout.pebble_activity);
 
         context = getApplicationContext();
@@ -66,13 +66,13 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void registerPebbleConnector() {
-        Log.i(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
+        Log.d(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
         pebbleConnector = Application.pebbleConnector;
         pebbleConnector.addObserver(this);
     }
 
     private void checkPebbleConnection() {
-        Log.i(TAG, "Init: Checking Pebble connection");
+        Log.d(TAG, "Init: Checking Pebble connection");
         if (pebbleConnector.isPebbleConnected()) {
             if (pebbleConnector.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
@@ -85,7 +85,7 @@ public class PebbleActivity extends Activity implements Observer {
     }
 
     private void registerButtonHandlers() {
-        Log.i(TAG, "Init: Registering button click handlers");
+        Log.d(TAG, "Init: Registering button click handlers");
 
         notification_send_button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -108,7 +108,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     @Override
     public void update(final Observable observable, final Object o) {
-        Log.i(TAG, "Event: Observable value has changed");
+        Log.d(TAG, "Event: Observable value has changed");
         if (observable == pebbleConnector) {
             onConnectionStateChanged();
         }

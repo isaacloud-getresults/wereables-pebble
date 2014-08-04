@@ -17,7 +17,7 @@ public class PebbleAckReceiver extends PebbleKit.PebbleAckReceiver {
 
     @Override
     public void receiveAck(final Context context, final int transactionId) {
-        Log.i(TAG, "Event: Received Ack from Pebble");
+        Log.d(TAG, "Event: Received Ack from Pebble");
         final PebbleConnector pebbleConnector = Application.pebbleConnector;
         pebbleConnector.onReceived();
         pebbleConnector.sendNext();
