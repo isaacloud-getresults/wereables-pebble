@@ -21,11 +21,11 @@ public class Responder {
     public static void sendResponseItemsToPebble(final int id, final Collection<ResponseItem> data) {
         if (!data.isEmpty()) {
             final Collection<PebbleDictionary> responseData = makeResponseDictionary(id, data);
-            Application.pebbleConnector.sendNewDataToPebble(responseData);
+            Application.pebbleConnector.sendDataToPebble(responseData);
         }
     }
 
-    private static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
+    public static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
         final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : data) {
             list.add(responseItem.getData(id));

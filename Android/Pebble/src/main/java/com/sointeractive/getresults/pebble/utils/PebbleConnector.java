@@ -29,24 +29,23 @@ public class PebbleConnector extends Observable {
         sender = new NotificationSender(context);
     }
 
-    public void sendNewDataToPebble(final Collection<PebbleDictionary> data) {
-        synchronized (sendingQueue) {
-            clearSendingQueue();
-            sendDataToPebble(data);
-        }
-    }
-
-    private void clearSendingQueue() {
-        Log.i(TAG, "Action: Empty sending queue");
+    public void clearSendingQueue() {
+        Log.i(TAG, "Action: Clear sending queue");
         sendingQueue.clear();
     }
 
-    private void sendDataToPebble(final Collection<PebbleDictionary> data) {
+    public void onReceived() {
+        Log.i(TAG, "Action: Poll queue");
+        sendingQueue.poll();
+    }
+
+    public void sendDataToPebble(final Collection<PebbleDictionary> data) {
         synchronized (sendingQueue) {
             if (isPebbleConnected()) {
                 final boolean wasEmpty = sendingQueue.isEmpty();
                 sendingQueue.addAll(data);
                 if (wasEmpty) {
+                    Log.i(TAG, "Check: Queue was empty");
                     sendNext();
                 }
             }
@@ -56,10 +55,11 @@ public class PebbleConnector extends Observable {
     public void sendNext() {
         synchronized (sendingQueue) {
             if (sendingQueue.isEmpty()) {
-                Log.i(TAG, "Event: Nothing to send, empty sendingQueue");
+                Log.i(TAG, "Event: Nothing to send, sendingQueue is empty");
             } else {
-                final PebbleDictionary data = sendingQueue.poll();
-                Log.i(TAG, "Action: sending response: " + data.toJsonString());
+                final PebbleDictionary data = sendingQueue.peek();
+                Log.i(TAG, "Action: Sending response");
+                Log.d(TAG, "Response data:" + data.toJsonString());
                 PebbleKit.sendDataToPebble(context, PebbleSettings.PEBBLE_APP_UUID, data);
             }
         }

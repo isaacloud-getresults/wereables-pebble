@@ -6,6 +6,7 @@ import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.LoginCache;
 import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
 
@@ -63,6 +64,7 @@ public enum Request implements Sendable {
     }
 
     public void sendResponse() {
+        Application.pebbleConnector.clearSendingQueue();
         Responder.sendResponseItemsToPebble(id, getSendable(query));
     }
 
