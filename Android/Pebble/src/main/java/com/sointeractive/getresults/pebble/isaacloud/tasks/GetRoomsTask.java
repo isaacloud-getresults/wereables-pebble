@@ -3,6 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 
 import org.json.JSONArray;
@@ -44,8 +45,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
         for (int i = 0; i < beacons.length(); i++) {
             final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
             final RoomIC roomFound = new RoomIC(beaconsJSON);
-            // TODO: Replace this by id's to skip
-            if (!roomFound.name.equals("skip this room")) {
+            if (!IsaaCloudSettings.IGNORED_GROUPS.contains(roomFound.id)) {
                 result.add(roomFound);
             }
         }
