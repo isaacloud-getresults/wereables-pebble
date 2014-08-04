@@ -55,8 +55,8 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
 
     @Override
     protected void onPostExecute(final Collection<RoomIC> result) {
-        if (result != null) {
-            Log.i(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: GetRoomsTask returned null");
         }
     }
 }
