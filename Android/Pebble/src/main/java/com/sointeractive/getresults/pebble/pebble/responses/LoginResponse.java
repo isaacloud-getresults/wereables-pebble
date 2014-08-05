@@ -4,10 +4,10 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
 public class LoginResponse implements ResponseItem {
+    public final String roomName;
     private final String name;
     private final int points;
     private final int rank;
-    private final String roomName;
     private final int beaconsSize;
 
     public LoginResponse(final String name, final int points, final int rank, final String roomName, final int beaconsSize) {
