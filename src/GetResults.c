@@ -81,6 +81,7 @@ uint16_t max_achievements;
 uint8_t last_request;
 
 static bool is_downloading;
+static bool achievements_first_time;
 
 static int textbar_height = 24;
 
@@ -108,9 +109,9 @@ static int beacons_compare(const void *b1, const void *b2) {
 }
 
 static bool update_beacons_table(Beacon *new_beacon) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() start new_beacon->name: %s",new_beacon->name);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() start new_beacon->name: %s",new_beacon->name);
     if(beacons==NULL) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         beacons = (Beacon**)calloc(user.beacons,sizeof(Beacon*));
         char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
         strcpy(new_name,new_beacon->name);
@@ -118,33 +119,38 @@ static bool update_beacons_table(Beacon *new_beacon) {
         beacons[0]->name = new_name;
         num_beacons = 0;
         num_beacons++;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first beacon: %s",beacons[0]->name);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first beacon: %s",beacons[0]->name);
         return true;
     }
     else {
         int size = num_beacons;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
         int i;
         for(i=0; i<size && i<user.beacons; ++i) {
             // if that beacon already exists in the table
             if(beacons[i]->id==new_beacon->id) {
                 // overwrite coworkers counter (probably faster than checking them and overwriting if changed)
                 beacons[i]->coworkers=new_beacon->coworkers;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, rejecting");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, rejecting");
                 free(new_beacon);
                 new_beacon = NULL;
                 return false;
             }
         }
         // add new if not found in table
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new, %u",strlen(new_beacon->name));
         char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 1");
         strcpy(new_name,new_beacon->name);
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 2");
         beacons[size] = new_beacon;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 3");
         beacons[size]->name = new_name;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 4");
         num_beacons++;
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 5");
         qsort(beacons,size+1,sizeof(Beacon*),beacons_compare);
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
         return true;
     }
 }
@@ -278,7 +284,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
 }
 
 static void clear_beacons_table() {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() start");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() start");
     if(beacons!=NULL) {
         int size = num_beacons;
         int i;
@@ -298,7 +304,7 @@ static void clear_beacons_table() {
     num_beacons = 0;
     num_beacons_in_range = 0;
     num_beacons_out_of_range = 0;
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() end");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() end");
 }
 
 static void clear_coworkers_table() {
@@ -431,7 +437,6 @@ enum {
 };
 
 ///////////////////////////////////// COMMUNICATION
-
 char * translate_result(AppMessageResult result) {
     switch (result) {
         case APP_MSG_OK: return "APP_MSG_OK";
@@ -492,12 +497,12 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
             Tuple *points = dict_find(iter,USER_POINTS);
@@ -539,39 +544,37 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_BEACON) {
+        else if(*(receiving_type->value->data)==RESPONSE_BEACON && user.name!=NULL) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
             Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
-            //Tuple *proximity = dict_find(iter,BEACON_PROXIMITY);
             Tuple *coworkers = dict_find(iter,BEACON_COWORKERS);
             Beacon *new_beacon = (Beacon*)malloc(sizeof(Beacon));
             if(new_beacon && coworkers /*&& proximity */&& name && id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_beacon->id = *(id->value->data);
                 new_beacon->name = new_name;
-                //new_beacon->proximity = *(proximity->value->data);
                 new_beacon->coworkers = *(coworkers->value->data);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | coworkers: %u",new_beacon->name,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
-                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
                         menu_layer_reload_data(beacons_menu_layer);
                     }
                 }
             }
             else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect beacon dictionary");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect beacon dictionary");
             }
             if(num_beacons==user.beacons) {
                 is_downloading = false;
                 layer_mark_dirty(beacons_downloading_sign_layer);
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER && user.name!=NULL) {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
@@ -598,7 +601,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT) {
+        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && user.name!=NULL) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             Tuple *name = dict_find(iter,ACHIEVEMENT_NAME);
@@ -612,7 +615,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_achievement->id = *(id->value->data);
                 new_achievement->name = new_name;
                 new_achievement->description = new_description;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
                 if(update_achievements_table(new_achievement)) {
                     if(window_stack_get_top_window()==achievements_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading achievements_menu_layer");
@@ -620,14 +623,15 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     }
                 }
                 is_downloading = false;
-                layer_mark_dirty(achievements_downloading_sign_layer);
+                if(achievements_downloading_sign_layer!=NULL)
+                    layer_mark_dirty(achievements_downloading_sign_layer);
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window && user.name!=NULL) {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             if(id) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
@@ -670,7 +674,7 @@ static GBitmap *user_icon;
 static void login_menu_beacons_callback(int index, void *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_menu_beacons_callback()");
     if(user.name!=NULL) {
-        if(beacons==NULL) {
+        if(user.beacons!=num_beacons) {
             send_simple_request(REQUEST_BEACONS);
             is_downloading = true;
         }
@@ -689,7 +693,7 @@ static void login_request_sending(void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_request_sending()");
     if(user.name==NULL) {
         send_simple_request(REQUEST_USER);
-        timer = app_timer_register(1000,login_request_sending,NULL);
+        timer = app_timer_register(2000,login_request_sending,NULL);
     }
 }
 
@@ -769,9 +773,10 @@ static SimpleMenuItem user_menu_first_section_items[1];
 
 static void user_menu_achievements_callback(int index, void *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_menu_achievements_callback()");
-    if(achievements==NULL) {
+    if(!achievements_first_time) {
         send_simple_request(REQUEST_ACHIEVEMENTS);
         is_downloading = true;
+        achievements_first_time = true;
     }
     window_stack_push(achievements_window, true);
 }
@@ -1245,6 +1250,7 @@ static void init() {
     last_request = 0;
     
     is_downloading = false;
+    achievements_first_time = false;
     
     login_window = window_create();
     window_set_fullscreen(login_window, true);
