@@ -45,7 +45,7 @@ public class PebbleConnector extends Observable {
                 final boolean wasEmpty = sendingQueue.isEmpty();
                 sendingQueue.addAll(data);
                 if (wasEmpty) {
-                    Log.i(TAG, "Check: Queue was empty");
+                    Log.d(TAG, "Check: Queue was empty");
                     sendNext();
                 }
             }

@@ -2,10 +2,10 @@ package com.sointeractive.getresults.pebble.pebble.cache;
 
 import com.sointeractive.getresults.pebble.isaacloud.checker.UserChangeChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -40,14 +40,17 @@ public class LoginCache {
         final UserIC newUserIC = UserProvider.INSTANCE.getUpToDateData();
 
         if (newUserIC != null) {
-            final int roomsNumber = RoomsProvider.INSTANCE.getSize();
-            final String roomName = RoomsProvider.INSTANCE.getRoomName(newUserIC.beacon);
+            final int roomsNumber = BeaconsCache.INSTANCE.getSize();
+            final String roomName = BeaconsCache.INSTANCE.getRoomName(newUserIC.beacon);
 
             final ResponseItem oldLoginResponse = loginResponse;
             final ResponseItem newLoginResponse = new LoginResponse(newUserIC.getFullName(), newUserIC.points, newUserIC.rank, roomName, roomsNumber);
 
             if (oldLoginResponse != null) {
                 UserChangeChecker.check(oldLoginResponse, newLoginResponse);
+            } else {
+                PeopleCache.INSTANCE.setObservedRoom(0);
+                Application.pebbleConnector.clearSendingQueue();
             }
 
             loginResponse = newLoginResponse;

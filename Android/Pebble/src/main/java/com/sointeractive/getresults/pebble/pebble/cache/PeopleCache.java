@@ -18,12 +18,17 @@ public class PeopleCache {
 
     private static final String TAG = PeopleCache.class.getSimpleName();
 
-    public int observedRoom = 0;
+    private int observedRoom = 0;
 
     private SparseArray<Collection<ResponseItem>> peopleResponses;
 
     private PeopleCache() {
         // Exists only to defeat instantiation.
+    }
+
+    public void setObservedRoom(final int observedRoom) {
+        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
+        this.observedRoom = observedRoom;
     }
 
     public Collection<ResponseItem> getData(final int room) {

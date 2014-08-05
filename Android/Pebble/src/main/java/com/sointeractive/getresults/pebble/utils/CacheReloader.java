@@ -28,7 +28,7 @@ public class CacheReloader {
     }
 
     public void reload() {
-        Log.i(TAG, "Action: Reload cache");
+        Log.d(TAG, "Action: Reload cache");
         AchievementsCache.INSTANCE.reload();
         PeopleCache.INSTANCE.reload();
         BeaconsCache.INSTANCE.reload();

@@ -1,5 +1,6 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.checker.BeaconsInfoChangeChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
@@ -38,5 +39,24 @@ public class BeaconsCache {
         if (oldBeaconsResponse != null) {
             BeaconsInfoChangeChecker.check(oldBeaconsResponse, beaconsResponse);
         }
+    }
+
+    public int getSize() {
+        if (beaconsResponse == null) {
+            return 0;
+        } else {
+            return beaconsResponse.size();
+        }
+    }
+
+    public String getRoomName(final int id) {
+        for (final ResponseItem responseItem : beaconsResponse) {
+            final BeaconResponse beacon = (BeaconResponse) responseItem;
+            if (beacon.id == id) {
+                return beacon.name;
+            }
+        }
+
+        return IsaaCloudSettings.ROOM_NOT_FOUND_NAME;
     }
 }

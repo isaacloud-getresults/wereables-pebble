@@ -36,6 +36,9 @@ public class Responder {
     public void sendRequestedResponse() {
         final Request request = getRequest();
         if (request != Request.UNKNOWN) {
+            if (request == Request.LOGIN) {
+                Application.pebbleConnector.clearSendingQueue();
+            }
             request.sendResponse();
         }
     }

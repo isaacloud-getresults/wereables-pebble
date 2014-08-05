@@ -6,7 +6,6 @@ import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.LoginCache;
 import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
-import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
 
@@ -35,7 +34,7 @@ public enum Request implements Sendable {
     PEOPLE_IN_ROOM(3, "People list") {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
-            PeopleCache.INSTANCE.observedRoom = query;
+            PeopleCache.INSTANCE.setObservedRoom(query);
             return PeopleCache.INSTANCE.getData(query);
         }
     },
@@ -64,7 +63,6 @@ public enum Request implements Sendable {
     }
 
     public void sendResponse() {
-        Application.pebbleConnector.clearSendingQueue();
         Responder.sendResponseItemsToPebble(id, getSendable(query));
     }
 
