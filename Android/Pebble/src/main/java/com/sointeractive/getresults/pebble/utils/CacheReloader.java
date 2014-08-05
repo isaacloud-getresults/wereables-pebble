@@ -30,9 +30,9 @@ public class CacheReloader {
     public void reload() {
         Log.i(TAG, "Action: Reload cache");
         AchievementsCache.INSTANCE.reload();
+        PeopleCache.INSTANCE.reload();
         BeaconsCache.INSTANCE.reload();
         LoginCache.INSTANCE.reload();
-        PeopleCache.INSTANCE.reload();
     }
 
     public void setAutoReload(final Context context) {

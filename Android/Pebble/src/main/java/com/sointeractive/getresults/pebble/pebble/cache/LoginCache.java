@@ -1,6 +1,6 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
-import com.sointeractive.getresults.pebble.isaacloud.checker.UserChecker;
+import com.sointeractive.getresults.pebble.isaacloud.checker.UserChangeChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
@@ -47,7 +47,7 @@ public class LoginCache {
             final ResponseItem newLoginResponse = new LoginResponse(newUserIC.getFullName(), newUserIC.points, newUserIC.rank, roomName, roomsNumber);
 
             if (oldLoginResponse != null) {
-                UserChecker.check(oldLoginResponse, newLoginResponse);
+                UserChangeChecker.check(oldLoginResponse, newLoginResponse);
             }
 
             loginResponse = newLoginResponse;

@@ -18,7 +18,7 @@ public class GetUserTask extends AsyncTask<Integer, Integer, UserIC> {
 
     @Override
     protected UserIC doInBackground(final Integer... ids) {
-        Log.d(TAG, "Action: Login in background");
+        Log.d(TAG, "Action: Get user in background");
 
         try {
             return logIn(ids[0].toString());
