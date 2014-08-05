@@ -50,7 +50,7 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
             }
         }
 
-        Log.d(TAG, "Event: " + result.size() + " rooms found");
+        Log.d(TAG, "Event: " + result.size() + " rooms downloaded");
         return result;
     }
 

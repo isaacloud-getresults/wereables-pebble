@@ -1,5 +1,6 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
+import com.sointeractive.getresults.pebble.isaacloud.checker.BeaconsInfoChangeChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.RoomsProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.BeaconResponse;
@@ -27,10 +28,15 @@ public class BeaconsCache {
     public void reload() {
         final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getUpToDateData();
 
+        final Collection<ResponseItem> oldBeaconsResponse = beaconsResponse;
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {
             final int peopleNumber = PeopleCache.INSTANCE.getData(room.id).size();
             beaconsResponse.add(new BeaconResponse(room.id, room.name, peopleNumber));
+        }
+
+        if (oldBeaconsResponse != null) {
+            BeaconsInfoChangeChecker.check(oldBeaconsResponse, beaconsResponse);
         }
     }
 }

@@ -33,6 +33,7 @@ public class CacheReloader {
         PeopleCache.INSTANCE.reload();
         BeaconsCache.INSTANCE.reload();
         LoginCache.INSTANCE.reload();
+        Log.i(TAG, "Event: Cache reloaded");
     }
 
     public void setAutoReload(final Context context) {

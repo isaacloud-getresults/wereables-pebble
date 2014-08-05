@@ -46,7 +46,7 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
             result.add(new AchievementIC(achievementJSON));
         }
 
-        Log.d(TAG, "Event: " + result.size() + " achievements found");
+        Log.d(TAG, "Event: " + result.size() + " achievements downloaded");
         return result;
     }
 

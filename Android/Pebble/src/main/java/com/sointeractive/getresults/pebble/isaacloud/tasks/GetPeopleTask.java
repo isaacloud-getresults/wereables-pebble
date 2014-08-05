@@ -46,7 +46,7 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
             people.add(new PersonIC(personJSON));
         }
 
-        Log.d(TAG, "Event: " + people.size() + " people found");
+        Log.d(TAG, "Event: " + people.size() + " people downloaded");
         return people;
     }
 

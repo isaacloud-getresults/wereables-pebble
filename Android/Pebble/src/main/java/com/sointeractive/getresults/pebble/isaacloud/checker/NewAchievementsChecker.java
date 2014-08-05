@@ -19,7 +19,7 @@ public class NewAchievementsChecker {
 
     public static void check(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
         if (oldAchievements != null && newAchievements != null && oldAchievements.size() != newAchievements.size()) {
-            Log.i(TAG, "Check: New achievements found");
+            Log.i(TAG, "Checker: New achievements found");
 
             final Set<AchievementIC> changedAchievements = getNewAchievements(oldAchievements, newAchievements);
             notifyAchievements(changedAchievements);

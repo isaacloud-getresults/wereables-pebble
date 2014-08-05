@@ -39,14 +39,14 @@ public class NewPeopleChecker {
 
     private static void notifyPeopleIn(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
-            Log.i(TAG, "Event: New people in the room");
+            Log.i(TAG, "Checker: New people entered observed room");
             Responder.sendResponseItemsToPebble(Request.PEOPLE_IN_ROOM.id, people);
         }
     }
 
     private static void notifyPeopleOut(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
-            Log.i(TAG, "Event: New people out of the room");
+            Log.i(TAG, "Check: New people exited observed room");
             Responder.sendResponseItemsToPebble(Responder.PERSON_POP, people);
         }
     }

@@ -14,7 +14,7 @@ public class UserChangeChecker {
 
     public static void check(final ResponseItem oldUser, final ResponseItem newUser) {
         if (!newUser.equals(oldUser)) {
-            Log.i(TAG, "Event: User data changed");
+            Log.i(TAG, "Checker: User data changed");
             final Collection<ResponseItem> loginResponse = new LinkedList<ResponseItem>();
             loginResponse.add(newUser);
             Responder.sendResponseItemsToPebble(Request.LOGIN.id, loginResponse);
