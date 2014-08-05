@@ -1,6 +1,5 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
-import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetRoomsTask;
 
@@ -21,45 +20,34 @@ public class RoomsProvider {
         if (roomsIC == null) {
             reload();
         }
-        return roomsIC;
+        return safeRooms();
     }
 
     public Collection<RoomIC> getUpToDateData() {
         reload();
-        return roomsIC;
+        return safeRooms();
+    }
+
+    private Collection<RoomIC> safeRooms() {
+        if (roomsIC == null) {
+            return new LinkedList<RoomIC>();
+        } else {
+            return roomsIC;
+        }
     }
 
     private void reload() {
         final GetRoomsTask getRooms = new GetRoomsTask();
         try {
-            roomsIC = getRooms.execute().get();
+            final Collection<RoomIC> newRoomsIC = getRooms.execute().get();
 
-            if (roomsIC == null) {
-                roomsIC = new LinkedList<RoomIC>();
+            if (newRoomsIC != null) {
+                roomsIC = newRoomsIC;
             }
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
             e.printStackTrace();
         }
-    }
-
-    public int getSize() {
-        if (roomsIC == null) {
-            return 0;
-        } else {
-            return roomsIC.size();
-        }
-    }
-
-    public String getRoomName(final int id) {
-        final Collection<RoomIC> roomsIC = getData();
-        for (final RoomIC roomIC : roomsIC) {
-            if (roomIC.id == id) {
-                return roomIC.name;
-            }
-        }
-
-        return IsaaCloudSettings.ROOM_NOT_FOUND_NAME;
     }
 }
