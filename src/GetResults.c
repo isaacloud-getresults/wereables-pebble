@@ -386,6 +386,15 @@ static void set_textbar_layer(Layer *window_layer, TextLayer **textbar_layer) {
     text_layer_set_text_color(*textbar_layer,GColorWhite);
 }
 
+static void set_downloading_sign_layer(Layer *window_layer, Layer **downloading_sign_layer, void (*downloading_sign_layer_update)(Layer *layer, GContext *ctx)) {
+    GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
+    downloading_sign_layer_bounds.origin.x = downloading_sign_layer_bounds.size.w-textbar_height;
+    downloading_sign_layer_bounds.size.h = textbar_height;
+    downloading_sign_layer_bounds.size.w = textbar_height;
+    *downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
+    layer_set_update_proc(*downloading_sign_layer, downloading_sign_layer_update);
+}
+
 enum {
     // request keys
     REQUEST_TYPE = 1,
@@ -483,13 +492,12 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        //is_downloading = true;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
             Tuple *points = dict_find(iter,USER_POINTS);
@@ -521,7 +529,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.points = *(points->value->data);
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u",user.name,user.points,user.rank,user.beacons);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u",user.name,user.points,user.rank,user.beacons);
                 static char text_buffer[50];
                 snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -532,7 +540,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_BEACON) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
             Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
             //Tuple *proximity = dict_find(iter,BEACON_PROXIMITY);
@@ -546,7 +554,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_beacon->name = new_name;
                 //new_beacon->proximity = *(proximity->value->data);
                 new_beacon->coworkers = *(coworkers->value->data);
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | coworkers: %u",new_beacon->name,new_beacon->coworkers);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | coworkers: %u",new_beacon->name,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
@@ -563,7 +571,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
@@ -572,7 +580,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_coworker->id = *(id->value->data);
                 new_coworker->name = new_name;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
                 if(update_coworkers_table(new_coworker)) {
                     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                     menu_layer_reload_data(coworkers_menu_layer);
@@ -619,10 +627,10 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             if(id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
                 if(pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
@@ -642,9 +650,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
     }
     else {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
     }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -907,12 +915,7 @@ static void beacons_window_load(Window *window) {
     set_textbar_layer(window_layer,&beacons_textbar_layer);
     text_layer_set_text(beacons_textbar_layer,user.name);
     
-    GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
-    downloading_sign_layer_bounds.origin.x = downloading_sign_layer_bounds.size.w-textbar_height;
-    downloading_sign_layer_bounds.size.h = textbar_height;
-    downloading_sign_layer_bounds.size.w = textbar_height;
-    beacons_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
-    layer_set_update_proc(beacons_downloading_sign_layer, beacons_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&beacons_downloading_sign_layer,beacons_downloading_sign_layer_update);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
@@ -1024,12 +1027,7 @@ static void coworkers_window_load(Window *window) {
     set_textbar_layer(window_layer,&coworkers_textbar_layer);
     text_layer_set_text(coworkers_textbar_layer,current_beacon->name);
     
-    GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
-    downloading_sign_layer_bounds.origin.x = downloading_sign_layer_bounds.size.w-textbar_height;
-    downloading_sign_layer_bounds.size.h = textbar_height;
-    downloading_sign_layer_bounds.size.w = textbar_height;
-    coworkers_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
-    layer_set_update_proc(coworkers_downloading_sign_layer, coworkers_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&coworkers_downloading_sign_layer,coworkers_downloading_sign_layer_update);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
@@ -1145,12 +1143,7 @@ static void achievements_window_load(Window *window) {
     set_textbar_layer(window_layer,&achievements_textbar_layer);
     text_layer_set_text(achievements_textbar_layer,user.name);
     
-    GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
-    downloading_sign_layer_bounds.origin.x = downloading_sign_layer_bounds.size.w-textbar_height;
-    downloading_sign_layer_bounds.size.h = textbar_height;
-    downloading_sign_layer_bounds.size.w = textbar_height;
-    achievements_downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
-    layer_set_update_proc(achievements_downloading_sign_layer, achievements_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&achievements_downloading_sign_layer,achievements_downloading_sign_layer_update);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
