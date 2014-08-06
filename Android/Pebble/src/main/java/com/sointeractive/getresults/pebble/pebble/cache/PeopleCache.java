@@ -61,7 +61,7 @@ public class PeopleCache {
         if (peopleResponses.get(room) == null) {
             peopleResponses.put(room, new ArrayList<ResponseItem>());
         }
-        peopleResponses.get(room).add(new PersonResponse(person.id, person.getFullName()));
+        peopleResponses.get(room).add(new PersonResponse(person.id, person.getFullName(), room));
     }
 
     private void updatePeopleList(final Iterable<PersonIC> people) {

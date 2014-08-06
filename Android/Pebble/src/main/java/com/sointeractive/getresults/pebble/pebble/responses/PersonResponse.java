@@ -6,10 +6,12 @@ import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 public class PersonResponse implements ResponseItem {
     private final int id;
     private final String name;
+    private final int roomId;
 
-    public PersonResponse(final int id, final String name) {
+    public PersonResponse(final int id, final String name, final int roomId) {
         this.id = id;
         this.name = name;
+        this.roomId = roomId;
     }
 
     @Override
@@ -17,6 +19,7 @@ public class PersonResponse implements ResponseItem {
         return new DictionaryBuilder(responseType)
                 .addInt(id)
                 .addString(name)
+                .addInt(roomId)
                 .build();
     }
 
