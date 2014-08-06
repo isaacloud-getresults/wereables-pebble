@@ -7,11 +7,10 @@ import java.util.List;
 
 public class PersonResponse implements ResponseItem {
     private static final int RESPONSE_HEADER_ID = 3;
-    private int responseType = RESPONSE_HEADER_ID;
-    private static final int RESPONSE_PERSON_POP = 5;
-    private final int id;
-    private final String name;
-    private final int roomId;
+
+    final int id;
+    final String name;
+    final int roomId;
 
     public PersonResponse(final int id, final String name, final int roomId) {
         this.id = id;
@@ -19,19 +18,9 @@ public class PersonResponse implements ResponseItem {
         this.roomId = roomId;
     }
 
-    public PersonResponse(final PersonResponse person) {
-        this.id = person.id;
-        this.name = person.name;
-        this.roomId = person.roomId;
-    }
-
-    public void setPersonPop() {
-        responseType = RESPONSE_PERSON_POP;
-    }
-
     @Override
     public List<PebbleDictionary> getData() {
-        return new DictionaryBuilder(responseType)
+        return new DictionaryBuilder(RESPONSE_HEADER_ID)
                 .addInt(id)
                 .addString(name)
                 .addInt(roomId)
