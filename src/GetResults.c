@@ -53,6 +53,7 @@ typedef struct {
 typedef struct {
     int id;
     char *name;
+    int beacon_id;
 } Coworker;
 
 typedef struct {
@@ -109,9 +110,9 @@ static int beacons_compare(const void *b1, const void *b2) {
 }
 
 static bool update_beacons_table(Beacon *new_beacon) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() start new_beacon->name: %s",new_beacon->name);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() start new_beacon->name: %s",new_beacon->name);
     if(beacons==NULL) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         beacons = (Beacon**)calloc(user.beacons,sizeof(Beacon*));
         char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
         strcpy(new_name,new_beacon->name);
@@ -119,99 +120,102 @@ static bool update_beacons_table(Beacon *new_beacon) {
         beacons[0]->name = new_name;
         num_beacons = 0;
         num_beacons++;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first beacon: %s",beacons[0]->name);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first beacon: %s",beacons[0]->name);
         return true;
     }
     else {
         int size = num_beacons;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
         int i;
         for(i=0; i<size && i<user.beacons; ++i) {
             // if that beacon already exists in the table
             if(beacons[i]->id==new_beacon->id) {
                 // overwrite coworkers counter (probably faster than checking them and overwriting if changed)
                 beacons[i]->coworkers=new_beacon->coworkers;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, rejecting");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon found, rejecting");
                 free(new_beacon);
                 new_beacon = NULL;
                 return false;
             }
         }
         // add new if not found in table
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new, %u",strlen(new_beacon->name));
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new");
         char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 1");
         strcpy(new_name,new_beacon->name);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 2");
         beacons[size] = new_beacon;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 3");
         beacons[size]->name = new_name;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 4");
         num_beacons++;
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new 5");
         qsort(beacons,size+1,sizeof(Beacon*),beacons_compare);
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
         return true;
     }
 }
 
 static bool update_coworkers_table(Coworker *new_coworker) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start");
-    if(coworkers==NULL) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-        max_coworkers = current_beacon->coworkers + 2;
-        coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
-        char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
-        strcpy(new_name,new_coworker->name);
-        coworkers[0] = new_coworker;
-        coworkers[0]->name = new_name;
-        num_coworkers = 1;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
-        return true;
-    }
-    else {
-        int size = num_coworkers;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
-        int i;
-        for(i=0; i<size; ++i) {
-            // if that coworker already exists in the table
-            if(coworkers[i]->id==new_coworker->id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
-                free(new_coworker);
-                new_coworker = NULL;
-                return false;
-            }
-        }
-        if(i<max_coworkers) {
-            // add new if not found in table
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start: %s",new_coworker->name);
+    if(current_beacon->id==new_coworker->beacon_id) {
+        if(coworkers==NULL) {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+            max_coworkers = current_beacon->coworkers + 2;
+            coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
             char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
             strcpy(new_name,new_coworker->name);
-            coworkers[i] = new_coworker;
-            coworkers[i]->name = new_name;
-            num_coworkers++;
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            coworkers[0] = new_coworker;
+            coworkers[0]->name = new_name;
+            num_coworkers = 1;
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
             return true;
         }
-        // reallocate table and increase its size if new element doesn't fit
         else {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
-            max_coworkers += 4;
-            Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
-            if(new_table!=NULL) {
-                for(i=0; i<size; ++i)
-                    new_table[i] = coworkers[i];
-                free(coworkers);
-                coworkers = new_table;
+            int size = num_coworkers;
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+            int i;
+            for(i=0; i<size; ++i) {
+                // if that coworker already exists in the table
+                if(coworkers[i]->id==new_coworker->id) {
+                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
+                    free(new_coworker);
+                    new_coworker = NULL;
+                    return false;
+                }
+            }
+            if(i<max_coworkers) {
+                // add new if not found in table
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
                 char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
                 strcpy(new_name,new_coworker->name);
                 coworkers[i] = new_coworker;
                 coworkers[i]->name = new_name;
                 num_coworkers++;
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+                return true;
             }
+            // reallocate table and increase its size if new element doesn't fit
+            else {
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
+                max_coworkers += 4;
+                Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
+                if(new_table!=NULL) {
+                    for(i=0; i<size; ++i)
+                        new_table[i] = coworkers[i];
+                    free(coworkers);
+                    coworkers = new_table;
+                    char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+                    strcpy(new_name,new_coworker->name);
+                    coworkers[i] = new_coworker;
+                    coworkers[i]->name = new_name;
+                    num_coworkers++;
+                }
+            }
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            return true;
         }
+    }
+    else {
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon_id differs, rejecting");
+        free(new_coworker);
+        new_coworker = NULL;
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
-        return true;
     }
     return false;
 }
@@ -284,7 +288,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
 }
 
 static void clear_beacons_table() {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() start");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() start");
     if(beacons!=NULL) {
         int size = num_beacons;
         int i;
@@ -304,7 +308,7 @@ static void clear_beacons_table() {
     num_beacons = 0;
     num_beacons_in_range = 0;
     num_beacons_out_of_range = 0;
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() end");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_beacons_table() end");
 }
 
 static void clear_coworkers_table() {
@@ -424,6 +428,7 @@ enum {
     BEACON_COWORKERS = 4,
     COWORKER_ID = 2,
     COWORKER_NAME = 3,
+    COWORKER_BEACON_ID = 4,
     ACHIEVEMENT_ID = 2,
     ACHIEVEMENT_NAME = 3,
     ACHIEVEMENT_DESCRIPTION = 4,
@@ -472,7 +477,7 @@ static void send_simple_request(int8_t request) {
 }
 
 static void send_query_request(int8_t request, int query) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %s start",request,query);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u start",request,query);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
@@ -485,7 +490,7 @@ static void send_query_request(int8_t request, int query) {
     last_request = request;
     
     app_message_outbox_send();
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %s end",request,query);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u end",request,query);
 }
 
 void out_sent_handler(DictionaryIterator *sent, void *context) {
@@ -545,13 +550,13 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_BEACON && user.name!=NULL) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
             Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
             Tuple *coworkers = dict_find(iter,BEACON_COWORKERS);
             Beacon *new_beacon = (Beacon*)malloc(sizeof(Beacon));
             if(new_beacon && coworkers /*&& proximity */&& name && id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_beacon->id = *(id->value->data);
@@ -560,13 +565,13 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | coworkers: %u",new_beacon->name,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
-                        APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
+                        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
                         menu_layer_reload_data(beacons_menu_layer);
                     }
                 }
             }
             else {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect beacon dictionary");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect beacon dictionary");
             }
             if(num_beacons==user.beacons) {
                 is_downloading = false;
@@ -577,28 +582,30 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
+            Tuple *beacon_id = dict_find(iter,COWORKER_BEACON_ID);
             Coworker *new_coworker = (Coworker*)malloc(sizeof(Coworker));
-            if(new_coworker && name && id) {
+            if(new_coworker && beacon_id && name && id) {
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_coworker->id = *(id->value->data);
                 new_coworker->name = new_name;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s",new_coworker->name);
+                new_coworker->beacon_id = *(beacon_id->value->data);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s | beacon_id: %i",new_coworker->name,new_coworker->beacon_id);
                 if(update_coworkers_table(new_coworker)) {
                     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                     menu_layer_reload_data(coworkers_menu_layer);
+                    if(num_coworkers==current_beacon->coworkers) {
+                        is_downloading = false;
+                        layer_mark_dirty(coworkers_downloading_sign_layer);
+                    }
+                    if(coworkers!=NULL) {
+                        layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
+                        layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
+                    }
                 }
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
-            }
-            if(num_coworkers==current_beacon->coworkers) {
-                is_downloading = false;
-                layer_mark_dirty(coworkers_downloading_sign_layer);
-            }
-            if(coworkers!=NULL) {
-                layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
-                layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT && user.name!=NULL) {
@@ -656,7 +663,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
     else {
         APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
@@ -1044,7 +1051,7 @@ static void coworkers_window_load(Window *window) {
     coworkers_text_layer = text_layer_create(menu_bounds);
     text_layer_set_text(coworkers_text_layer,"This room is empty");
     text_layer_set_font(coworkers_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
-    text_layer_set_text_alignment(coworkers_text_layer, GTextAlignmentLeft);
+    text_layer_set_text_alignment(coworkers_text_layer, GTextAlignmentCenter);
     
     if(current_beacon->coworkers!=0) {
         layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
