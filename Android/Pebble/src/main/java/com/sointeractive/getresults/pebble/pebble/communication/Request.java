@@ -44,6 +44,13 @@ public enum Request implements Sendable {
         public Collection<ResponseItem> getSendable(final int query) {
             return AchievementsCache.INSTANCE.getData();
         }
+    },
+
+    ACHIEVEMENT_DESCRIPTION(5, "Achievement description") {
+        @Override
+        public Collection<ResponseItem> getSendable(final int query) {
+            return AchievementsCache.INSTANCE.getDescriptionData(query);
+        }
     };
 
     public static final int RESPONSE_TYPE = 1;

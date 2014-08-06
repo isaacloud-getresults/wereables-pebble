@@ -35,10 +35,10 @@ public class PeopleCache {
         if (peopleResponses == null) {
             reload();
         }
-        return peopleRoomResponse(room);
+        return getPeopleRoomResponse(room);
     }
 
-    private Collection<ResponseItem> peopleRoomResponse(final int room) {
+    private Collection<ResponseItem> getPeopleRoomResponse(final int room) {
         Collection<ResponseItem> response = peopleResponses.get(room);
 
         if (response == null) {
