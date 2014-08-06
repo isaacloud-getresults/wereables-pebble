@@ -3,6 +3,8 @@ package com.sointeractive.getresults.pebble.pebble.responses;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
+import java.util.Collection;
+
 public class BeaconResponse implements ResponseItem {
     public final int id;
     public final String name;
@@ -15,12 +17,12 @@ public class BeaconResponse implements ResponseItem {
     }
 
     @Override
-    public PebbleDictionary getData(final int responseType) {
+    public Collection<PebbleDictionary> getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addInt(id)
                 .addString(name)
                 .addInt(people)
-                .build();
+                .pack();
     }
 
     @Override

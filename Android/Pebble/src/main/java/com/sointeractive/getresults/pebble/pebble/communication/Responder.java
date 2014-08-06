@@ -28,7 +28,7 @@ public class Responder {
     public static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
         final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : data) {
-            list.add(responseItem.getData(id));
+            list.addAll(responseItem.getData(id));
         }
         return list;
     }
