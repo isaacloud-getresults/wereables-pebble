@@ -12,6 +12,7 @@ public class IsaaCloudSettings {
     // Data settings
     public static final int ROOM_COUNTER_ID = 1;
     public static final int LEADERBOARD_ID = 1;
+    public static final int PEBBLE_NOTIFICATION_ID = 4;
 
     public static final int CACHE_RELOAD_INTERVAL_SECONDS = 5;
     public static final String ROOM_NOT_FOUND_NAME = "Unknown room";

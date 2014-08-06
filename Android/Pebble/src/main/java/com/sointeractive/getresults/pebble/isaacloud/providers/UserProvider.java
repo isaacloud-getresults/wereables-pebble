@@ -2,6 +2,7 @@ package com.sointeractive.getresults.pebble.isaacloud.providers;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.GetNotificationsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
 
@@ -35,6 +36,10 @@ public class UserProvider {
             final UserIC newUserData = getUser.execute(userId).get();
 
             if (newUserData != null) {
+                if (userIC == null) {
+                    final GetNotificationsTask getNotifications = new GetNotificationsTask();
+                    getNotifications.execute(userId);
+                }
                 userIC = newUserData;
             }
         } catch (final InterruptedException e) {
@@ -48,8 +53,7 @@ public class UserProvider {
         if (isLoaded()) {
             return userIC.id;
         } else {
-            final GetUserIdTask getLoginId = new GetUserIdTask();
-            final Integer userId = getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+            final Integer userId = logIn();
 
             if (userId == null) {
                 return 0;
@@ -57,6 +61,11 @@ public class UserProvider {
                 return userId;
             }
         }
+    }
+
+    private Integer logIn() throws ExecutionException, InterruptedException {
+        final GetUserIdTask getLoginId = new GetUserIdTask();
+        return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
     }
 
     private boolean isLoaded() {

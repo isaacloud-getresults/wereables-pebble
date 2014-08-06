@@ -2,6 +2,7 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 
 import android.util.Log;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.io.IOException;
@@ -35,6 +36,21 @@ public enum Query {
         return Application.isaacloudConnector
                 .path("/cache/users")
                 .withFields("id")
+                .withQuery(query)
+                .get();
+    }
+
+    static HttpResponse getNotifications(final int userId) throws IOException, IsaaCloudConnectionException {
+        Log.d(TAG, "Action: Query for notification where userId=" + userId);
+
+        final Map<String, Object> query = new HashMap<String, Object>();
+        query.put("subjectId", userId);
+        query.put("typeId", IsaaCloudSettings.PEBBLE_NOTIFICATION_ID);
+        query.put("status", 0);
+
+        return Application.isaacloudConnector
+                .path("/queues/notifications")
+                .withFields("data")
                 .withQuery(query)
                 .get();
     }
