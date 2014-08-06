@@ -6,6 +6,9 @@ import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 import java.util.List;
 
 public class PersonResponse implements ResponseItem {
+    private static final int RESPONSE_HEADER_ID = 3;
+    private int responseType = RESPONSE_HEADER_ID;
+    private static final int RESPONSE_PERSON_POP = 5;
     private final int id;
     private final String name;
     private final int roomId;
@@ -16,8 +19,18 @@ public class PersonResponse implements ResponseItem {
         this.roomId = roomId;
     }
 
+    public PersonResponse(final PersonResponse person) {
+        this.id = person.id;
+        this.name = person.name;
+        this.roomId = person.roomId;
+    }
+
+    public void setPersonPop() {
+        responseType = RESPONSE_PERSON_POP;
+    }
+
     @Override
-    public List<PebbleDictionary> getData(final int responseType) {
+    public List<PebbleDictionary> getData() {
         return new DictionaryBuilder(responseType)
                 .addInt(id)
                 .addString(name)

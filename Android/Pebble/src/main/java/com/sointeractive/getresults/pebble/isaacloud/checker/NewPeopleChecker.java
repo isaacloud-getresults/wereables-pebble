@@ -3,8 +3,8 @@ package com.sointeractive.getresults.pebble.isaacloud.checker;
 import android.util.Log;
 
 import com.google.common.collect.Sets;
-import com.sointeractive.getresults.pebble.pebble.communication.Request;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
+import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
@@ -40,14 +40,25 @@ public class NewPeopleChecker {
     private static void notifyPeopleIn(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
             Log.i(TAG, "Checker: New people entered observed room");
-            Responder.sendResponseItemsToPebble(Request.PEOPLE_IN_ROOM.id, people);
+            Responder.sendResponseItemsToPebble(people);
         }
     }
 
     private static void notifyPeopleOut(final Collection<ResponseItem> people) {
         if (!people.isEmpty()) {
             Log.i(TAG, "Check: New people exited observed room");
-            Responder.sendResponseItemsToPebble(Responder.PERSON_POP, people);
+            final Collection<ResponseItem> response = getPeoplePopResponses(people);
+            Responder.sendResponseItemsToPebble(response);
         }
+    }
+
+    private static Collection<ResponseItem> getPeoplePopResponses(final Iterable<ResponseItem> people) {
+        final Collection<ResponseItem> response = new LinkedList<ResponseItem>();
+        for (final ResponseItem responseItem : people) {
+            final PersonResponse personPop = new PersonResponse((PersonResponse) responseItem);
+            personPop.setPersonPop();
+            response.add(personPop);
+        }
+        return response;
     }
 }

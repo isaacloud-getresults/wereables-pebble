@@ -5,5 +5,5 @@ import com.sointeractive.android.kit.util.PebbleDictionary;
 import java.util.List;
 
 public interface ResponseItem {
-    List<PebbleDictionary> getData(int responseType);
+    List<PebbleDictionary> getData();
 }

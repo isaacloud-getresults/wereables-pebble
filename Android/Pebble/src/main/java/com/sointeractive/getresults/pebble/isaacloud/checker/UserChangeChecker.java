@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble.isaacloud.checker;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
-import com.sointeractive.getresults.pebble.pebble.communication.Request;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
@@ -19,7 +18,7 @@ public class UserChangeChecker {
             Log.i(TAG, "Checker: User data changed");
             final Collection<ResponseItem> loginResponse = new LinkedList<ResponseItem>();
             loginResponse.add(newUser);
-            Responder.sendResponseItemsToPebble(Request.LOGIN.id, loginResponse);
+            Responder.sendResponseItemsToPebble(loginResponse);
 
             checkRoomChanged((LoginResponse) oldUser, (LoginResponse) newUser);
         }

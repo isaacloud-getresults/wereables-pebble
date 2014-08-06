@@ -10,7 +10,6 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public class Responder {
-    public static final int PERSON_POP = 5;
     private static final String TAG = Responder.class.getSimpleName();
     private final PebbleDictionary data;
 
@@ -18,17 +17,17 @@ public class Responder {
         this.data = data;
     }
 
-    public static void sendResponseItemsToPebble(final int id, final Collection<ResponseItem> data) {
+    public static void sendResponseItemsToPebble(final Collection<ResponseItem> data) {
         if (!data.isEmpty()) {
-            final Collection<PebbleDictionary> responseData = makeResponseDictionary(id, data);
+            final Collection<PebbleDictionary> responseData = makeResponseDictionary(data);
             Application.pebbleConnector.sendDataToPebble(responseData);
         }
     }
 
-    public static Collection<PebbleDictionary> makeResponseDictionary(final int id, final Iterable<ResponseItem> data) {
+    public static Collection<PebbleDictionary> makeResponseDictionary(final Iterable<ResponseItem> data) {
         final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : data) {
-            list.addAll(responseItem.getData(id));
+            list.addAll(responseItem.getData());
         }
         return list;
     }

@@ -6,6 +6,8 @@ import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 import java.util.List;
 
 public class BeaconResponse implements ResponseItem {
+    private static final int RESPONSE_HEADER_ID = 2;
+
     public final int id;
     public final String name;
     private final int people;
@@ -17,8 +19,8 @@ public class BeaconResponse implements ResponseItem {
     }
 
     @Override
-    public List<PebbleDictionary> getData(final int responseType) {
-        return new DictionaryBuilder(responseType)
+    public List<PebbleDictionary> getData() {
+        return new DictionaryBuilder(RESPONSE_HEADER_ID)
                 .addInt(id)
                 .addString(name)
                 .addInt(people)

@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble.isaacloud.checker;
 import android.util.Log;
 
 import com.google.common.collect.Sets;
-import com.sointeractive.getresults.pebble.pebble.communication.Request;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
@@ -29,6 +28,6 @@ public class BeaconsInfoChangeChecker {
     }
 
     private static void sendListItem(final Collection<ResponseItem> changedBeacons) {
-        Responder.sendResponseItemsToPebble(Request.BEACONS.id, changedBeacons);
+        Responder.sendResponseItemsToPebble(changedBeacons);
     }
 }

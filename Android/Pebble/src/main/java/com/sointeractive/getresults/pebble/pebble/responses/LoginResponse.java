@@ -6,6 +6,8 @@ import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 import java.util.List;
 
 public class LoginResponse implements ResponseItem {
+    private static final int RESPONSE_HEADER_ID = 1;
+
     public final String roomName;
     private final String name;
     private final int points;
@@ -21,8 +23,8 @@ public class LoginResponse implements ResponseItem {
     }
 
     @Override
-    public List<PebbleDictionary> getData(final int responseType) {
-        return new DictionaryBuilder(responseType)
+    public List<PebbleDictionary> getData() {
+        return new DictionaryBuilder(RESPONSE_HEADER_ID)
                 .addString(name)
                 .addString(roomName)
                 .addInt(points)

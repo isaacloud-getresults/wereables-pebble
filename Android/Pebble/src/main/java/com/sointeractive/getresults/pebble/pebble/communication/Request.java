@@ -63,7 +63,7 @@ public enum Request implements Sendable {
     }
 
     public void sendResponse() {
-        Responder.sendResponseItemsToPebble(id, getSendable(query));
+        Responder.sendResponseItemsToPebble(getSendable(query));
     }
 
     public void setQuery(final PebbleDictionary data) {
