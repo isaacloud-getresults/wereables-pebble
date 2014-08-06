@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.CacheReloader;
 
 public class PebbleConnectedReceiver extends BroadcastReceiver {
     private static final String TAG = PebbleConnectedReceiver.class.getSimpleName();
@@ -14,5 +15,6 @@ public class PebbleConnectedReceiver extends BroadcastReceiver {
     public void onReceive(final Context context, final Intent intent) {
         Log.i(TAG, "Event: Pebble is now connected");
         Application.pebbleConnector.isPebbleConnected();
+        CacheReloader.INSTANCE.setAutoReload(context);
     }
 }

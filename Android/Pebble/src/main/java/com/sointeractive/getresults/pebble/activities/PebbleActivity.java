@@ -76,6 +76,7 @@ public class PebbleActivity extends Activity implements Observer {
         if (pebbleConnector.isPebbleConnected()) {
             if (pebbleConnector.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
+                CacheReloader.INSTANCE.setAutoReload(context);
             } else {
                 showInfo(R.string.app_messages_not_supported);
             }
@@ -125,12 +126,10 @@ public class PebbleActivity extends Activity implements Observer {
     private void onPebbleConnected() {
         Log.i(TAG, "Event: Pebble connected");
         checkBox.setChecked(true);
-        CacheReloader.INSTANCE.setAutoReload(context);
     }
 
     private void onPebbleDisconnected() {
         Log.i(TAG, "Event: Pebble disconnected");
         checkBox.setChecked(false);
-        CacheReloader.INSTANCE.stopAutoReload();
     }
 }
