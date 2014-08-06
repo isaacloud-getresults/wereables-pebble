@@ -2,8 +2,8 @@ package com.sointeractive.getresults.pebble.pebble.responses;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
 
-import java.util.Collection;
+import java.util.List;
 
 public interface ResponseItem {
-    Collection<PebbleDictionary> getData(int responseType);
+    List<PebbleDictionary> getData(int responseType);
 }

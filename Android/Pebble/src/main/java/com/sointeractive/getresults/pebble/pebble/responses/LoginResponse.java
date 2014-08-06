@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.responses;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
-import java.util.Collection;
+import java.util.List;
 
 public class LoginResponse implements ResponseItem {
     public final String roomName;
@@ -21,7 +21,7 @@ public class LoginResponse implements ResponseItem {
     }
 
     @Override
-    public Collection<PebbleDictionary> getData(final int responseType) {
+    public List<PebbleDictionary> getData(final int responseType) {
         return new DictionaryBuilder(responseType)
                 .addString(name)
                 .addString(roomName)
