@@ -50,7 +50,7 @@ public class BeaconsCache {
     }
 
     public String getRoomName(final int id) {
-        for (final ResponseItem responseItem : beaconsResponse) {
+        for (final ResponseItem responseItem : getData()) {
             final BeaconResponse beacon = (BeaconResponse) responseItem;
             if (beacon.id == id) {
                 return beacon.name;
