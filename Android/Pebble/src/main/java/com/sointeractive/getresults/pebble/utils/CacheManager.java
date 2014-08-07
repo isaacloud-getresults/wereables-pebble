@@ -14,20 +14,25 @@ import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.LoginCache;
 import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 
-public class CacheReloader {
-    public static final CacheReloader INSTANCE = new CacheReloader();
-    private static final String TAG = CacheReloader.class.getSimpleName();
+public class CacheManager {
+    public static final CacheManager INSTANCE = new CacheManager();
+    private static final String TAG = CacheManager.class.getSimpleName();
     private static final int SECOND = 1000;
     private static final int INTERVAL = IsaaCloudSettings.CACHE_RELOAD_INTERVAL_SECONDS * SECOND;
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
 
-    private CacheReloader() {
+    private CacheManager() {
         // Exists only to defeat instantiation.
     }
 
     public void reload() {
+        clear();
+        update();
+    }
+
+    public void update() {
         Log.d(TAG, "Action: Reload cache");
         AchievementsCache.INSTANCE.reload();
         PeopleCache.INSTANCE.reload();
@@ -36,9 +41,17 @@ public class CacheReloader {
         Log.i(TAG, "Event: Cache reloaded");
     }
 
+    public void clear() {
+        Log.i(TAG, "Action: Clear cache");
+        AchievementsCache.INSTANCE.clear();
+        PeopleCache.INSTANCE.clear();
+        BeaconsCache.INSTANCE.clear();
+        LoginCache.INSTANCE.clear();
+    }
+
     public void setAutoReload(final Context context) {
         if (alarmManager == null) {
-            Log.i(TAG, "Action: Set cache auto reload");
+            Log.i(TAG, "Action: Set cache auto update");
 
             final Intent intent = new Intent(context, AlarmReceiver.class);
             alarmIntent = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -49,7 +62,7 @@ public class CacheReloader {
     }
 
     public void stopAutoReload() {
-        Log.i(TAG, "Action: Stop cache auto reload");
+        Log.i(TAG, "Action: Stop cache auto update");
 
         if (alarmManager != null) {
             alarmManager.cancel(alarmIntent);

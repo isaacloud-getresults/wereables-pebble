@@ -37,4 +37,8 @@ public class PeopleProvider {
             e.printStackTrace();
         }
     }
+
+    public void clear() {
+        peopleIC.clear();
+    }
 }

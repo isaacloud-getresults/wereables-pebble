@@ -78,4 +78,9 @@ public class PeopleCache {
             NewPeopleChecker.checkSafe(oldResponses.get(observedRoom), peopleResponses.get(observedRoom));
         }
     }
+
+    public void clear() {
+        PeopleProvider.INSTANCE.clear();
+        peopleResponses = null;
+    }
 }

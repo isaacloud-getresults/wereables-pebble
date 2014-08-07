@@ -72,7 +72,7 @@ public class UserProvider {
         return userIC != null;
     }
 
-    public void logOut() {
+    public void clear() {
         userIC = null;
     }
 }

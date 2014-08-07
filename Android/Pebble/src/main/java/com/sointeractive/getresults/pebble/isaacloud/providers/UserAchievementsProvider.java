@@ -47,4 +47,8 @@ public class UserAchievementsProvider {
             e.printStackTrace();
         }
     }
+
+    public void clear() {
+        achievementsIC.clear();
+    }
 }

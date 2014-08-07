@@ -56,4 +56,9 @@ public class LoginCache {
             loginResponse = newLoginResponse;
         }
     }
+
+    public void clear() {
+        UserProvider.INSTANCE.clear();
+        loginResponse = null;
+    }
 }

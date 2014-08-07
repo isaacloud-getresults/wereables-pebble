@@ -17,4 +17,5 @@
     <!-- Login form -->
     <string name="login_button_label">Log in</string>
     <string name="login_email_hint">e-mail</string>
+    <string name="cache_clear_button_label">Clear cache</string>
 </resources>

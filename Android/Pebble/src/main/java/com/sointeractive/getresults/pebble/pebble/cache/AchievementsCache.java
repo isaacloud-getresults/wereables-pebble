@@ -80,4 +80,9 @@ public class AchievementsCache {
         final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
         achievementsResponse = makeResponse(userAchievements);
     }
+
+    public void clear() {
+        UserAchievementsProvider.INSTANCE.clear();
+        achievementsResponse = null;
+    }
 }

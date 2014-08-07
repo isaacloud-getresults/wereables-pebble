@@ -59,4 +59,9 @@ public class BeaconsCache {
 
         return IsaaCloudSettings.ROOM_NOT_FOUND_NAME;
     }
+
+    public void clear() {
+        RoomsProvider.INSTANCE.clear();
+        beaconsResponse = null;
+    }
 }

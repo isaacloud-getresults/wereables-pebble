@@ -5,7 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.utils.CacheReloader;
+import com.sointeractive.getresults.pebble.utils.CacheManager;
 
 public class AlarmReceiver extends BroadcastReceiver {
     private static final String TAG = AlarmReceiver.class.getSimpleName();
@@ -13,6 +13,6 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.d(TAG, "Event: Alarm tick");
-        CacheReloader.INSTANCE.reload();
+        CacheManager.INSTANCE.update();
     }
 }

@@ -39,4 +39,8 @@ public class RoomsProvider {
             e.printStackTrace();
         }
     }
+
+    public void clear() {
+        roomsIC.clear();
+    }
 }
