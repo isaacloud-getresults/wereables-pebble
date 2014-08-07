@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.cache;
 import android.util.SparseArray;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
-import com.sointeractive.getresults.pebble.isaacloud.providers.UserAchievementsProvider;
+import com.sointeractive.getresults.pebble.isaacloud.providers.AchievementsProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.AchievementDescriptionResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.AchievementResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
@@ -63,12 +63,12 @@ public class AchievementsCache {
     }
 
     public void reload() {
-        final Collection<AchievementIC> userAchievements = UserAchievementsProvider.INSTANCE.getData();
-        achievementsResponse = makeResponse(userAchievements);
+        final Collection<AchievementIC> achievements = AchievementsProvider.INSTANCE.getData();
+        achievementsResponse = makeResponse(achievements);
     }
 
     public void clear() {
-        UserAchievementsProvider.INSTANCE.clear();
+        AchievementsProvider.INSTANCE.clear();
         achievementsResponse.clear();
     }
 }

@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.providers;
 import com.sointeractive.getresults.pebble.isaacloud.checker.NewAchievementsNotifier;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserAchievementsTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.GetAchievementsTask;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -12,13 +12,13 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.ExecutionException;
 
-public class UserAchievementsProvider {
-    public final static UserAchievementsProvider INSTANCE = new UserAchievementsProvider();
+public class AchievementsProvider {
+    public final static AchievementsProvider INSTANCE = new AchievementsProvider();
 
     @NotNull
     private Collection<AchievementIC> achievementsIC = new LinkedList<AchievementIC>();
 
-    private UserAchievementsProvider() {
+    private AchievementsProvider() {
         // Exists only to defeat instantiation.
     }
 
@@ -29,7 +29,7 @@ public class UserAchievementsProvider {
     }
 
     private void reload() {
-        final GetUserAchievementsTask getAchievements = new GetUserAchievementsTask();
+        final GetAchievementsTask getAchievements = new GetAchievementsTask();
         try {
             @Nullable final UserIC user = UserProvider.INSTANCE.getData();
             if (user == null) {

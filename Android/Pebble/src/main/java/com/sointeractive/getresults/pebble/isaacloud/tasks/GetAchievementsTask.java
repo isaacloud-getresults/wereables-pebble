@@ -18,8 +18,8 @@ import java.util.LinkedList;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collection<AchievementIC>> {
-    private static final String TAG = GetUserAchievementsTask.class.getSimpleName();
+public class GetAchievementsTask extends AsyncTask<Integer, Integer, Collection<AchievementIC>> {
+    private static final String TAG = GetAchievementsTask.class.getSimpleName();
 
     private static final String PATH = "/cache/users/%d/achievements";
     private static final String[] FIELDS = new String[]{"id", "label", "description"};
