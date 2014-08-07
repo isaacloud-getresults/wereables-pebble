@@ -38,7 +38,7 @@ public class BeaconsCache {
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {
             final int peopleNumber = PeopleCache.INSTANCE.getSize(room.id);
-            beaconsResponse.add(new BeaconResponse(room.id, room.name, peopleNumber));
+            beaconsResponse.add(room.toBeaconResponse(peopleNumber));
         }
     }
 

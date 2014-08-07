@@ -6,7 +6,6 @@ import android.util.SparseArray;
 import com.sointeractive.getresults.pebble.isaacloud.checker.NewPeopleChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.PersonIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.PeopleProvider;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.ArrayList;
@@ -67,7 +66,7 @@ public class PeopleCache {
         if (peopleResponses.get(roomId) == null) {
             peopleResponses.put(roomId, new ArrayList<ResponseItem>());
         }
-        peopleResponses.get(roomId).add(new PersonResponse(person.id, person.getFullName(), roomId));
+        peopleResponses.get(roomId).add(person.toPersonInResponse(roomId));
     }
 
     private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {

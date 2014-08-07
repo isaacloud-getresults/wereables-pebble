@@ -4,7 +4,6 @@ import com.sointeractive.getresults.pebble.isaacloud.checker.UserChangeChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.UserProvider;
 import com.sointeractive.getresults.pebble.pebble.responses.EmptyResponse;
-import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import org.jetbrains.annotations.Nullable;
@@ -46,10 +45,10 @@ public class LoginCache {
         UserChangeChecker.check(oldLoginResponse, loginResponse);
     }
 
-    private ResponseItem getLoginResponse(final UserIC newUserIC) {
+    private ResponseItem getLoginResponse(final UserIC userIC) {
+        final String roomName = BeaconsCache.INSTANCE.getRoomName(userIC.beacon);
         final int roomsNumber = BeaconsCache.INSTANCE.getSize();
-        final String roomName = BeaconsCache.INSTANCE.getRoomName(newUserIC.beacon);
-        return new LoginResponse(newUserIC.getFullName(), newUserIC.points, newUserIC.rank, roomName, roomsNumber);
+        return userIC.toLoginResponse(roomName, roomsNumber);
     }
 
     public void clear() {

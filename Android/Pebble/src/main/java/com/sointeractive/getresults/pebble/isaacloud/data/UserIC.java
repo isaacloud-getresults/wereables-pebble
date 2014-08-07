@@ -3,6 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.data;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,5 +39,9 @@ public class UserIC extends PersonIC {
             }
         }
         return null;
+    }
+
+    public LoginResponse toLoginResponse(final String roomName, final int roomsNumber) {
+        return new LoginResponse(getFullName(), points, rank, roomName, roomsNumber);
     }
 }

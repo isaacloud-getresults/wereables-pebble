@@ -27,6 +27,10 @@ public class PersonResponse implements ResponseItem {
                 .pack();
     }
 
+    public PersonOutResponse toPersonOutResponse() {
+        return new PersonOutResponse(this);
+    }
+
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
