@@ -155,10 +155,10 @@ static bool update_beacons_table(Beacon *new_beacon) {
 }
 
 static bool update_coworkers_table(Coworker *new_coworker) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start: %s",new_coworker->name);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start: %s",new_coworker->name);
     if(current_beacon->id==new_coworker->beacon_id) {
         if(coworkers==NULL) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
             max_coworkers = current_beacon->coworkers + 2;
             coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
             char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
@@ -166,17 +166,17 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             coworkers[0] = new_coworker;
             coworkers[0]->name = new_name;
             num_coworkers = 1;
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "    added first coworker: %s",coworkers[0]->name);
             return true;
         }
         else {
             int size = num_coworkers;
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "    num_coworkers: %u",size);
             int i;
             for(i=0; i<size; ++i) {
                 // if that coworker already exists in the table
                 if(coworkers[i]->id==new_coworker->id) {
-                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
+                    APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
                     free(new_coworker);
                     new_coworker = NULL;
                     return false;
@@ -184,18 +184,18 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             }
             if(i<max_coworkers) {
                 // add new if not found in table
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
                 char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
                 strcpy(new_name,new_coworker->name);
                 coworkers[i] = new_coworker;
                 coworkers[i]->name = new_name;
                 num_coworkers++;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
                 return true;
             }
             // reallocate table and increase its size if new element doesn't fit
             else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
                 max_coworkers += 4;
                 Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
                 if(new_table!=NULL) {
@@ -210,15 +210,15 @@ static bool update_coworkers_table(Coworker *new_coworker) {
                     num_coworkers++;
                 }
             }
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
             return true;
         }
     }
     else {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon_id differs, rejecting");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon_id differs, rejecting");
         free(new_coworker);
         new_coworker = NULL;
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
     }
     return false;
 }
@@ -579,15 +579,22 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_coworker->beacon_id = *(beacon_id->value->data);
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s | beacon_id: %i",new_coworker->name,new_coworker->beacon_id);
                 if(update_coworkers_table(new_coworker)) {
-                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
+                    APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                     menu_layer_reload_data(coworkers_menu_layer);
+                    APP_LOG(APP_LOG_LEVEL_DEBUG, "    1");
                     if(num_coworkers==current_beacon->coworkers) {
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    2");
                         is_downloading = false;
-                        layer_mark_dirty(coworkers_downloading_sign_layer);
+                        //if(coworkers_downloading_sign_layer!=NULL)
+                            //layer_mark_dirty(coworkers_downloading_sign_layer);
                     }
-                    if(coworkers!=NULL) {
-                        layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
-                        layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
+                    if(coworkers!=NULL && window_stack_get_top_window()==coworkers_window) {
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    3");
+                        if(coworkers_text_layer!=NULL)
+                            layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
+                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    4");
+                        if(coworkers_menu_layer!=NULL)
+                            layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
                     }
                 }
             }
@@ -635,7 +642,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     else
                         strcat(achievement_description,text->value->cstring);
                 }
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement description: id: %i | part: %i | text: %s",*(id->value->data),*(part->value->data),text->value->cstring);
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement description: id: %i | part: %i | text: %s",*(id->value->data),*(part->value->data),text->value->cstring);
                 text_layer_set_text(achievement_details_text_layer,achievement_description);
                 GSize max_size = text_layer_get_content_size(achievement_details_text_layer);
                 max_size.w = 144;
@@ -974,13 +981,13 @@ static void beacons_window_appear(Window *window) {
 
 ///////////////////////////////////// COWORKERS WINDOW
 static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
     if(is_downloading && last_request==REQUEST_COWORKERS && current_beacon->coworkers>0) {
         graphics_context_set_stroke_color(ctx, GColorWhite);
         graphics_context_set_fill_color(ctx, GColorWhite);
         graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
     }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
 }
 
 static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
