@@ -2,9 +2,12 @@ package com.sointeractive.getresults.pebble.isaacloud.providers;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.GetNotificationsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.SendNotificationsTask;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ExecutionException;
 
@@ -17,6 +20,7 @@ public class UserProvider {
         // Exists only to defeat instantiation.
     }
 
+    @Nullable
     public UserIC getData() {
         if (userIC == null) {
             reload();
@@ -29,16 +33,17 @@ public class UserProvider {
         return userIC;
     }
 
+    // TODO: Refactor this
     private void reload() {
         try {
             final int userId = getUserId();
             final GetUserTask getUser = new GetUserTask();
-            final UserIC newUserData = getUser.execute(userId).get();
+            @Nullable final UserIC newUserData = getUser.execute(userId).get();
 
             if (newUserData != null) {
                 if (userIC == null) {
-                    final GetNotificationsTask getNotifications = new GetNotificationsTask();
-                    getNotifications.execute(userId);
+                    final SendNotificationsTask sendNotifications = new SendNotificationsTask();
+                    sendNotifications.execute(userId);
                 }
                 userIC = newUserData;
             }
@@ -53,16 +58,11 @@ public class UserProvider {
         if (isLoaded()) {
             return userIC.id;
         } else {
-            final Integer userId = logIn();
-
-            if (userId == null) {
-                return 0;
-            } else {
-                return userId;
-            }
+            return logIn();
         }
     }
 
+    @NotNull
     private Integer logIn() throws ExecutionException, InterruptedException {
         final GetUserIdTask getLoginId = new GetUserIdTask();
         return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();

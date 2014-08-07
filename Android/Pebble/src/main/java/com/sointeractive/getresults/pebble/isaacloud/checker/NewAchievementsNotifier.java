@@ -9,34 +9,35 @@ import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class NewAchievementsChecker {
-    private static final String TAG = NewAchievementsChecker.class.getSimpleName();
+public class NewAchievementsNotifier {
+    private static final String TAG = NewAchievementsNotifier.class.getSimpleName();
 
-    public static void check(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
-        if (oldAchievements != null && newAchievements != null && oldAchievements.size() != newAchievements.size()) {
-            Log.i(TAG, "Checker: New achievements found");
+    public static void findDifference(@NotNull final Collection<AchievementIC> oldAchievements, @NotNull final Collection<AchievementIC> newAchievements) {
+        Log.i(TAG, "Checker: New achievements found");
 
-            final Set<AchievementIC> changedAchievements = getNewAchievements(oldAchievements, newAchievements);
-            notifyAchievements(changedAchievements);
-        }
+        final Set<AchievementIC> gainedAchievements = getGainedAchievements(oldAchievements, newAchievements);
+        notifyAchievements(gainedAchievements);
     }
 
-    private static Set<AchievementIC> getNewAchievements(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
-        final Set<AchievementIC> set1 = new HashSet<AchievementIC>(oldAchievements);
-        final Set<AchievementIC> set2 = new HashSet<AchievementIC>(newAchievements);
-        return Sets.symmetricDifference(set1, set2).immutableCopy();
+    private static Set<AchievementIC> getGainedAchievements(final Collection<AchievementIC> oldAchievements, final Collection<AchievementIC> newAchievements) {
+        final Set<AchievementIC> oldSet = new HashSet<AchievementIC>(oldAchievements);
+        final Set<AchievementIC> newSet = new HashSet<AchievementIC>(newAchievements);
+        return Sets.difference(newSet, oldSet).immutableCopy();
     }
 
     private static void notifyAchievements(final Collection<AchievementIC> changedAchievements) {
-        sendListItem(changedAchievements);
+        sendListItems(changedAchievements);
         sendNotification(changedAchievements);
     }
 
-    private static void sendListItem(final Iterable<AchievementIC> changedAchievements) {
+    // TODO: Refactor this
+    private static void sendListItems(final Iterable<AchievementIC> changedAchievements) {
         final Collection<ResponseItem> responseItems = AchievementsCache.makeResponse(changedAchievements);
         Responder.sendResponseItemsToPebble(responseItems);
     }

@@ -30,7 +30,7 @@ public class AchievementResponse implements ResponseItem {
 
     private int getDescriptionPartsNumber() {
         final double stringLength = description.length();
-        final double partSize = PebbleSettings.MAX_ACHIEVEMENTS_DESCTIPTION_STR_LEN;
+        final double partSize = PebbleSettings.MAX_ACHIEVEMENTS_DESCRIPTION_STR_LEN;
         return (int) Math.ceil(stringLength / partSize);
     }
 }

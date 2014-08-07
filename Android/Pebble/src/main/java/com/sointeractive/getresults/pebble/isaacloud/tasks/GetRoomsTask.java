@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.RoomIC;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,6 +21,9 @@ import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
     private static final String TAG = GetRoomsTask.class.getSimpleName();
 
+    private static final String PATH = "/cache/users/groups";
+    private static final String[] FIELDS = new String[]{"id", "label"};
+
     @Override
     protected Collection<RoomIC> doInBackground(final Void... params) {
         Log.d(TAG, "Action: Get beacons in background");
@@ -34,19 +38,19 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
             Log.e(TAG, "Error: IO error");
         }
 
-        return null;
+        Log.e(TAG, "Error: Beacons not found");
+        return new LinkedList<RoomIC>();
     }
 
     private Collection<RoomIC> getBeacons() throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.BEACONS.getResponse();
-
+        final HttpResponse response = getHttpResponse();
         final Collection<RoomIC> result = new LinkedList<RoomIC>();
+
         final JSONArray beacons = response.getJSONArray();
         for (int i = 0; i < beacons.length(); i++) {
-            final JSONObject beaconsJSON = (JSONObject) beacons.get(i);
-            final RoomIC roomFound = new RoomIC(beaconsJSON);
-            if (!IsaaCloudSettings.IGNORED_GROUPS.contains(roomFound.id)) {
-                result.add(roomFound);
+            final RoomIC roomIC = getRoom(beacons, i);
+            if (isNotIgnored(roomIC)) {
+                result.add(roomIC);
             }
         }
 
@@ -54,10 +58,22 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
         return result;
     }
 
-    @Override
-    protected void onPostExecute(final Collection<RoomIC> result) {
-        if (result == null) {
-            Log.e(TAG, "Error: Returned null");
-        }
+    private RoomIC getRoom(final JSONArray beacons, final int i) throws JSONException {
+        final JSONObject beaconsJSON = beacons.getJSONObject(i);
+        return new RoomIC(beaconsJSON);
+    }
+
+    private boolean isNotIgnored(final RoomIC roomIC) {
+        return !IsaaCloudSettings.IGNORED_GROUPS.contains(roomIC.id);
+    }
+
+    private HttpResponse getHttpResponse() throws IOException, IsaaCloudConnectionException {
+        Log.d(TAG, "Action: Query for beacons");
+
+        return Application.isaacloudConnector
+                .path(PATH)
+                .withFields(FIELDS)
+                .withLimit(IsaaCloudSettings.UNLIMITED)
+                .get();
     }
 }

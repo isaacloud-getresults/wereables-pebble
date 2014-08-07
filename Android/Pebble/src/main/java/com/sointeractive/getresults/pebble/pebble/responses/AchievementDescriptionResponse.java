@@ -30,7 +30,7 @@ public class AchievementDescriptionResponse implements ResponseItem {
     @Override
     public List<PebbleDictionary> getData() {
         final List<PebbleDictionary> data = new LinkedList<PebbleDictionary>();
-        final Queue<String> descriptionParts = partitionDescription(description, PebbleSettings.MAX_ACHIEVEMENTS_DESCTIPTION_STR_LEN);
+        final Queue<String> descriptionParts = partitionDescription(description, PebbleSettings.MAX_ACHIEVEMENTS_DESCRIPTION_STR_LEN);
 
         int descriptionPartId = 0;
         while (!descriptionParts.isEmpty()) {

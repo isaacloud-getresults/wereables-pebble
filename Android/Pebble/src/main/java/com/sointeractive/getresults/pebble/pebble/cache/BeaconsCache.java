@@ -27,7 +27,7 @@ public class BeaconsCache {
     }
 
     public void reload() {
-        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getUpToDateData();
+        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getData();
 
         final Collection<ResponseItem> oldBeaconsResponse = beaconsResponse;
         beaconsResponse = new LinkedList<ResponseItem>();

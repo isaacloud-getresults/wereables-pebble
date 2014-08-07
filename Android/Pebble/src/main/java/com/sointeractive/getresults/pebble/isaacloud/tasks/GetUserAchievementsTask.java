@@ -3,7 +3,9 @@ package com.sointeractive.getresults.pebble.isaacloud.tasks;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -19,12 +21,19 @@ import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collection<AchievementIC>> {
     private static final String TAG = GetUserAchievementsTask.class.getSimpleName();
 
+    private static final String PATH = "/cache/users/%d/achievements";
+    private static final String[] FIELDS = new String[]{"id", "label", "description"};
+
     @Override
-    protected Collection<AchievementIC> doInBackground(final Integer... userId) {
+    protected Collection<AchievementIC> doInBackground(final Integer... userIds) {
         Log.d(TAG, "Action: Get achievements in background");
 
+        if (userIds.length != 1) {
+            throw new IllegalArgumentException("You have to use exactly one id to to get user achievements");
+        }
+
         try {
-            return getAchievements(userId[0].toString());
+            return getAchievements(userIds[0]);
         } catch (final JSONException e) {
             Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
@@ -33,27 +42,38 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
             Log.e(TAG, "Error: IO error");
         }
 
-        return null;
+        Log.e(TAG, "Error: User achievements not found");
+        return new LinkedList<AchievementIC>();
     }
 
-    private Collection<AchievementIC> getAchievements(final String user) throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.ACHIEVEMENTS.getResponse(user);
-
+    private Collection<AchievementIC> getAchievements(final int userId) throws IOException, IsaaCloudConnectionException, JSONException {
+        final HttpResponse response = getHttpResponse(userId);
         final Collection<AchievementIC> result = new LinkedList<AchievementIC>();
+
         final JSONArray achievements = response.getJSONArray();
         for (int i = 0; i < achievements.length(); i++) {
-            final JSONObject achievementJSON = (JSONObject) achievements.get(i);
-            result.add(new AchievementIC(achievementJSON));
+            final AchievementIC achievementIC = getAchievement(achievements, i);
+            result.add(achievementIC);
         }
 
         Log.d(TAG, "Event: " + result.size() + " achievements downloaded");
         return result;
     }
 
-    @Override
-    protected void onPostExecute(final Collection<AchievementIC> result) {
-        if (result == null) {
-            Log.e(TAG, "Error: Returned null");
-        }
+    private AchievementIC getAchievement(final JSONArray achievements, final int i) throws JSONException {
+        final JSONObject achievementJSON = achievements.getJSONObject(i);
+        return new AchievementIC(achievementJSON);
+    }
+
+    private HttpResponse getHttpResponse(final int userId) throws IOException, IsaaCloudConnectionException {
+        final String path = String.format(PATH, userId);
+
+        Log.d(TAG, "Action: Query for user achievements");
+
+        return Application.isaacloudConnector
+                .path(path)
+                .withFields(FIELDS)
+                .withLimit(IsaaCloudSettings.UNLIMITED)
+                .get();
     }
 }

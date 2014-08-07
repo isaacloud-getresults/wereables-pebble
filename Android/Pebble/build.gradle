@@ -24,4 +24,5 @@ dependencies {
     compile project(':PEBBLE_KIT')
     compile files('libs/estimote-sdk-preview.jar')
     compile files('libs/isaacloud-android-sdk.jar')
+    compile files('libs/annotations.jar')
 }
