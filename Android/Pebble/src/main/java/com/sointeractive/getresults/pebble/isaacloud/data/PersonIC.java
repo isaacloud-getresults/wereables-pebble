@@ -20,13 +20,15 @@ public class PersonIC {
         firstName = json.getString("firstName");
         lastName = json.getString("lastName");
         setCounterValues(json.getJSONArray("counterValues"));
-        beacon = counters.get(IsaaCloudSettings.ROOM_COUNTER_ID, 0);
+        beacon = counters.get(IsaaCloudSettings.ROOM_COUNTER_ID, -1);
     }
 
     void setCounterValues(final JSONArray jsonArray) throws JSONException {
         for (int i = 0; i < jsonArray.length(); i++) {
-            final JSONObject counter = jsonArray.getJSONObject(i);
-            counters.put(counter.getInt("counter"), counter.getInt("value"));
+            if (!jsonArray.isNull(i)) {
+                final JSONObject counter = jsonArray.getJSONObject(i);
+                counters.put(counter.getInt("counter"), counter.getInt("value"));
+            }
         }
     }
 

@@ -48,9 +48,11 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
 
         final JSONArray beacons = response.getJSONArray();
         for (int i = 0; i < beacons.length(); i++) {
-            final RoomIC roomIC = getRoom(beacons, i);
-            if (isNotIgnored(roomIC)) {
-                result.add(roomIC);
+            if (!beacons.isNull(i)) {
+                final RoomIC roomIC = getRoom(beacons, i);
+                if (isNotIgnored(roomIC)) {
+                    result.add(roomIC);
+                }
             }
         }
 

@@ -24,6 +24,7 @@ public class GetUserIdTask extends AsyncTask<String, Integer, Integer> {
     protected Integer doInBackground(final String... emails) {
         Log.d(TAG, "Action: Get user id in background");
 
+
         if (emails.length != 1) {
             throw new IllegalArgumentException("You have to use exactly one email to to get user id");
         }

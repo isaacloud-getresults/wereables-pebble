@@ -52,8 +52,10 @@ public class GetUserAchievementsTask extends AsyncTask<Integer, Integer, Collect
 
         final JSONArray achievements = response.getJSONArray();
         for (int i = 0; i < achievements.length(); i++) {
-            final AchievementIC achievementIC = getAchievement(achievements, i);
-            result.add(achievementIC);
+            if (!achievements.isNull(i)) {
+                final AchievementIC achievementIC = getAchievement(achievements, i);
+                result.add(achievementIC);
+            }
         }
 
         Log.d(TAG, "Event: " + result.size() + " achievements downloaded");

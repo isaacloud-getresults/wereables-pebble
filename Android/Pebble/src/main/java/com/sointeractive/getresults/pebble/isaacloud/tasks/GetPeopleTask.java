@@ -53,8 +53,10 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
         final Collection<PersonIC> people = new LinkedList<PersonIC>();
         final JSONArray peopleJSON = response.getJSONArray();
         for (int i = 0; i < peopleJSON.length(); i++) {
-            final PersonIC personIC = getPerson(peopleJSON, i);
-            people.add(personIC);
+            if (!peopleJSON.isNull(i)) {
+                final PersonIC personIC = getPerson(peopleJSON, i);
+                people.add(personIC);
+            }
         }
         return people;
     }
