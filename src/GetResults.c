@@ -526,7 +526,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.points = *(points->value->data);
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u",user.name,user.points,user.rank,user.beacons);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u | location: %s",user.name,user.points,user.rank,user.beacons,user.location);
                 static char text_buffer[50];
                 snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -581,18 +581,12 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 if(update_coworkers_table(new_coworker)) {
                     APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                     menu_layer_reload_data(coworkers_menu_layer);
-                    APP_LOG(APP_LOG_LEVEL_DEBUG, "    1");
                     if(num_coworkers==current_beacon->coworkers) {
-                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    2");
                         is_downloading = false;
-                        //if(coworkers_downloading_sign_layer!=NULL)
-                            //layer_mark_dirty(coworkers_downloading_sign_layer);
                     }
                     if(coworkers!=NULL && window_stack_get_top_window()==coworkers_window) {
-                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    3");
                         if(coworkers_text_layer!=NULL)
                             layer_set_hidden(text_layer_get_layer(coworkers_text_layer),true);
-                        APP_LOG(APP_LOG_LEVEL_DEBUG, "    4");
                         if(coworkers_menu_layer!=NULL)
                             layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),false);
                     }
@@ -659,12 +653,14 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window && user.name!=NULL) {
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && user.name!=NULL) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
-            Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
-            if(id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
-                if(pop_coworker_from_table(*(id->value->data))) {
+            Tuple *id = dict_find(iter,COWORKER_ID);
+            Tuple *name = dict_find(iter,COWORKER_NAME);
+            Tuple *beacon_id = dict_find(iter,COWORKER_BEACON_ID);
+            if(beacon_id && id) {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i | name: %s | from room id: %i",*(id->value->data),name->value->cstring,*(beacon_id->value->data));
+                if(*(beacon_id->value->data)==current_beacon->id && pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
@@ -981,13 +977,13 @@ static void beacons_window_appear(Window *window) {
 
 ///////////////////////////////////// COWORKERS WINDOW
 static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
     if(is_downloading && last_request==REQUEST_COWORKERS && current_beacon->coworkers>0) {
         graphics_context_set_stroke_color(ctx, GColorWhite);
         graphics_context_set_fill_color(ctx, GColorWhite);
         graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
 }
 
 static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
@@ -1290,7 +1286,22 @@ static WindowHandlers achievement_details_window_handlers = {
     .unload = achievement_details_window_unload
 };
 
+static void memtest() {
+    uint16_t i = 0;
+    char *temp;
+    while(true) {
+        temp = (char*)malloc(++i*sizeof(char));
+        if(temp==NULL) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "memtest: maximum memory allocated %i",i);
+            free(temp);
+            break;
+        }
+        free(temp);
+    }
+}
+
 static void init() {
+    //memtest();
     num_beacons = 0;
     num_beacons_in_range = 0;
     num_beacons_out_of_range = 0;
