@@ -4,10 +4,10 @@ import android.util.Log;
 
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.isaacloud.data.AchievementIC;
-import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
 import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -45,8 +45,7 @@ public class NewAchievementsNotifier {
     private static void sendNotification(final Collection<AchievementIC> changedAchievements) {
         final String title = getTitle(changedAchievements);
         final String body = getBody(changedAchievements);
-        final IsaacloudNotification notification = new IsaacloudNotification(title, body);
-        notification.send();
+        Application.pebbleConnector.sendNotification(title, body);
     }
 
     private static String getBody(final Iterable<AchievementIC> changedAchievements) {

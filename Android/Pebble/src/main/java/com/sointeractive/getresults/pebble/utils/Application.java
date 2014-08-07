@@ -1,6 +1,5 @@
 package com.sointeractive.getresults.pebble.utils;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
@@ -16,11 +15,9 @@ public class Application extends android.app.Application {
 
     public static Isaacloud isaacloudConnector;
     public static PebbleConnector pebbleConnector;
-    public static Context context;
 
     @SuppressWarnings("WeakerAccess")
     public Application() {
-        context = this;
         pebbleConnector = new PebbleConnector(this);
         initIsaacloudConnector();
     }

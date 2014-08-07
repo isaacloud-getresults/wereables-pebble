@@ -5,7 +5,6 @@ import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.config.PebbleSettings;
-import com.sointeractive.getresults.pebble.isaacloud.notification.IsaacloudNotification;
 import com.sointeractive.getresults.pebble.utils.Application;
 
 import org.json.JSONArray;
@@ -92,15 +91,9 @@ public class SendNotificationsTask extends AsyncTask<Integer, Integer, List<Stri
             Log.e(TAG, "Error: Returned null");
         } else {
             // TODO: Replace trimmed list by whole result
-            for (final String notification : result.subList(0, 1)) {
-                sendNotification(notification);
+            for (final String body : result.subList(0, 1)) {
+                Application.pebbleConnector.sendNotification(PebbleSettings.IC_NOTIFICATION_HEADER, body);
             }
         }
-    }
-
-    private void sendNotification(final String body) {
-        final String title = PebbleSettings.IC_NOTIFICATION_HEADER;
-        final IsaacloudNotification notification = new IsaacloudNotification(title, body);
-        notification.send();
     }
 }
