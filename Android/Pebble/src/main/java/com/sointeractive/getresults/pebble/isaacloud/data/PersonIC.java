@@ -3,7 +3,7 @@ package com.sointeractive.getresults.pebble.isaacloud.data;
 import android.util.SparseIntArray;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.PersonInResponse;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,7 +37,7 @@ public class PersonIC {
         return firstName + " " + lastName;
     }
 
-    public PersonResponse toPersonInResponse(final int roomId) {
-        return new PersonResponse(id, getFullName(), roomId);
+    public PersonInResponse toPersonInResponse(final int roomId) {
+        return new PersonInResponse(id, getFullName(), roomId);
     }
 }

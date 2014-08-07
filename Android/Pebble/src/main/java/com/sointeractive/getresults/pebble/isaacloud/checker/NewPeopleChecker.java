@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.PersonInResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
@@ -43,8 +43,8 @@ public class NewPeopleChecker {
     private static Collection<ResponseItem> getPeopleOutResponse(final Iterable<ResponseItem> people) {
         final Collection<ResponseItem> peopleOut = new LinkedList<ResponseItem>();
         for (final ResponseItem responseItem : people) {
-            final PersonResponse personResponse = (PersonResponse) responseItem;
-            peopleOut.add(personResponse.toPersonOutResponse());
+            final PersonInResponse personInResponse = (PersonInResponse) responseItem;
+            peopleOut.add(personInResponse.toPersonOutResponse());
         }
         return peopleOut;
     }

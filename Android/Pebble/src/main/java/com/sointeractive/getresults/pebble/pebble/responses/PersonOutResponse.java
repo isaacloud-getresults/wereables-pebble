@@ -12,7 +12,7 @@ public class PersonOutResponse implements ResponseItem {
     private final String name;
     private final int roomId;
 
-    public PersonOutResponse(final PersonResponse person) {
+    public PersonOutResponse(final PersonInResponse person) {
         this.id = person.id;
         this.name = person.name;
         this.roomId = person.roomId;
