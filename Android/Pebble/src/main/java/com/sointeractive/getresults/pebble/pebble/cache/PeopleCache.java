@@ -64,12 +64,10 @@ public class PeopleCache {
     }
 
     private void addPersonToRoom(final int roomId, final PersonIC person) {
-        final Collection<ResponseItem> room = peopleResponses.get(roomId);
-        if (room == null) {
+        if (peopleResponses.get(roomId) == null) {
             peopleResponses.put(roomId, new ArrayList<ResponseItem>());
         }
-        assert room != null;
-        room.add(new PersonResponse(person.id, person.getFullName(), roomId));
+        peopleResponses.get(roomId).add(new PersonResponse(person.id, person.getFullName(), roomId));
     }
 
     private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
