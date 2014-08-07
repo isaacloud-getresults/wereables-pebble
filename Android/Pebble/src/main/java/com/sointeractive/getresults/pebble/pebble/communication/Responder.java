@@ -3,6 +3,7 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
+import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import com.sointeractive.getresults.pebble.utils.Application;
 
@@ -34,8 +35,10 @@ public class Responder {
 
     public void sendRequestedResponse() {
         final Request request = getRequest();
+        // TODO: Polymorphic request action
         if (request != Request.UNKNOWN) {
             if (request == Request.LOGIN) {
+                PeopleCache.INSTANCE.clearObservedRoom();
                 Application.pebbleConnector.clearSendingQueue();
             }
             request.sendResponse();

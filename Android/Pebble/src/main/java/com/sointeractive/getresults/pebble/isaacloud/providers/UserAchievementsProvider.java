@@ -6,6 +6,7 @@ import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserAchievementsTask;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -30,7 +31,7 @@ public class UserAchievementsProvider {
     private void reload() {
         final GetUserAchievementsTask getAchievements = new GetUserAchievementsTask();
         try {
-            final UserIC user = UserProvider.INSTANCE.getData();
+            @Nullable final UserIC user = UserProvider.INSTANCE.getData();
             if (user == null) {
                 return;
             }

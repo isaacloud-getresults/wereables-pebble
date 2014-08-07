@@ -16,19 +16,7 @@ import java.util.Set;
 public class NewPeopleChecker {
     private static final String TAG = NewPeopleChecker.class.getSimpleName();
 
-    public static void checkSafe(Collection<ResponseItem> oldPeople, Collection<ResponseItem> newPeople) {
-        if (oldPeople == null) {
-            oldPeople = new LinkedList<ResponseItem>();
-        }
-
-        if (newPeople == null) {
-            newPeople = new LinkedList<ResponseItem>();
-        }
-
-        check(oldPeople, newPeople);
-    }
-
-    private static void check(final Collection<ResponseItem> oldPeople, final Collection<ResponseItem> newPeople) {
+    public static void check(final Collection<ResponseItem> oldPeople, final Collection<ResponseItem> newPeople) {
         final Set<ResponseItem> oldPeopleSet = new HashSet<ResponseItem>(oldPeople);
         final Set<ResponseItem> newPeopleSet = new HashSet<ResponseItem>(newPeople);
         final Set<ResponseItem> peopleIn = Sets.difference(newPeopleSet, oldPeopleSet).immutableCopy();

@@ -15,7 +15,7 @@ public class AchievementsCache {
     public static final AchievementsCache INSTANCE = new AchievementsCache();
     private static final SparseArray<Collection<ResponseItem>> achievementDescriptionResponses = new SparseArray<Collection<ResponseItem>>();
 
-    private Collection<ResponseItem> achievementsResponse;
+    private Collection<ResponseItem> achievementsResponse = new LinkedList<ResponseItem>();
 
     private AchievementsCache() {
         // Exists only to defeat instantiation.
@@ -23,7 +23,7 @@ public class AchievementsCache {
 
     public static Collection<ResponseItem> makeResponse(final Iterable<AchievementIC> collection) {
         final Collection<ResponseItem> response = new LinkedList<ResponseItem>();
-        for (final AchievementIC achievement : safe(collection)) {
+        for (final AchievementIC achievement : collection) {
             response.add(new AchievementResponse(achievement.id, achievement.name, achievement.description));
             makeAchievementDescriptionResponse(achievement.id, achievement.description);
         }
@@ -42,14 +42,6 @@ public class AchievementsCache {
         return responseItems;
     }
 
-    private static Iterable<AchievementIC> safe(final Iterable<AchievementIC> collection) {
-        if (collection == null) {
-            return new LinkedList<AchievementIC>();
-        } else {
-            return collection;
-        }
-    }
-
     public Collection<ResponseItem> getData() {
         reloadIfNeeded();
         return achievementsResponse;
@@ -61,17 +53,11 @@ public class AchievementsCache {
     }
 
     private Collection<ResponseItem> getDescription(final int id) {
-        Collection<ResponseItem> response = achievementDescriptionResponses.get(id);
-
-        if (response == null) {
-            response = new LinkedList<ResponseItem>();
-        }
-
-        return response;
+        return achievementDescriptionResponses.get(id, new LinkedList<ResponseItem>());
     }
 
     private void reloadIfNeeded() {
-        if (achievementsResponse == null) {
+        if (achievementsResponse.isEmpty()) {
             reload();
         }
     }
@@ -83,6 +69,6 @@ public class AchievementsCache {
 
     public void clear() {
         UserAchievementsProvider.INSTANCE.clear();
-        achievementsResponse = null;
+        achievementsResponse.clear();
     }
 }

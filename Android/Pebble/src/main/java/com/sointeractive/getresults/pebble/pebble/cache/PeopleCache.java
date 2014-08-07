@@ -18,50 +18,41 @@ public class PeopleCache {
 
     private static final String TAG = PeopleCache.class.getSimpleName();
 
-    private int observedRoom = 0;
+    private int observedRoom = -1;
 
-    private SparseArray<Collection<ResponseItem>> peopleResponses;
+    private SparseArray<Collection<ResponseItem>> peopleResponses = new SparseArray<Collection<ResponseItem>>();
 
     private PeopleCache() {
         // Exists only to defeat instantiation.
     }
 
-    public void setObservedRoom(final int observedRoom) {
-        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
-        this.observedRoom = observedRoom;
-    }
-
     public Collection<ResponseItem> getData(final int room) {
-        if (peopleResponses == null) {
+        if (peopleResponses.size() == 0) {
             reload();
         }
         return getPeopleRoomResponse(room);
     }
 
+    public int getSize(final int room) {
+        return getData(room).size();
+    }
+
     private Collection<ResponseItem> getPeopleRoomResponse(final int room) {
         Collection<ResponseItem> response = peopleResponses.get(room);
-
         if (response == null) {
             response = new LinkedList<ResponseItem>();
         }
-
         return response;
     }
 
     public void reload() {
-        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
         final SparseArray<Collection<ResponseItem>> oldResponses = peopleResponses;
+
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
-
+        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
         updatePeopleList(people);
-        findChanges(oldResponses);
-    }
 
-    private void addPersonToRoom(final int room, final PersonIC person) {
-        if (peopleResponses.get(room) == null) {
-            peopleResponses.put(room, new ArrayList<ResponseItem>());
-        }
-        peopleResponses.get(room).add(new PersonResponse(person.id, person.getFullName(), room));
+        findChanges(oldResponses);
     }
 
     private void updatePeopleList(final Iterable<PersonIC> people) {
@@ -72,15 +63,34 @@ public class PeopleCache {
         }
     }
 
-    private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
-        if (oldResponses != null) {
-            Log.d(TAG, "Check: Changes in room " + observedRoom);
-            NewPeopleChecker.checkSafe(oldResponses.get(observedRoom), peopleResponses.get(observedRoom));
+    private void addPersonToRoom(final int roomId, final PersonIC person) {
+        final Collection<ResponseItem> room = peopleResponses.get(roomId);
+        if (room == null) {
+            peopleResponses.put(roomId, new ArrayList<ResponseItem>());
         }
+        assert room != null;
+        room.add(new PersonResponse(person.id, person.getFullName(), roomId));
+    }
+
+    private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
+        Log.d(TAG, "Check: Changes in roomId: " + observedRoom);
+        final Collection<ResponseItem> oldResponsesRoom = oldResponses.get(observedRoom, new LinkedList<ResponseItem>());
+        final Collection<ResponseItem> newResponsesRoom = peopleResponses.get(observedRoom, new LinkedList<ResponseItem>());
+        NewPeopleChecker.check(oldResponsesRoom, newResponsesRoom);
     }
 
     public void clear() {
         PeopleProvider.INSTANCE.clear();
-        peopleResponses = null;
+        peopleResponses.clear();
+        clearObservedRoom();
+    }
+
+    public void setObservedRoom(final int observedRoom) {
+        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
+        this.observedRoom = observedRoom;
+    }
+
+    public void clearObservedRoom() {
+        observedRoom = -1;
     }
 }

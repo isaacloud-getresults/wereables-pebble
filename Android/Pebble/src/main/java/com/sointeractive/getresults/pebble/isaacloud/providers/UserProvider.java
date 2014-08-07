@@ -28,25 +28,29 @@ public class UserProvider {
         return userIC;
     }
 
+    @Nullable
     public UserIC getUpToDateData() {
         reload();
         return userIC;
     }
 
-    // TODO: Refactor this
     private void reload() {
         try {
-            final int userId = getUserId();
+            final int userId = getId();
+            if (userId < 0) {
+                return;
+            }
+
             final GetUserTask getUser = new GetUserTask();
             @Nullable final UserIC newUserData = getUser.execute(userId).get();
-
-            if (newUserData != null) {
-                if (userIC == null) {
-                    final SendNotificationsTask sendNotifications = new SendNotificationsTask();
-                    sendNotifications.execute(userId);
-                }
-                userIC = newUserData;
+            if (newUserData == null) {
+                return;
             }
+
+            if (!isLoaded()) {
+                onLogInAction(userId);
+            }
+            logIn(newUserData);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
@@ -54,25 +58,34 @@ public class UserProvider {
         }
     }
 
-    private int getUserId() throws ExecutionException, InterruptedException {
+    private int getId() throws ExecutionException, InterruptedException {
         if (isLoaded()) {
             return userIC.id;
         } else {
-            return logIn();
+            return getUserId();
         }
     }
 
     @NotNull
-    private Integer logIn() throws ExecutionException, InterruptedException {
-        final GetUserIdTask getLoginId = new GetUserIdTask();
-        return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+    private Integer getUserId() throws ExecutionException, InterruptedException {
+        final GetUserIdTask getUserId = new GetUserIdTask();
+        return getUserId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
     }
 
     private boolean isLoaded() {
         return userIC != null;
     }
 
+    private void onLogInAction(final int userId) {
+        final SendNotificationsTask sendNotifications = new SendNotificationsTask();
+        sendNotifications.execute(userId);
+    }
+
+    private void logIn(final UserIC newUserData) {
+        userIC = newUserData;
+    }
+
     public void clear() {
-        userIC = null;
+        logIn(null);
     }
 }
