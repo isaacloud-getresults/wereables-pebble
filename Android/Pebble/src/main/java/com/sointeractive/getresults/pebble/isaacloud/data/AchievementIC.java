@@ -1,14 +1,9 @@
 package com.sointeractive.getresults.pebble.isaacloud.data;
 
-import com.sointeractive.getresults.pebble.pebble.responses.AchievementDescriptionResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.AchievementResponse;
-import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.Collection;
-import java.util.LinkedList;
 
 public class AchievementIC {
     public final int id;
@@ -41,11 +36,5 @@ public class AchievementIC {
 
     public AchievementResponse toAchievementResponse() {
         return new AchievementResponse(id, name, description);
-    }
-
-    public Collection<ResponseItem> toAchievementDescriptionResponse() {
-        final Collection<ResponseItem> responseItems = new LinkedList<ResponseItem>();
-        responseItems.add(new AchievementDescriptionResponse(id, description));
-        return responseItems;
     }
 }
