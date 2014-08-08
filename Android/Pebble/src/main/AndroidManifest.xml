@@ -79,14 +79,6 @@
         </receiver>
 
         <receiver
-            android:name=".isaacloud.notification.IsaacloudNotificationReceiver"
-            tools:ignore="ExportedReceiver">
-            <intent-filter>
-                <action android:name="com.isaacloud.action.ISAACLOUD_NOTIFICATION"/>
-            </intent-filter>
-        </receiver>
-
-        <receiver
             android:name=".isaacloud.receivers.BootReceiver"
             tools:ignore="ExportedReceiver">
             <intent-filter>

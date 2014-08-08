@@ -43,7 +43,7 @@ public class CacheManager {
         Log.i(TAG, "Event: Cache reloaded");
     }
 
-    public void clear() {
+    private void clear() {
         Log.d(TAG, "Action: Clear cache");
         AchievementsCache.INSTANCE.clear();
         PeopleCache.INSTANCE.clear();

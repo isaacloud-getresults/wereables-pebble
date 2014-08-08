@@ -2,7 +2,7 @@ package com.sointeractive.getresults.pebble.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 public class IsaaCloudSettings {
     // Connection settings
@@ -14,7 +14,7 @@ public class IsaaCloudSettings {
     public static final int ROOM_COUNTER_ID = 1;
     public static final int LEADERBOARD_ID = 1;
     public static final int PEBBLE_NOTIFICATION_ID = 4;
-    public static final List<Integer> IGNORED_GROUPS = new ArrayList<Integer>(Arrays.asList(1, 2));
+    public static final Collection<Integer> IGNORED_GROUPS = new ArrayList<Integer>(Arrays.asList(1, 2));
 
     // String values
     public static final String ROOM_NOT_FOUND_NAME = "Unknown room";

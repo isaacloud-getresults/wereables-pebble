@@ -27,7 +27,7 @@ public class PersonInResponse implements ResponseItem {
                 .pack();
     }
 
-    public PersonOutResponse toPersonOutResponse() {
+    public ResponseItem toPersonOutResponse() {
         return new PersonOutResponse(this);
     }
 

@@ -68,7 +68,6 @@ public enum Request implements Sendable {
         this.logMessage = logMessage;
     }
 
-    @Override
     public void onRequest() {
         // Default: no onRequest action
     }

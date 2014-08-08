@@ -4,6 +4,7 @@ import android.util.SparseIntArray;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.pebble.responses.PersonInResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,11 +34,11 @@ public class PersonIC {
         }
     }
 
-    public String getFullName() {
+    String getFullName() {
         return firstName + " " + lastName;
     }
 
-    public PersonInResponse toPersonInResponse(final int roomId) {
+    public ResponseItem toPersonInResponse(final int roomId) {
         return new PersonInResponse(id, getFullName(), roomId);
     }
 }

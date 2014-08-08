@@ -6,7 +6,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class EmptyResponse implements ResponseItem {
-    public static final EmptyResponse INSTANCE = new EmptyResponse();
+    public static final ResponseItem INSTANCE = new EmptyResponse();
 
     private EmptyResponse() {
         // Exists only to defeat instantiation.

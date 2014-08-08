@@ -6,6 +6,4 @@ import java.util.Collection;
 
 interface Sendable {
     public Collection<ResponseItem> getSendable(final int query);
-
-    public void onRequest();
 }

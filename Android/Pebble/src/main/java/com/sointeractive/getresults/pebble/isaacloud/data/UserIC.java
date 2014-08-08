@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,8 +13,8 @@ import org.json.JSONObject;
 public class UserIC extends PersonIC {
     private static final String TAG = UserIC.class.getSimpleName();
 
-    public int points = 0;
-    public int rank = 0;
+    private int points = 0;
+    private int rank = 0;
 
     public UserIC(final JSONObject json) throws JSONException {
         super(json);
@@ -41,7 +42,7 @@ public class UserIC extends PersonIC {
         return null;
     }
 
-    public LoginResponse toLoginResponse(final String roomName, final int roomsNumber) {
+    public ResponseItem toLoginResponse(final String roomName, final int roomsNumber) {
         return new LoginResponse(getFullName(), points, rank, roomName, roomsNumber);
     }
 }
