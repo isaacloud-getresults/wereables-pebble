@@ -55,6 +55,11 @@ public class PebbleActivity extends Activity implements Observer {
         setContentView(R.layout.pebble_activity);
 
         context = getApplicationContext();
+        getGuiComponents();
+        email_text_view.setText(IsaaCloudSettings.LOGIN_EMAIL);
+    }
+
+    private void getGuiComponents() {
         checkBox = (CheckBox) findViewById(R.id.pebble_connected_checkBox);
         notification_send_button = (Button) findViewById(R.id.notification_send_button);
         cache_clear_button = (Button) findViewById(R.id.cache_clear_button);
@@ -62,8 +67,6 @@ public class PebbleActivity extends Activity implements Observer {
         notification_body_text_view = (TextView) findViewById(R.id.notification_body_text_view);
         login_button = (Button) findViewById(R.id.login_button);
         email_text_view = (TextView) findViewById(R.id.email_text_view);
-
-        email_text_view.setText(IsaaCloudSettings.LOGIN_EMAIL);
     }
 
     private void registerPebbleConnector() {
@@ -78,6 +81,7 @@ public class PebbleActivity extends Activity implements Observer {
             if (pebbleConnector.areAppMessagesSupported()) {
                 showInfo(R.string.ok_connection_to_pebble);
                 CacheManager.INSTANCE.setAutoReload(context);
+                onPebbleConnected();
             } else {
                 showInfo(R.string.app_messages_not_supported);
             }

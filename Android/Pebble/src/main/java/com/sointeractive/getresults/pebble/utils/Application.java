@@ -18,8 +18,12 @@ public class Application extends android.app.Application {
 
     @SuppressWarnings("WeakerAccess")
     public Application() {
-        pebbleConnector = new PebbleConnector(this);
+        initPebbleConnector();
         initIsaacloudConnector();
+    }
+
+    private void initPebbleConnector() {
+        pebbleConnector = new PebbleConnector(this);
     }
 
     private void initIsaacloudConnector() {

@@ -37,22 +37,14 @@ public class AchievementsCache {
 
     public Collection<ResponseItem> getDescriptionData(final int id) {
         reloadIfNeeded();
-        return getDescription(id);
-    }
-
-    private Collection<ResponseItem> getDescription(final int id) {
         return achievementDescriptionResponses.get(id, new LinkedList<ResponseItem>());
     }
 
     private void reloadIfNeeded() {
         if (achievementsResponse.isEmpty()) {
-            reload();
+            final Collection<AchievementIC> achievements = AchievementsProvider.INSTANCE.getData();
+            achievementsResponse = makeResponse(achievements);
         }
-    }
-
-    public void reload() {
-        final Collection<AchievementIC> achievements = AchievementsProvider.INSTANCE.getData();
-        achievementsResponse = makeResponse(achievements);
     }
 
     public void clear() {

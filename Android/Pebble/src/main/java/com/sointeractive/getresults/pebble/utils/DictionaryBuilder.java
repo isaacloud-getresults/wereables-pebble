@@ -7,7 +7,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class DictionaryBuilder {
-
     private final PebbleDictionary dictionary = new PebbleDictionary();
     private int currentIndex = Request.RESPONSE_DATA_INDEX;
 

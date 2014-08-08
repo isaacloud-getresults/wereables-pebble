@@ -25,23 +25,20 @@ public class PeopleCache {
         // Exists only to defeat instantiation.
     }
 
+    public void setObservedRoom(final int observedRoom) {
+        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
+        this.observedRoom = observedRoom;
+    }
+
+    public void clearObservedRoom() {
+        observedRoom = -1;
+    }
+
     public Collection<ResponseItem> getData(final int room) {
         if (peopleResponses.size() == 0) {
             reload();
         }
         return getPeopleRoomResponse(room);
-    }
-
-    public int getSize(final int room) {
-        return getData(room).size();
-    }
-
-    private Collection<ResponseItem> getPeopleRoomResponse(final int room) {
-        Collection<ResponseItem> response = peopleResponses.get(room);
-        if (response == null) {
-            response = new LinkedList<ResponseItem>();
-        }
-        return response;
     }
 
     public void reload() {
@@ -76,18 +73,21 @@ public class PeopleCache {
         NewPeopleChecker.check(oldResponsesRoom, newResponsesRoom);
     }
 
+    private Collection<ResponseItem> getPeopleRoomResponse(final int room) {
+        Collection<ResponseItem> response = peopleResponses.get(room);
+        if (response == null) {
+            response = new LinkedList<ResponseItem>();
+        }
+        return response;
+    }
+
+    public int getSize(final int room) {
+        return getData(room).size();
+    }
+
     public void clear() {
         PeopleProvider.INSTANCE.clear();
         peopleResponses.clear();
         clearObservedRoom();
-    }
-
-    public void setObservedRoom(final int observedRoom) {
-        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
-        this.observedRoom = observedRoom;
-    }
-
-    public void clearObservedRoom() {
-        observedRoom = -1;
     }
 }
