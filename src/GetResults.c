@@ -497,10 +497,10 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
@@ -634,12 +634,14 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && window_stack_get_top_window()==coworkers_window && user.name!=NULL) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
-            Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
-            if(id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i",*(id->value->data));
-                if(pop_coworker_from_table(*(id->value->data))) {
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && user.name!=NULL) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
+            Tuple *id = dict_find(iter,COWORKER_ID);
+            Tuple *name = dict_find(iter,COWORKER_NAME);
+            Tuple *beacon_id = dict_find(iter,COWORKER_BEACON_ID);
+            if(beacon_id && id) {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i | name: %s | from room id: %i",*(id->value->data),name->value->cstring,*(beacon_id->value->data));
+                if(*(beacon_id->value->data)==current_beacon->id && pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
@@ -1251,7 +1253,7 @@ static WindowHandlers achievement_details_window_handlers = {
 };
 
 static void init() {
-    memtest();
+    //memtest();
     
     num_beacons = 0;
     num_coworkers = 0;
