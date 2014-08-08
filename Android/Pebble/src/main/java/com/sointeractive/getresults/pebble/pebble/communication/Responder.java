@@ -3,7 +3,6 @@ package com.sointeractive.getresults.pebble.pebble.communication;
 import android.util.Log;
 
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 import com.sointeractive.getresults.pebble.utils.Application;
 
@@ -25,7 +24,7 @@ public class Responder {
         }
     }
 
-    public static Collection<PebbleDictionary> makeResponseDictionary(final Iterable<ResponseItem> data) {
+    private static Collection<PebbleDictionary> makeResponseDictionary(final Iterable<ResponseItem> data) {
         final Collection<PebbleDictionary> list = new LinkedList<PebbleDictionary>();
         for (final ResponseItem responseItem : data) {
             list.addAll(responseItem.getData());
@@ -34,38 +33,30 @@ public class Responder {
     }
 
     public void sendRequestedResponse() {
+        sendResponseItemsToPebble(getResponse());
+    }
+
+    private Collection<ResponseItem> getResponse() {
         final Request request = getRequest();
-        // TODO: Polymorphic request action
-        if (request != Request.UNKNOWN) {
-            if (request == Request.LOGIN) {
-                PeopleCache.INSTANCE.clearObservedRoom();
-                Application.pebbleConnector.clearSendingQueue();
-            }
-            request.sendResponse();
-        }
+        return request.getSendable(data);
     }
 
     private Request getRequest() {
-        final Request request = getByData(data);
+        final Request request = getById(getRequestId());
         Log.i(TAG, "Request: " + request.logMessage);
-        request.setQuery(data);
+        request.onRequest();
         return request;
     }
 
-    private Request getByData(final PebbleDictionary data) {
-        final int requestID = getRequestId(data);
-        return getById(requestID);
-    }
-
-    private int getRequestId(final PebbleDictionary data) {
+    private int getRequestId() {
         final Long requestID = data.getInteger(Request.REQUEST_TYPE);
         return requestID.intValue();
     }
 
     private Request getById(final int id) {
-        for (final Request e : Request.values()) {
-            if (e.id == id)
-                return e;
+        for (final Request request : Request.values()) {
+            if (request.id == id)
+                return request;
         }
         return Request.UNKNOWN;
     }

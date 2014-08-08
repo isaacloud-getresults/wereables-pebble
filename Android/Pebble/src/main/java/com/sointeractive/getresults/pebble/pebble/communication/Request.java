@@ -6,14 +6,16 @@ import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.LoginCache;
 import com.sointeractive.getresults.pebble.pebble.cache.PeopleCache;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+import com.sointeractive.getresults.pebble.utils.Application;
 
 import java.util.Collection;
+import java.util.LinkedList;
 
 public enum Request implements Sendable {
     UNKNOWN(0, "UNKNOWN") {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
-            return null;
+            return new LinkedList<ResponseItem>();
         }
     },
 
@@ -21,6 +23,12 @@ public enum Request implements Sendable {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             return LoginCache.INSTANCE.getData();
+        }
+
+        @Override
+        public void onRequest() {
+            PeopleCache.INSTANCE.clearObservedRoom();
+            Application.pebbleConnector.clearSendingQueue();
         }
     },
 
@@ -62,22 +70,25 @@ public enum Request implements Sendable {
     public final int id;
     public final String logMessage;
 
-    private int query;
-
     private Request(final int id, final String logMessage) {
         this.id = id;
         this.logMessage = logMessage;
     }
 
-    public void sendResponse() {
-        Responder.sendResponseItemsToPebble(getSendable(query));
+    @Override
+    public void onRequest() {
+        // Default: no onRequest action
     }
 
-    public void setQuery(final PebbleDictionary data) {
+    public Collection<ResponseItem> getSendable(final PebbleDictionary data) {
+        return getSendable(getQuery(data));
+    }
+
+    private int getQuery(final PebbleDictionary data) {
         if (data.contains(REQUEST_QUERY)) {
-            query = data.getInteger(REQUEST_QUERY).intValue();
+            return data.getInteger(REQUEST_QUERY).intValue();
         } else {
-            query = 0;
+            return -1;
         }
     }
 }

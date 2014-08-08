@@ -17,7 +17,7 @@ public class BeaconsInfoChangeChecker {
         final Set<ResponseItem> changedBeacons = getChangedBeacons(oldBeacons, newBeacons);
         if (!changedBeacons.isEmpty()) {
             Log.i(TAG, "Checker: Beacons info changed");
-            sendListItem(changedBeacons);
+            Responder.sendResponseItemsToPebble(changedBeacons);
         }
     }
 
@@ -25,9 +25,5 @@ public class BeaconsInfoChangeChecker {
         final Set<ResponseItem> oldBeaconsSet = new HashSet<ResponseItem>(oldBeacons);
         final Set<ResponseItem> newBeaconsSet = new HashSet<ResponseItem>(newBeacons);
         return Sets.difference(newBeaconsSet, oldBeaconsSet).immutableCopy();
-    }
-
-    private static void sendListItem(final Collection<ResponseItem> changedBeacons) {
-        Responder.sendResponseItemsToPebble(changedBeacons);
     }
 }
