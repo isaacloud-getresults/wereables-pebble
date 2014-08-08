@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.pebble.communication;
 
+import android.util.Log;
+
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.pebble.cache.AchievementsCache;
 import com.sointeractive.getresults.pebble.pebble.cache.BeaconsCache;
@@ -12,34 +14,40 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 public enum Request implements Sendable {
-    UNKNOWN(0, "UNKNOWN") {
+    UNKNOWN(0) {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             return new LinkedList<ResponseItem>();
         }
+
+        @Override
+        void onRequest() {
+            Log.d(TAG, "Error: Unknown request");
+        }
     },
 
-    LOGIN(1, "Login info") {
+    LOGIN(1) {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             return LoginCache.INSTANCE.getData();
         }
 
         @Override
-        public void onRequest() {
+        void onRequest() {
+            super.onRequest();
             PeopleCache.INSTANCE.clearObservedRoom();
             Application.getPebbleConnector().clearSendingQueue();
         }
     },
 
-    BEACONS(2, "Beacons list") {
+    BEACONS(2) {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             return BeaconsCache.INSTANCE.getData();
         }
     },
 
-    PEOPLE_IN_ROOM(3, "People list") {
+    PEOPLE_IN_ROOM(3) {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             PeopleCache.INSTANCE.setObservedRoom(query);
@@ -47,7 +55,7 @@ public enum Request implements Sendable {
         }
     },
 
-    ACHIEVEMENTS(4, "Achievements info") {
+    ACHIEVEMENTS(4) {
         @Override
         public Collection<ResponseItem> getSendable(final int query) {
             return AchievementsCache.INSTANCE.getData();
@@ -57,30 +65,56 @@ public enum Request implements Sendable {
     public static final int RESPONSE_TYPE = 1;
     public static final int RESPONSE_DATA_INDEX = 2;
 
-    static final int REQUEST_TYPE = 1;
-    static final int REQUEST_QUERY = 2;
+    private static final String TAG = Responder.class.getSimpleName();
 
-    public final int id;
-    public final String logMessage;
+    private static final int REQUEST_TYPE = 1;
+    private static final int REQUEST_QUERY = 2;
 
-    private Request(final int id, final String logMessage) {
+    private final int id;
+
+    private Request(final int id) {
         this.id = id;
-        this.logMessage = logMessage;
     }
 
-    public void onRequest() {
-        // Default: no onRequest action
+    public static Collection<ResponseItem> getResponse(final PebbleDictionary data) {
+        final int requestId = getRequestId(data);
+        final int query = getQuery(data);
+        return getSendable(requestId, query);
     }
 
-    public Collection<ResponseItem> getSendable(final PebbleDictionary data) {
-        return getSendable(getQuery(data));
+    private static int getRequestId(final PebbleDictionary data) {
+        final Long requestID = data.getInteger(Request.REQUEST_TYPE);
+        return requestID.intValue();
     }
 
-    private int getQuery(final PebbleDictionary data) {
+    private static int getQuery(final PebbleDictionary data) {
         if (data.contains(REQUEST_QUERY)) {
             return data.getInteger(REQUEST_QUERY).intValue();
         } else {
             return -1;
         }
+    }
+
+    private static Collection<ResponseItem> getSendable(final int requestId, final int query) {
+        final Request request = getRequest(requestId);
+        return request.getSendable(query);
+    }
+
+    private static Request getRequest(final int requestId) {
+        final Request request = getById(requestId);
+        request.onRequest();
+        return request;
+    }
+
+    private static Request getById(final int id) {
+        for (final Request request : Request.values()) {
+            if (request.id == id)
+                return request;
+        }
+        return Request.UNKNOWN;
+    }
+
+    void onRequest() {
+        Log.i(TAG, "Request: " + name());
     }
 }

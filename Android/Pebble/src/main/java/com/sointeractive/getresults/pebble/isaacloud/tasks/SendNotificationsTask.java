@@ -75,6 +75,7 @@ public class SendNotificationsTask extends AsyncTask<Integer, Integer, List<Stri
                 .path(PATH)
                 .withFields(FIELDS)
                 .withQuery(query)
+                        //.withLimit(IsaaCloudSettings.UNLIMITED) TODO: Download limitless notifications
                 .get();
     }
 
