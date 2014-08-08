@@ -8,9 +8,9 @@ import java.util.List;
 public class PersonInResponse implements ResponseItem {
     private static final int RESPONSE_ID = 3;
 
-    final int id;
-    final String name;
-    final int roomId;
+    private final int id;
+    private final String name;
+    private final int roomId;
 
     public PersonInResponse(final int id, final String name, final int roomId) {
         this.id = id;
@@ -28,7 +28,7 @@ public class PersonInResponse implements ResponseItem {
     }
 
     public ResponseItem toPersonOutResponse() {
-        return new PersonOutResponse(this);
+        return new PersonOutResponse(id, name, roomId);
     }
 
     @Override

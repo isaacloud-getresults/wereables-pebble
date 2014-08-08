@@ -55,7 +55,8 @@ public class GetUserIdTask extends AsyncTask<String, Integer, Integer> {
 
         final Map<String, Object> query = getQuery(email);
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(PATH)
                 .withFields(FIELDS)
                 .withQuery(query)

@@ -28,7 +28,7 @@ public enum Request implements Sendable {
         @Override
         public void onRequest() {
             PeopleCache.INSTANCE.clearObservedRoom();
-            Application.pebbleConnector.clearSendingQueue();
+            Application.getPebbleConnector().clearSendingQueue();
         }
     },
 

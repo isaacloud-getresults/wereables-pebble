@@ -8,14 +8,22 @@ import java.util.List;
 public class BeaconResponse implements ResponseItem {
     private static final int RESPONSE_ID = 2;
 
-    public final int id;
-    public final String name;
+    private final int id;
+    private final String name;
     private final int people;
 
     public BeaconResponse(final int id, final String name, final int people) {
         this.id = id;
         this.name = name;
         this.people = people;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

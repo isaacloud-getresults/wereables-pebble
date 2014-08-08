@@ -54,7 +54,7 @@ public class PeopleCache {
     private void updatePeopleList(final Iterable<PersonIC> people) {
         int room;
         for (final PersonIC person : people) {
-            room = person.beacon;
+            room = person.getBeacon();
             addPersonToRoom(room, person);
         }
     }

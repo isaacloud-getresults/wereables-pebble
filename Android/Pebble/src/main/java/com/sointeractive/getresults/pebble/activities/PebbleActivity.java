@@ -71,7 +71,7 @@ public class PebbleActivity extends Activity implements Observer {
 
     private void registerPebbleConnector() {
         Log.d(TAG, "Init: Registering" + PebbleConnector.class.getSimpleName());
-        pebbleConnector = Application.pebbleConnector;
+        pebbleConnector = Application.getPebbleConnector();
         pebbleConnector.addObserver(this);
     }
 

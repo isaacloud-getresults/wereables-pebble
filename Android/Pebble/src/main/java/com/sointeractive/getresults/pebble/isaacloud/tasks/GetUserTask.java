@@ -53,7 +53,8 @@ public class GetUserTask extends AsyncTask<Integer, Integer, UserIC> {
 
         final String path = String.format(PATH, id);
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(path)
                 .withFields(FIELDS)
                 .get();

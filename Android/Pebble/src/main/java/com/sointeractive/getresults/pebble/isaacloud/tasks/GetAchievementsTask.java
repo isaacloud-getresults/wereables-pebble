@@ -72,7 +72,8 @@ public class GetAchievementsTask extends AsyncTask<Integer, Integer, Collection<
 
         Log.d(TAG, "Action: Query for user achievements");
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(path)
                 .withFields(FIELDS)
                 .withLimit(IsaaCloudSettings.UNLIMITED)

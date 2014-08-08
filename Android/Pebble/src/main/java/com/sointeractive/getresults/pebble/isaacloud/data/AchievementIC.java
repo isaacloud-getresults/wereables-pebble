@@ -7,14 +7,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class AchievementIC {
-    public final String name;
     private final int id;
+    private final String name;
     private final String description;
 
     public AchievementIC(final JSONObject json) throws JSONException {
         id = json.getInt("id");
         name = json.getString("label");
         description = json.getString("description");
+    }
+
+    public String getName() {
+        return name;
     }
 
     @Override

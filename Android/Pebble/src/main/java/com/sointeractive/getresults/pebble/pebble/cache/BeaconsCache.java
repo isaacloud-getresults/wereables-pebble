@@ -37,7 +37,7 @@ public class BeaconsCache {
     private void loadNewResponses(final Iterable<RoomIC> rooms) {
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {
-            final int peopleNumber = PeopleCache.INSTANCE.getSize(room.id);
+            final int peopleNumber = PeopleCache.INSTANCE.getSize(room.getId());
             beaconsResponse.add(room.toBeaconResponse(peopleNumber));
         }
     }
@@ -49,8 +49,8 @@ public class BeaconsCache {
     public String getRoomName(final int roomId) {
         for (final ResponseItem responseItem : beaconsResponse) {
             final BeaconResponse beacon = (BeaconResponse) responseItem;
-            if (beacon.id == roomId) {
-                return beacon.name;
+            if (beacon.getId() == roomId) {
+                return beacon.getName();
             }
         }
 

@@ -45,7 +45,7 @@ public class NewAchievementsNotifier {
     private static void sendNotification(final Collection<AchievementIC> changedAchievements) {
         final String title = getTitle(changedAchievements);
         final String body = getBody(changedAchievements);
-        Application.pebbleConnector.sendNotification(title, body);
+        Application.getPebbleConnector().sendNotification(title, body);
     }
 
     private static String getBody(final Iterable<AchievementIC> changedAchievements) {
@@ -53,7 +53,7 @@ public class NewAchievementsNotifier {
 
         for (final AchievementIC newAchievement : changedAchievements) {
             bodyBuilder.append("-- ");
-            bodyBuilder.append(newAchievement.name);
+            bodyBuilder.append(newAchievement.getName());
             bodyBuilder.append("\n");
         }
 

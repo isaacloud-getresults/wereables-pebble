@@ -13,13 +13,21 @@ import pl.sointeractive.isaacloud.exceptions.InvalidConfigException;
 public class Application extends android.app.Application {
     private static final String TAG = Application.class.getSimpleName();
 
-    public static Isaacloud isaacloudConnector;
-    public static PebbleConnector pebbleConnector;
+    private static Isaacloud isaacloudConnector;
+    private static PebbleConnector pebbleConnector;
 
     @SuppressWarnings("WeakerAccess")
     public Application() {
         initPebbleConnector();
         initIsaacloudConnector();
+    }
+
+    public static Isaacloud getIsaacloudConnector() {
+        return isaacloudConnector;
+    }
+
+    public static PebbleConnector getPebbleConnector() {
+        return pebbleConnector;
     }
 
     private void initPebbleConnector() {

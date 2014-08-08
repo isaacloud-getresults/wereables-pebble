@@ -37,7 +37,7 @@ public class AchievementsProvider {
             }
 
             @NotNull final Collection<AchievementIC> oldAchievements = achievementsIC;
-            @NotNull final Collection<AchievementIC> newAchievements = getAchievements.execute(user.id).get();
+            @NotNull final Collection<AchievementIC> newAchievements = getAchievements.execute(user.getId()).get();
             if (newAchievements.size() > oldAchievements.size()) {
                 achievementsIC = newAchievements;
                 NewAchievementsNotifier.findDifference(oldAchievements, newAchievements);

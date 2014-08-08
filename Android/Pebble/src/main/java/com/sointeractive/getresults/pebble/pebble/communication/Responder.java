@@ -20,7 +20,7 @@ public class Responder {
     public static void sendResponseItemsToPebble(final Collection<ResponseItem> data) {
         if (!data.isEmpty()) {
             final Collection<PebbleDictionary> responseData = makeResponseDictionary(data);
-            Application.pebbleConnector.sendDataToPebble(responseData);
+            Application.getPebbleConnector().sendDataToPebble(responseData);
         }
     }
 

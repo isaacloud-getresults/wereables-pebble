@@ -66,13 +66,14 @@ public class GetRoomsTask extends AsyncTask<Void, Integer, Collection<RoomIC>> {
     }
 
     private boolean isNotIgnored(final RoomIC roomIC) {
-        return !IsaaCloudSettings.IGNORED_GROUPS.contains(roomIC.id);
+        return !IsaaCloudSettings.IGNORED_GROUPS.contains(roomIC.getId());
     }
 
     private HttpResponse getHttpResponse() throws IOException, IsaaCloudConnectionException {
         Log.d(TAG, "Action: Query for beacons");
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(PATH)
                 .withFields(FIELDS)
                 .withLimit(IsaaCloudSettings.UNLIMITED)

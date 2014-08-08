@@ -60,7 +60,7 @@ public class UserProvider {
 
     private int getId() throws ExecutionException, InterruptedException {
         if (isLoaded()) {
-            return userIC.id;
+            return userIC.getId();
         } else {
             return getUserId();
         }

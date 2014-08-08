@@ -70,7 +70,8 @@ public class SendNotificationsTask extends AsyncTask<Integer, Integer, List<Stri
 
         final Map<String, Object> query = getQuery(userId);
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(PATH)
                 .withFields(FIELDS)
                 .withQuery(query)
@@ -92,7 +93,7 @@ public class SendNotificationsTask extends AsyncTask<Integer, Integer, List<Stri
         } else {
             // TODO: Replace trimmed list by whole result
             for (final String body : result.subList(0, 1)) {
-                Application.pebbleConnector.sendNotification(PebbleSettings.IC_NOTIFICATION_HEADER, body);
+                Application.getPebbleConnector().sendNotification(PebbleSettings.IC_NOTIFICATION_HEADER, body);
             }
         }
     }

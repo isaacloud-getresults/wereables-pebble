@@ -7,12 +7,16 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class RoomIC {
-    public final int id;
+    private final int id;
     private final String name;
 
     public RoomIC(final JSONObject json) throws JSONException {
         id = json.getInt("id");
         name = json.getString("label");
+    }
+
+    public int getId() {
+        return id;
     }
 
     public ResponseItem toBeaconResponse(final int peopleNumber) {

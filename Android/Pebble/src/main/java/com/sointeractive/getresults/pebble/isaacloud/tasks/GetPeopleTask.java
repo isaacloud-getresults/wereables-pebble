@@ -69,7 +69,8 @@ public class GetPeopleTask extends AsyncTask<Void, Integer, Collection<PersonIC>
     private HttpResponse getHttpResponse() throws IOException, IsaaCloudConnectionException {
         Log.d(TAG, "Action: Query for beacons");
 
-        return Application.isaacloudConnector
+        return Application
+                .getIsaacloudConnector()
                 .path(PATH)
                 .withFields(FIELDS)
                 .withLimit(IsaaCloudSettings.UNLIMITED)

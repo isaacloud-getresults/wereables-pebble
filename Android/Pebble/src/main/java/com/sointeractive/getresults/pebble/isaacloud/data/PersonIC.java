@@ -11,8 +11,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class PersonIC {
-    public final int id;
-    public final int beacon;
+    private final int id;
+    private final int beacon;
     private final String firstName;
     private final String lastName;
     private final SparseIntArray counters = new SparseIntArray();
@@ -23,6 +23,14 @@ public class PersonIC {
         lastName = json.getString("lastName");
         setCounterValues(json.getJSONArray("counterValues"));
         beacon = counters.get(IsaaCloudSettings.ROOM_COUNTER_ID, -1);
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public int getBeacon() {
+        return beacon;
     }
 
     void setCounterValues(final JSONArray jsonArray) throws JSONException {
