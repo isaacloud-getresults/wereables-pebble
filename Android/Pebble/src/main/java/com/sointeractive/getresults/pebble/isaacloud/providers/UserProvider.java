@@ -2,9 +2,12 @@ package com.sointeractive.getresults.pebble.isaacloud.providers;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.GetNotificationsTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
+import com.sointeractive.getresults.pebble.isaacloud.tasks.SendNotificationsTask;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.ExecutionException;
 
@@ -17,6 +20,7 @@ public class UserProvider {
         // Exists only to defeat instantiation.
     }
 
+    @Nullable
     public UserIC getData() {
         if (userIC == null) {
             reload();
@@ -24,6 +28,7 @@ public class UserProvider {
         return userIC;
     }
 
+    @Nullable
     public UserIC getUpToDateData() {
         reload();
         return userIC;
@@ -31,17 +36,21 @@ public class UserProvider {
 
     private void reload() {
         try {
-            final int userId = getUserId();
-            final GetUserTask getUser = new GetUserTask();
-            final UserIC newUserData = getUser.execute(userId).get();
-
-            if (newUserData != null) {
-                if (userIC == null) {
-                    final GetNotificationsTask getNotifications = new GetNotificationsTask();
-                    getNotifications.execute(userId);
-                }
-                userIC = newUserData;
+            final int userId = getId();
+            if (userId < 0) {
+                return;
             }
+
+            final GetUserTask getUser = new GetUserTask();
+            @Nullable final UserIC newUserData = getUser.execute(userId).get();
+            if (newUserData == null) {
+                return;
+            }
+
+            if (!isLoaded()) {
+                onLogInAction(userId);
+            }
+            logIn(newUserData);
         } catch (final InterruptedException e) {
             e.printStackTrace();
         } catch (final ExecutionException e) {
@@ -49,30 +58,34 @@ public class UserProvider {
         }
     }
 
-    private int getUserId() throws ExecutionException, InterruptedException {
+    private int getId() throws ExecutionException, InterruptedException {
         if (isLoaded()) {
-            return userIC.id;
+            return userIC.getId();
         } else {
-            final Integer userId = logIn();
-
-            if (userId == null) {
-                return 0;
-            } else {
-                return userId;
-            }
+            return getUserId();
         }
     }
 
-    private Integer logIn() throws ExecutionException, InterruptedException {
-        final GetUserIdTask getLoginId = new GetUserIdTask();
-        return getLoginId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
+    @NotNull
+    private Integer getUserId() throws ExecutionException, InterruptedException {
+        final GetUserIdTask getUserId = new GetUserIdTask();
+        return getUserId.execute(IsaaCloudSettings.LOGIN_EMAIL).get();
     }
 
     private boolean isLoaded() {
         return userIC != null;
     }
 
-    public void logOut() {
-        userIC = null;
+    private void onLogInAction(final int userId) {
+        final SendNotificationsTask sendNotifications = new SendNotificationsTask();
+        sendNotifications.execute(userId);
+    }
+
+    private void logIn(final UserIC newUserData) {
+        userIC = newUserData;
+    }
+
+    public void clear() {
+        logIn(null);
     }
 }

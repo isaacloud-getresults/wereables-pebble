@@ -34,9 +34,8 @@ public class PebbleConnector extends Observable {
         sendingQueue.clear();
     }
 
-    public void onReceived() {
-        Log.d(TAG, "Action: Poll queue");
-        sendingQueue.poll();
+    public void sendNotification(final String title, final String body) {
+        sender.send(title, body);
     }
 
     public void sendDataToPebble(final Collection<PebbleDictionary> data) {
@@ -62,6 +61,11 @@ public class PebbleConnector extends Observable {
                 PebbleKit.sendDataToPebble(context, PebbleSettings.PEBBLE_APP_UUID, data);
             }
         }
+    }
+
+    public void onAckReceived() {
+        Log.d(TAG, "Action: Poll queue");
+        sendingQueue.poll();
     }
 
     public boolean isPebbleConnected() {
@@ -90,9 +94,5 @@ public class PebbleConnector extends Observable {
         }
 
         return appMessagesSupported;
-    }
-
-    public void sendNotification(final String title, final String body) {
-        sender.send(title, body);
     }
 }

@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.utils.Application;
-import com.sointeractive.getresults.pebble.utils.CacheReloader;
+import com.sointeractive.getresults.pebble.utils.CacheManager;
 
 public class PebbleDisconnectedReceiver extends BroadcastReceiver {
     private static final String TAG = PebbleConnectedReceiver.class.getSimpleName();
@@ -14,7 +14,7 @@ public class PebbleDisconnectedReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(final Context context, final Intent intent) {
         Log.i(TAG, "Event: Pebble is now disconnected");
-        Application.pebbleConnector.isPebbleConnected();
-        CacheReloader.INSTANCE.stopAutoReload();
+        Application.getPebbleConnector().isPebbleConnected();
+        CacheManager.INSTANCE.stopAutoReload();
     }
 }

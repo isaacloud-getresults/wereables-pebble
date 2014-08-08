@@ -12,10 +12,10 @@ public class PersonOutResponse implements ResponseItem {
     private final String name;
     private final int roomId;
 
-    public PersonOutResponse(final PersonResponse person) {
-        this.id = person.id;
-        this.name = person.name;
-        this.roomId = person.roomId;
+    public PersonOutResponse(final int id, final String name, final int roomId) {
+        this.id = id;
+        this.name = name;
+        this.roomId = roomId;
     }
 
     @Override

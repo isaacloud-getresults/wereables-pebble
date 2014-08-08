@@ -18,7 +18,7 @@ public class PebbleNackReceiver extends PebbleKit.PebbleNackReceiver {
     @Override
     public void receiveNack(final Context context, final int transactionId) {
         Log.e(TAG, "Event: Received Nack from Pebble, transactionId=" + transactionId);
-        final PebbleConnector pebbleConnector = Application.pebbleConnector;
+        final PebbleConnector pebbleConnector = Application.getPebbleConnector();
         pebbleConnector.sendNext();
     }
 }

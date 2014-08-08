@@ -4,8 +4,7 @@ import android.util.Log;
 
 import com.google.common.collect.Sets;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonOutResponse;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.PersonInResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.Collection;
@@ -16,19 +15,7 @@ import java.util.Set;
 public class NewPeopleChecker {
     private static final String TAG = NewPeopleChecker.class.getSimpleName();
 
-    public static void checkSafe(Collection<ResponseItem> oldPeople, Collection<ResponseItem> newPeople) {
-        if (oldPeople == null) {
-            oldPeople = new LinkedList<ResponseItem>();
-        }
-
-        if (newPeople == null) {
-            newPeople = new LinkedList<ResponseItem>();
-        }
-
-        check(oldPeople, newPeople);
-    }
-
-    private static void check(final Collection<ResponseItem> oldPeople, final Collection<ResponseItem> newPeople) {
+    public static void check(final Collection<ResponseItem> oldPeople, final Collection<ResponseItem> newPeople) {
         final Set<ResponseItem> oldPeopleSet = new HashSet<ResponseItem>(oldPeople);
         final Set<ResponseItem> newPeopleSet = new HashSet<ResponseItem>(newPeople);
         final Set<ResponseItem> peopleIn = Sets.difference(newPeopleSet, oldPeopleSet).immutableCopy();
@@ -56,7 +43,8 @@ public class NewPeopleChecker {
     private static Collection<ResponseItem> getPeopleOutResponse(final Iterable<ResponseItem> people) {
         final Collection<ResponseItem> peopleOut = new LinkedList<ResponseItem>();
         for (final ResponseItem responseItem : people) {
-            peopleOut.add(new PersonOutResponse((PersonResponse) responseItem));
+            final PersonInResponse personInResponse = (PersonInResponse) responseItem;
+            peopleOut.add(personInResponse.toPersonOutResponse());
         }
         return peopleOut;
     }

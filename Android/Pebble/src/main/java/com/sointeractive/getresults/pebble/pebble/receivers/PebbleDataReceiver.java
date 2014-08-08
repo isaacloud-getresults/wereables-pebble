@@ -7,7 +7,11 @@ import android.util.Log;
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
 import com.sointeractive.getresults.pebble.config.PebbleSettings;
+import com.sointeractive.getresults.pebble.pebble.communication.Request;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+
+import java.util.Collection;
 
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private static final String TAG = PebbleDataReceiver.class.getSimpleName();
@@ -37,7 +41,7 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     }
 
     private void response(final PebbleDictionary data) {
-        final Responder responder = new Responder(data);
-        responder.sendRequestedResponse();
+        final Collection<ResponseItem> response = Request.getResponse(data);
+        Responder.sendResponseItemsToPebble(response);
     }
 }

@@ -5,14 +5,14 @@ import com.sointeractive.getresults.pebble.utils.DictionaryBuilder;
 
 import java.util.List;
 
-public class PersonResponse implements ResponseItem {
+public class PersonInResponse implements ResponseItem {
     private static final int RESPONSE_ID = 3;
 
-    final int id;
-    final String name;
-    final int roomId;
+    private final int id;
+    private final String name;
+    private final int roomId;
 
-    public PersonResponse(final int id, final String name, final int roomId) {
+    public PersonInResponse(final int id, final String name, final int roomId) {
         this.id = id;
         this.name = name;
         this.roomId = roomId;
@@ -27,18 +27,22 @@ public class PersonResponse implements ResponseItem {
                 .pack();
     }
 
+    public ResponseItem toPersonOutResponse() {
+        return new PersonOutResponse(id, name, roomId);
+    }
+
     @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
 
-        if (!(obj instanceof PersonResponse)) {
+        if (!(obj instanceof PersonInResponse)) {
             return false;
         }
 
-        final PersonResponse personResponse = (PersonResponse) obj;
-        return id == personResponse.id;
+        final PersonInResponse personInResponse = (PersonInResponse) obj;
+        return id == personInResponse.id;
     }
 
     public int hashCode() {

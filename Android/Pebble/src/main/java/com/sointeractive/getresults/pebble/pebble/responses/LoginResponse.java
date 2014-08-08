@@ -8,7 +8,7 @@ import java.util.List;
 public class LoginResponse implements ResponseItem {
     private static final int RESPONSE_ID = 1;
 
-    public final String roomName;
+    private final String roomName;
     private final String name;
     private final int points;
     private final int rank;

@@ -1,6 +1,5 @@
 package com.sointeractive.getresults.pebble.utils;
 
-import android.content.Context;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
@@ -14,15 +13,25 @@ import pl.sointeractive.isaacloud.exceptions.InvalidConfigException;
 public class Application extends android.app.Application {
     private static final String TAG = Application.class.getSimpleName();
 
-    public static Isaacloud isaacloudConnector;
-    public static PebbleConnector pebbleConnector;
-    public static Context context;
+    private static Isaacloud isaacloudConnector;
+    private static PebbleConnector pebbleConnector;
 
     @SuppressWarnings("WeakerAccess")
     public Application() {
-        context = this;
-        pebbleConnector = new PebbleConnector(this);
+        initPebbleConnector();
         initIsaacloudConnector();
+    }
+
+    public static Isaacloud getIsaacloudConnector() {
+        return isaacloudConnector;
+    }
+
+    public static PebbleConnector getPebbleConnector() {
+        return pebbleConnector;
+    }
+
+    private void initPebbleConnector() {
+        pebbleConnector = new PebbleConnector(this);
     }
 
     private void initIsaacloudConnector() {

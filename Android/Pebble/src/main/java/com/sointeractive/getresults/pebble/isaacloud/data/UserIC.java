@@ -1,22 +1,32 @@
 package com.sointeractive.getresults.pebble.isaacloud.data;
 
+import android.util.Log;
+
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+import com.sointeractive.getresults.pebble.pebble.responses.LoginResponse;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class UserIC extends PersonIC {
-    public int points;
-    public int rank;
+    private static final String TAG = UserIC.class.getSimpleName();
+
+    private int points = 0;
+    private int rank = 0;
 
     public UserIC(final JSONObject json) throws JSONException {
         super(json);
 
-        final JSONObject leaderboard = getLeaderboard(json.getJSONArray("leaderboards"));
-        if (leaderboard != null) {
-            points = leaderboard.getInt("score");
-            rank = leaderboard.getInt("position");
+        try {
+            final JSONObject leaderboard = getLeaderboard(json.getJSONArray("leaderboards"));
+            if (leaderboard != null) {
+                points = leaderboard.getInt("score");
+                rank = leaderboard.getInt("position");
+            }
+        } catch (final JSONException e) {
+            Log.e(TAG, "Error: Cannot get leaderboard");
         }
     }
 
@@ -30,5 +40,9 @@ public class UserIC extends PersonIC {
             }
         }
         return null;
+    }
+
+    public ResponseItem toLoginResponse(final String roomName, final int roomsNumber) {
+        return new LoginResponse(getFullName(), points, rank, roomName, roomsNumber);
     }
 }

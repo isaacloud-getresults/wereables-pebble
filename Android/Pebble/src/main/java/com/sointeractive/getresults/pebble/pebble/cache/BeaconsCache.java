@@ -13,50 +13,52 @@ import java.util.LinkedList;
 public class BeaconsCache {
     public static final BeaconsCache INSTANCE = new BeaconsCache();
 
-    private Collection<ResponseItem> beaconsResponse;
+    private Collection<ResponseItem> beaconsResponse = new LinkedList<ResponseItem>();
 
     private BeaconsCache() {
         // Exists only to defeat instantiation.
     }
 
     public Collection<ResponseItem> getData() {
-        if (beaconsResponse == null) {
+        if (beaconsResponse.isEmpty()) {
             reload();
         }
         return beaconsResponse;
     }
 
     public void reload() {
-        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getUpToDateData();
-
         final Collection<ResponseItem> oldBeaconsResponse = beaconsResponse;
+        final Collection<RoomIC> rooms = RoomsProvider.INSTANCE.getData();
+        loadNewResponses(rooms);
+
+        BeaconsInfoChangeChecker.check(oldBeaconsResponse, beaconsResponse);
+    }
+
+    private void loadNewResponses(final Iterable<RoomIC> rooms) {
         beaconsResponse = new LinkedList<ResponseItem>();
         for (final RoomIC room : rooms) {
-            final int peopleNumber = PeopleCache.INSTANCE.getData(room.id).size();
-            beaconsResponse.add(new BeaconResponse(room.id, room.name, peopleNumber));
-        }
-
-        if (oldBeaconsResponse != null) {
-            BeaconsInfoChangeChecker.check(oldBeaconsResponse, beaconsResponse);
+            final int peopleNumber = PeopleCache.INSTANCE.getSize(room.getId());
+            beaconsResponse.add(room.toBeaconResponse(peopleNumber));
         }
     }
 
     public int getSize() {
-        if (beaconsResponse == null) {
-            return 0;
-        } else {
-            return beaconsResponse.size();
-        }
+        return beaconsResponse.size();
     }
 
-    public String getRoomName(final int id) {
-        for (final ResponseItem responseItem : getData()) {
+    public String getRoomName(final int roomId) {
+        for (final ResponseItem responseItem : beaconsResponse) {
             final BeaconResponse beacon = (BeaconResponse) responseItem;
-            if (beacon.id == id) {
-                return beacon.name;
+            if (beacon.getId() == roomId) {
+                return beacon.getName();
             }
         }
 
         return IsaaCloudSettings.ROOM_NOT_FOUND_NAME;
+    }
+
+    public void clear() {
+        RoomsProvider.INSTANCE.clear();
+        beaconsResponse.clear();
     }
 }
