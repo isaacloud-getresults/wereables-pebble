@@ -36,6 +36,10 @@ public class AchievementsCache {
         achievementsResponse = makeResponse(achievements);
     }
 
+    public int getSize() {
+        return achievementsResponse.size();
+    }
+
     public void clear() {
         AchievementsProvider.INSTANCE.clear();
         achievementsResponse.clear();

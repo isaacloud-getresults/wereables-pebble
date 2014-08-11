@@ -48,7 +48,8 @@ public class LoginCache {
     private ResponseItem getLoginResponse(final UserIC userIC) {
         final String roomName = BeaconsCache.INSTANCE.getRoomName(userIC.getBeacon());
         final int roomsNumber = BeaconsCache.INSTANCE.getSize();
-        return userIC.toLoginResponse(roomName, roomsNumber);
+        final int achievementsNumber = AchievementsCache.INSTANCE.getSize();
+        return userIC.toLoginResponse(roomName, roomsNumber, achievementsNumber);
     }
 
     public void clear() {

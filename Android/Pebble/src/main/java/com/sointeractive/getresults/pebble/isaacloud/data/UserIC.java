@@ -42,7 +42,7 @@ public class UserIC extends PersonIC {
         return null;
     }
 
-    public ResponseItem toLoginResponse(final String roomName, final int roomsNumber) {
-        return new LoginResponse(getFullName(), points, rank, roomName, roomsNumber);
+    public ResponseItem toLoginResponse(final String roomName, final int roomsNumber, final int achievementsNumber) {
+        return new LoginResponse(getFullName(), points, rank, roomName, roomsNumber, achievementsNumber);
     }
 }
