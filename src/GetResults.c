@@ -16,24 +16,26 @@ static TextLayer *user_text_layer;
 
 static Window *beacons_window;
 static MenuLayer *beacons_menu_layer;
-static TextLayer *beacons_textbar_layer ;
-static Layer *beacons_downloading_sign_layer;
+static TextLayer *beacons_textbar_layer;
+static BitmapLayer *beacons_downloading_sign_layer;
 
 static Window *coworkers_window;
 static MenuLayer *coworkers_menu_layer;
 static TextLayer *coworkers_textbar_layer;
 static TextLayer *coworkers_text_layer;
-static Layer *coworkers_downloading_sign_layer;
+static BitmapLayer *coworkers_downloading_sign_layer;
 
 static Window *achievements_window;
 static MenuLayer *achievements_menu_layer;
 static TextLayer *achievements_textbar_layer;
-static Layer *achievements_downloading_sign_layer;
+static BitmapLayer *achievements_downloading_sign_layer;
 
 static Window *achievement_details_window;
 static TextLayer *achievement_details_textbar_layer;
 static TextLayer *achievement_details_text_layer;
 static ScrollLayer *achievement_details_scroll_layer;
+
+static GBitmap *downloading_sign_image;
 
 typedef struct {
     char *name;
@@ -41,6 +43,7 @@ typedef struct {
     int points;
     int rank;
     int beacons;
+    int achievements;
 } User;
 
 typedef struct {
@@ -221,6 +224,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() start id: %u | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
     if(achievements==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
+        max_achievements = user.achievements + 2;
         achievements = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
         char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
         strcpy(new_name,new_achievement->name);
@@ -262,7 +266,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
         // reallocate table and increase its size twice if new element doesn't fit
         else {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, reallocating table and adding new");
-            max_achievements *= 2;
+            max_achievements += 2;
             Achievement **new_table = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
             if(new_table!=NULL) {
                 for(i=0; i<size; ++i)
@@ -391,13 +395,14 @@ static void set_textbar_layer(Layer *window_layer, TextLayer **textbar_layer) {
     text_layer_set_text_color(*textbar_layer,GColorWhite);
 }
 
-static void set_downloading_sign_layer(Layer *window_layer, Layer **downloading_sign_layer, void (*downloading_sign_layer_update)(Layer *layer, GContext *ctx)) {
+static void set_downloading_sign_layer(Layer *window_layer, BitmapLayer **downloading_sign_layer) {
     GRect downloading_sign_layer_bounds = layer_get_bounds(window_layer);
     downloading_sign_layer_bounds.origin.x = downloading_sign_layer_bounds.size.w-textbar_height;
     downloading_sign_layer_bounds.size.h = textbar_height;
     downloading_sign_layer_bounds.size.w = textbar_height;
-    *downloading_sign_layer = layer_create(downloading_sign_layer_bounds);
-    layer_set_update_proc(*downloading_sign_layer, downloading_sign_layer_update);
+    *downloading_sign_layer = bitmap_layer_create(downloading_sign_layer_bounds);
+    bitmap_layer_set_bitmap(*downloading_sign_layer,downloading_sign_image);
+    bitmap_layer_set_alignment(*downloading_sign_layer,GAlignCenter);
 }
 
 enum {
@@ -418,6 +423,7 @@ enum {
     USER_POINTS = 4,
     USER_RANK = 5,
     USER_BEACONS = 6,
+    USER_ACHIEVEMENTS = 7,
     BEACON_ID = 2,
     BEACON_NAME = 3,
     BEACON_COWORKERS = 4,
@@ -508,7 +514,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *points = dict_find(iter,USER_POINTS);
             Tuple *rank = dict_find(iter,USER_RANK);
             Tuple *beacons = dict_find(iter,USER_BEACONS);
-            if(beacons && rank && points && location && name) {
+            Tuple *achievements = dict_find(iter,USER_ACHIEVEMENTS);
+            if(achievements && beacons && rank && points && location && name) {
                 if(user.name==NULL) {
                     char *new_name = (char*)calloc(strlen(name->value->cstring),sizeof(char));
                     strcpy(new_name,name->value->cstring);
@@ -534,7 +541,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.points = *(points->value->data);
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u | location: %s",user.name,user.points,user.rank,user.beacons,user.location);
+                user.achievements = *(achievements->value->data);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | points: %u | rank: %u | beacons: %u | achiev.: %u | location: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
                 static char text_buffer[50];
                 snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -570,7 +578,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
             if(num_beacons==user.beacons) {
                 is_downloading = false;
-                layer_mark_dirty(beacons_downloading_sign_layer);
+                if(beacons_downloading_sign_layer!=NULL)
+                    layer_set_hidden(bitmap_layer_get_layer(beacons_downloading_sign_layer),true);
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER && user.name!=NULL) {
@@ -591,7 +600,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     menu_layer_reload_data(coworkers_menu_layer);
                     if(num_coworkers==current_beacon->coworkers) {
                         is_downloading = false;
-                        layer_mark_dirty(coworkers_downloading_sign_layer);
+                        if(coworkers_downloading_sign_layer!=NULL)
+                            layer_set_hidden(bitmap_layer_get_layer(coworkers_downloading_sign_layer),true);
                     }
                     if(coworkers!=NULL && window_stack_get_top_window()==coworkers_window) {
                         if(coworkers_text_layer!=NULL)
@@ -626,12 +636,14 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         menu_layer_reload_data(achievements_menu_layer);
                     }
                 }
-                is_downloading = false;
-                if(achievements_downloading_sign_layer!=NULL)
-                    layer_mark_dirty(achievements_downloading_sign_layer);
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement dictionary");
+            }
+            if(num_achievements==user.achievements) {
+                is_downloading = false;
+                if(achievements_downloading_sign_layer!=NULL)
+                    layer_set_hidden(bitmap_layer_get_layer(achievements_downloading_sign_layer),true);
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && user.name!=NULL) {
@@ -648,7 +660,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     }
                 }
                 is_downloading = false;
-                layer_mark_dirty(coworkers_downloading_sign_layer);
+                if(coworkers_downloading_sign_layer!=NULL)
+                    layer_set_hidden(bitmap_layer_get_layer(coworkers_downloading_sign_layer),true);
                 if(coworkers==NULL) {
                     layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),true);
                     layer_set_hidden(text_layer_get_layer(coworkers_text_layer),false);
@@ -840,16 +853,6 @@ static void user_window_unload(Window *window) {
 /////////////////////////////////////
 
 ///////////////////////////////////// BEACONS WINDOW
-static void beacons_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
-    if(is_downloading && last_request==REQUEST_BEACONS) {
-        graphics_context_set_stroke_color(ctx, GColorWhite);
-        graphics_context_set_fill_color(ctx, GColorWhite);
-        graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
-    }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
-}
-
 static uint16_t get_num_sections_beacons(MenuLayer *menu_layer, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_sections_beacons()");
     //return 2;
@@ -926,7 +929,8 @@ static void beacons_window_load(Window *window) {
     set_textbar_layer(window_layer,&beacons_textbar_layer);
     text_layer_set_text(beacons_textbar_layer,user.name);
     
-    set_downloading_sign_layer(window_layer,&beacons_downloading_sign_layer,beacons_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&beacons_downloading_sign_layer);
+    layer_set_hidden(bitmap_layer_get_layer(beacons_downloading_sign_layer),(is_downloading && last_request==REQUEST_BEACONS)?false:true);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
@@ -936,7 +940,7 @@ static void beacons_window_load(Window *window) {
     menu_layer_set_click_config_onto_window(beacons_menu_layer, window);
     
     layer_add_child(window_layer, text_layer_get_layer(beacons_textbar_layer));
-    layer_add_child(window_layer, beacons_downloading_sign_layer);
+    layer_add_child(window_layer, bitmap_layer_get_layer(beacons_downloading_sign_layer));
     layer_add_child(window_layer, menu_layer_get_layer(beacons_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_load() end");
 }
@@ -944,23 +948,13 @@ static void beacons_window_load(Window *window) {
 static void beacons_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_unload() start");
     menu_layer_destroy(beacons_menu_layer);
-    layer_destroy(beacons_downloading_sign_layer);
+    bitmap_layer_destroy(beacons_downloading_sign_layer);
     text_layer_destroy(beacons_textbar_layer);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_unload() start");
 }
 /////////////////////////////////////
 
 ///////////////////////////////////// COWORKERS WINDOW
-static void coworkers_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() start");
-    if(is_downloading && last_request==REQUEST_COWORKERS && current_beacon->coworkers>0) {
-        graphics_context_set_stroke_color(ctx, GColorWhite);
-        graphics_context_set_fill_color(ctx, GColorWhite);
-        graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
-    }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "downloading_sign_layer_update() end");
-}
-
 static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
     return 1;
 }
@@ -1030,7 +1024,8 @@ static void coworkers_window_load(Window *window) {
     set_textbar_layer(window_layer,&coworkers_textbar_layer);
     text_layer_set_text(coworkers_textbar_layer,current_beacon->name);
     
-    set_downloading_sign_layer(window_layer,&coworkers_downloading_sign_layer,coworkers_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&coworkers_downloading_sign_layer);
+    layer_set_hidden(bitmap_layer_get_layer(coworkers_downloading_sign_layer),(is_downloading && last_request==REQUEST_COWORKERS && current_beacon->coworkers>0)?false:true);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
@@ -1054,7 +1049,7 @@ static void coworkers_window_load(Window *window) {
     }
     
     layer_add_child(window_layer, text_layer_get_layer(coworkers_textbar_layer));
-    layer_add_child(window_layer, coworkers_downloading_sign_layer);
+    layer_add_child(window_layer, bitmap_layer_get_layer(coworkers_downloading_sign_layer));
     layer_add_child(window_layer, menu_layer_get_layer(coworkers_menu_layer));
     layer_add_child(window_layer, text_layer_get_layer(coworkers_text_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_load() end");
@@ -1064,23 +1059,13 @@ static void coworkers_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_unload() start");
     text_layer_destroy(coworkers_text_layer);
     menu_layer_destroy(coworkers_menu_layer);
-    layer_destroy(coworkers_downloading_sign_layer);
+    bitmap_layer_destroy(coworkers_downloading_sign_layer);
     text_layer_destroy(coworkers_textbar_layer);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "coworkers_window_unload() end");
 }
 /////////////////////////////////////
 
 ///////////////////////////////////// ACHIEVEMENTS WINDOW
-static void achievements_downloading_sign_layer_update(Layer *layer, GContext *ctx) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_downloading_sign_layer_update() start");
-    if(is_downloading && last_request==REQUEST_ACHIEVEMENTS) {
-        graphics_context_set_stroke_color(ctx, GColorWhite);
-        graphics_context_set_fill_color(ctx, GColorWhite);
-        graphics_fill_circle (ctx,GPoint(textbar_height/2,textbar_height/2),textbar_height/4);
-    }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_downloading_sign_layer_update() end");
-}
-
 static uint16_t get_num_sections_achievements(MenuLayer *menu_layer, void *data) {
     if(achievements!=NULL)
         return 1;
@@ -1145,7 +1130,8 @@ static void achievements_window_load(Window *window) {
     set_textbar_layer(window_layer,&achievements_textbar_layer);
     text_layer_set_text(achievements_textbar_layer,user.name);
     
-    set_downloading_sign_layer(window_layer,&achievements_downloading_sign_layer,achievements_downloading_sign_layer_update);
+    set_downloading_sign_layer(window_layer,&achievements_downloading_sign_layer);
+    layer_set_hidden(bitmap_layer_get_layer(achievements_downloading_sign_layer),(is_downloading && last_request==REQUEST_ACHIEVEMENTS)?false:true);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
@@ -1155,7 +1141,7 @@ static void achievements_window_load(Window *window) {
     menu_layer_set_click_config_onto_window(achievements_menu_layer, window);
     
     layer_add_child(window_layer, text_layer_get_layer(achievements_textbar_layer));
-    layer_add_child(window_layer, achievements_downloading_sign_layer);
+    layer_add_child(window_layer, bitmap_layer_get_layer(achievements_downloading_sign_layer));
     layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_load() end");
 }
@@ -1163,7 +1149,7 @@ static void achievements_window_load(Window *window) {
 static void achievements_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_unload() start");
     menu_layer_destroy(achievements_menu_layer);
-    layer_destroy(achievements_downloading_sign_layer);
+    bitmap_layer_destroy(achievements_downloading_sign_layer);
     text_layer_destroy(achievements_textbar_layer);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_unload() end");
 }
@@ -1210,19 +1196,21 @@ static void achievement_details_window_unload(Window *window) {
 }
 /////////////////////////////////////
 
+static char *memtest_memory;
+
 static void memtest() {
     uint16_t i = 1;
-    char *temp;
+    
     while(true) {
-        temp = (char*)malloc(i++*sizeof(char));
-        if(temp==NULL) {
+        memtest_memory = (char*)malloc(i++*sizeof(char));
+        if(memtest_memory==NULL) {
             APP_LOG(APP_LOG_LEVEL_DEBUG, "memtest: maximum memory allocated %i",i);
-            free(temp);
+            //free(memtest_memory);
             break;
         }
         if(i%1000==0)
             APP_LOG(APP_LOG_LEVEL_DEBUG, "memtest: %i...",i);
-        free(temp);
+        free(memtest_memory);
     }
 }
 
@@ -1258,11 +1246,12 @@ static void init() {
     num_beacons = 0;
     num_coworkers = 0;
     num_achievements = 0;
-    max_achievements = 2;
     last_request = 0;
     
     is_downloading = false;
     achievements_first_time = false;
+    
+    downloading_sign_image = gbitmap_create_with_resource(RESOURCE_ID_ICON_DOWNLOADING);
     
     login_window = window_create();
     window_set_fullscreen(login_window, true);
@@ -1299,7 +1288,7 @@ static void init() {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message initialising: %s",translate_result(app_message_open(200,outbound_size)));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message inbound size: %u",inbound_size);
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "App_message outbound size: %u",outbound_size);
-    app_comm_set_sniff_interval(SNIFF_INTERVAL_REDUCED);
+    app_comm_set_sniff_interval(SNIFF_INTERVAL_NORMAL);
     
     window_stack_push(login_window, true);
 }
@@ -1311,6 +1300,8 @@ static void deinit() {
     window_destroy(beacons_window);
     window_destroy(user_window);
     window_destroy(login_window);
+    
+    gbitmap_destroy(downloading_sign_image);
     
     if(user.name!=NULL) {
         free(user.name);
