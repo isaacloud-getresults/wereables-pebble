@@ -4,7 +4,7 @@ import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserTask;
-import com.sointeractive.getresults.pebble.isaacloud.tasks.SendNotificationsTask;
+import com.sointeractive.getresults.pebble.socket.SocketIONotifier;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -77,8 +77,7 @@ public class UserProvider {
     }
 
     private void onLogInAction(final int userId) {
-        final SendNotificationsTask sendNotifications = new SendNotificationsTask();
-        sendNotifications.execute(userId);
+        SocketIONotifier.INSTANCE.connect(userId);
     }
 
     private void logIn(final UserIC newUserData) {

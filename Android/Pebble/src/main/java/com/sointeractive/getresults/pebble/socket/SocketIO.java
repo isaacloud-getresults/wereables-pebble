@@ -6,22 +6,36 @@ import com.github.nkzawa.emitter.Emitter;
 import com.github.nkzawa.socketio.client.IO;
 import com.github.nkzawa.socketio.client.Socket;
 
-import org.json.JSONObject;
-
 import java.net.URISyntaxException;
 
 public abstract class SocketIO {
     static final String TAG = SocketIO.class.getSimpleName();
 
-    Socket socket;
+    private Socket socket;
 
     public SocketIO(final String address) {
         try {
-            socket = IO.socket(address);
+            final IO.Options opts = getOptions();
+            socket = IO.socket(address, opts);
             bindEvents();
         } catch (final URISyntaxException e) {
             Log.e(TAG, "Error: Websocket server address is not valid");
         }
+    }
+
+    private IO.Options getOptions() {
+        final IO.Options opts = new IO.Options();
+        opts.forceNew = false;
+        opts.reconnection = true;
+        return opts;
+    }
+
+    public void connect() {
+        socket.connect();
+    }
+
+    Socket getSocket() {
+        return socket;
     }
 
     private void bindEvents() {
@@ -103,19 +117,11 @@ public abstract class SocketIO {
         });
     }
 
-    private String getSafeString(final Object... args) {
+    String getSafeString(final Object... args) {
         if (args.length > 0) {
             return args[0].toString();
         } else {
             return "";
-        }
-    }
-
-    private JSONObject getSafeJSON(final Object... args) {
-        if (args.length > 0) {
-            return (JSONObject) args[0];
-        } else {
-            return new JSONObject();
         }
     }
 
@@ -140,8 +146,4 @@ public abstract class SocketIO {
     abstract void onConnectionTimeout(final String safeString);
 
     abstract void onConnectionError(final String message);
-
-    public void connect() {
-        socket.connect();
-    }
 }
