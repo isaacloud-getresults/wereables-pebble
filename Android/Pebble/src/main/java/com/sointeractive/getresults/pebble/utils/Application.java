@@ -3,7 +3,11 @@ package com.sointeractive.getresults.pebble.utils;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
+import com.sointeractive.getresults.pebble.config.WebsocketSettings;
+import com.sointeractive.getresults.pebble.isaacloud.receivers.WebsocketReceiver;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -20,6 +24,7 @@ public class Application extends android.app.Application {
     public Application() {
         initPebbleConnector();
         initIsaacloudConnector();
+        initWebsocketReceiver();
     }
 
     public static Isaacloud getIsaacloudConnector() {
@@ -51,5 +56,15 @@ public class Application extends android.app.Application {
         config.put("appSecret", IsaaCloudSettings.APP_SECRET);
 
         return config;
+    }
+
+    private void initWebsocketReceiver() {
+        try {
+            final URI serverURI = new URI(WebsocketSettings.SERVER_ADDRESS);
+            final WebsocketReceiver websocketReceiver = new WebsocketReceiver(serverURI);
+            websocketReceiver.connect();
+        } catch (final URISyntaxException e) {
+            Log.e(TAG, "Error: Websocket server address not valid");
+        }
     }
 }
