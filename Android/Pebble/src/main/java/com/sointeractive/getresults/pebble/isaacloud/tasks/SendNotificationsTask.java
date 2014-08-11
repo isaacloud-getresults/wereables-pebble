@@ -91,11 +91,13 @@ public class SendNotificationsTask extends AsyncTask<Integer, Integer, List<Stri
     protected void onPostExecute(final List<String> result) {
         if (result == null) {
             Log.e(TAG, "Error: Returned null");
-        } else {
+        } else if (!result.isEmpty()) {
             // TODO: Replace trimmed list by whole result
             for (final String body : result.subList(0, 1)) {
                 Application.getPebbleConnector().sendNotification(PebbleSettings.IC_NOTIFICATION_HEADER, body);
             }
+        } else {
+            Log.i(TAG, "No notifications downloaded");
         }
     }
 }
