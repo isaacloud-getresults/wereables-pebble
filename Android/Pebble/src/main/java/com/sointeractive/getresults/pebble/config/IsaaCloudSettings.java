@@ -20,7 +20,7 @@ public class IsaaCloudSettings {
     public static final String ROOM_NOT_FOUND_NAME = "Unknown room";
 
     // Caching settings
-    public static final int CACHE_RELOAD_INTERVAL_SECONDS = 5;
+    public static final int CACHE_RELOAD_INTERVAL_SECONDS = 10;
 
     // Log in settings
     public static String LOGIN_EMAIL = "yoda@op.pl";

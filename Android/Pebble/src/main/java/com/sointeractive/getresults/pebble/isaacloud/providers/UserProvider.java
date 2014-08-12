@@ -1,5 +1,7 @@
 package com.sointeractive.getresults.pebble.isaacloud.providers;
 
+import android.os.Handler;
+
 import com.sointeractive.getresults.pebble.config.IsaaCloudSettings;
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
 import com.sointeractive.getresults.pebble.isaacloud.tasks.GetUserIdTask;
@@ -77,7 +79,12 @@ public class UserProvider {
     }
 
     private void onLogInAction(final int userId) {
-        SocketIONotifier.INSTANCE.connect(userId);
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                SocketIONotifier.INSTANCE.connect(userId);
+            }
+        });
     }
 
     private void logIn(final UserIC newUserData) {

@@ -24,6 +24,7 @@ public class CacheManager {
 
     private AlarmManager alarmManager;
     private PendingIntent alarmIntent;
+    private boolean canReload = true;
 
     private CacheManager() {
         // Exists only to defeat instantiation.
@@ -35,12 +36,18 @@ public class CacheManager {
     }
 
     public void update() {
-        Log.d(TAG, "Action: Reload cache");
-        AchievementsCache.INSTANCE.reload();
-        PeopleCache.INSTANCE.reload();
-        BeaconsCache.INSTANCE.reload();
-        LoginCache.INSTANCE.reload();
-        Log.i(TAG, "Event: Cache reloaded");
+        if (canReload) {
+            canReload = false;
+            Log.d(TAG, "Action: Reload cache");
+            AchievementsCache.INSTANCE.reload();
+            PeopleCache.INSTANCE.reload();
+            BeaconsCache.INSTANCE.reload();
+            LoginCache.INSTANCE.reload();
+            Log.i(TAG, "Event: Cache reloaded");
+            canReload = true;
+        } else {
+            Log.i(TAG, "Event: Previous reload in progress");
+        }
     }
 
     private void clear() {
