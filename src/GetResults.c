@@ -87,7 +87,7 @@ uint8_t last_request;
 
 static bool is_downloading;
 static bool achievements_first_time;
-static bool animated = true;
+static bool animated = false;
 
 static int textbar_height = 24;
 
@@ -118,8 +118,8 @@ static bool update_beacons_table(Beacon *new_beacon) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() start new_beacon->name: %s",new_beacon->name);
     if(beacons==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-        beacons = (Beacon**)calloc(user.beacons,sizeof(Beacon*));
-        char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
+        beacons = (Beacon**)malloc(user.beacons*sizeof(Beacon*));
+        char *new_name = (char*)malloc((strlen(new_beacon->name)+1)*sizeof(char));
         strcpy(new_name,new_beacon->name);
         beacons[0] = new_beacon;
         beacons[0]->name = new_name;
@@ -157,7 +157,7 @@ static bool update_beacons_table(Beacon *new_beacon) {
         }
         // add new if not found in table
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, adding new");
-        char *new_name = (char*)calloc(strlen(new_beacon->name),sizeof(char));
+        char *new_name = (char*)malloc((strlen(new_beacon->name)+1)*sizeof(char));
         strcpy(new_name,new_beacon->name);
         beacons[size] = new_beacon;
         beacons[size]->name = new_name;
@@ -172,10 +172,13 @@ static bool update_coworkers_table(Coworker *new_coworker) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() start: %s",new_coworker->name);
     if(current_beacon->id==new_coworker->beacon_id) {
         if(coworkers==NULL) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-            max_coworkers = current_beacon->coworkers;
-            coworkers = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
-            char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+            if(current_beacon->coworkers==0)
+                max_coworkers = 1;
+            else
+                max_coworkers = current_beacon->coworkers;
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table, size: %u",max_coworkers);
+            coworkers = (Coworker**)malloc(max_coworkers*sizeof(Coworker*));
+            char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
             strcpy(new_name,new_coworker->name);
             coworkers[0] = new_coworker;
             coworkers[0]->name = new_name;
@@ -185,12 +188,12 @@ static bool update_coworkers_table(Coworker *new_coworker) {
         }
         else {
             int size = num_coworkers;
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table_size: %u",size);
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    num_coworkers: %u | max_coworkers: %u",num_coworkers,max_coworkers);
             int i;
             for(i=0; i<size; ++i) {
                 // if that coworker already exists in the table
                 if(coworkers[i]->id==new_coworker->id) {
-                    APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
+                    //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker found, rejecting");
                     if(new_coworker!=NULL) {
                         free(new_coworker);
                         new_coworker = NULL;
@@ -200,8 +203,8 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             }
             if(i<max_coworkers) {
                 // add new if not found in table
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new");
-                char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, adding new, name_size: %u",strlen(new_coworker->name));
+                char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
                 strcpy(new_name,new_coworker->name);
                 coworkers[i] = new_coworker;
                 coworkers[i]->name = new_name;
@@ -212,15 +215,15 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             // reallocate table and increase its size if new element doesn't fit
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
-                max_coworkers += 1;
-                Coworker **new_table = (Coworker**)calloc(max_coworkers,sizeof(Coworker*));
+                max_coworkers += 2;
+                Coworker **new_table = (Coworker**)realloc(coworkers,max_coworkers*sizeof(Coworker*));
                 if(new_table!=NULL) {
-                    for(i=0; i<size; ++i)
+                    /*for(i=0; i<size; ++i)
                         new_table[i] = coworkers[i];
                     if(coworkers!=NULL)
-                        free(coworkers);
+                        free(coworkers);*/
                     coworkers = new_table;
-                    char *new_name = (char*)calloc(strlen(new_coworker->name),sizeof(char));
+                    char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
                     strcpy(new_name,new_coworker->name);
                     coworkers[i] = new_coworker;
                     coworkers[i]->name = new_name;
@@ -247,10 +250,10 @@ static bool update_achievements_table(Achievement *new_achievement) {
     if(achievements==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
         max_achievements = user.achievements;
-        achievements = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
-        char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
+        achievements = (Achievement**)malloc(max_achievements*sizeof(Achievement*));
+        char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
         strcpy(new_name,new_achievement->name);
-        char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
+        char *new_description = (char*)malloc((strlen(new_achievement->description)+1)*sizeof(char));
         strcpy(new_description,new_achievement->description);
         achievements[0] = new_achievement;
         achievements[0]->name = new_name;
@@ -278,9 +281,9 @@ static bool update_achievements_table(Achievement *new_achievement) {
         // add new if not found in table
         if(i<max_achievements) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, adding new");
-            char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
+            char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
             strcpy(new_name,new_achievement->name);
-            char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
+            char *new_description = (char*)malloc((strlen(new_achievement->description)+1)*sizeof(char));
             strcpy(new_description,new_achievement->description);
             achievements[i] = new_achievement;
             achievements[i]->name = new_name;
@@ -291,16 +294,16 @@ static bool update_achievements_table(Achievement *new_achievement) {
         else {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, reallocating table and adding new");
             max_achievements += 1;
-            Achievement **new_table = (Achievement**)calloc(max_achievements,sizeof(Achievement*));
+            Achievement **new_table = (Achievement**)malloc(max_achievements*sizeof(Achievement*));
             if(new_table!=NULL) {
                 for(i=0; i<size; ++i)
                     new_table[i] = achievements[i];
                 if(achievements!=NULL)
                     free(achievements);
                 achievements = new_table;
-                char *new_name = (char*)calloc(strlen(new_achievement->name),sizeof(char));
+                char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
                 strcpy(new_name,new_achievement->name);
-                char *new_description = (char*)calloc(strlen(new_achievement->description),sizeof(char));
+                char *new_description = (char*)malloc((strlen(new_achievement->description)+1)*sizeof(char));
                 strcpy(new_description,new_achievement->description);
                 achievements[i] = new_achievement;
                 achievements[i]->name = new_name;
@@ -336,11 +339,12 @@ static void clear_beacons_table() {
 }
 
 static void clear_coworkers_table() {
-    //PP_LOG(APP_LOG_LEVEL_DEBUG, "clear_coworkers_table() start | size: %u",num_coworkers);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_coworkers_table() start | size: %u",num_coworkers);
     if(coworkers!=NULL) {
         int size = num_coworkers;
         int i;
         for(i=0; i<size && i<max_coworkers; ++i) {
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "clear_coworkers_table() i: %u",i);
             if(coworkers[i]!=NULL) {
                 if(coworkers[i]->name!=NULL) {
                     free(coworkers[i]->name);
@@ -486,7 +490,7 @@ char * translate_result(AppMessageResult result) {
 }
 
 static void send_simple_request(int8_t request) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
@@ -500,7 +504,7 @@ static void send_simple_request(int8_t request) {
 }
 
 static void send_query_request(int8_t request, int query) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u start",request,query);
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u start",request,query);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
@@ -539,22 +543,22 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *achievements = dict_find(iter,USER_ACHIEVEMENTS);
             if(achievements && beacons && rank && points && location && name) {
                 if(user.name==NULL) {
-                    char *new_name = (char*)calloc(strlen(name->value->cstring),sizeof(char));
+                    char *new_name = (char*)malloc((strlen(name->value->cstring)+1)*sizeof(char));
                     strcpy(new_name,name->value->cstring);
                     user.name = new_name;
-                    char *new_location = (char*)calloc(strlen(location->value->cstring),sizeof(char));
+                    char *new_location = (char*)malloc((strlen(location->value->cstring)+1)*sizeof(char));
                     strcpy(new_location,location->value->cstring);
                     user.location = new_location;
                 }
                 else {
                     if(strcmp(user.name,name->value->cstring)!=0) {
-                        char *new_name = (char*)calloc(strlen(name->value->cstring),sizeof(char));
+                        char *new_name = (char*)malloc((strlen(name->value->cstring)+1)*sizeof(char));
                         strcpy(new_name,name->value->cstring);
                         free(user.name);
                         user.name = new_name;
                     }
                     if(strcmp(user.location,location->value->cstring)!=0) {
-                        char *new_location = (char*)calloc(strlen(location->value->cstring),sizeof(char));
+                        char *new_location = (char*)malloc((strlen(location->value->cstring)+1)*sizeof(char));
                         strcpy(new_location,location->value->cstring);
                         free(user.location);
                         user.location = new_location;
@@ -565,7 +569,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.beacons = *(beacons->value->data);
                 user.achievements = *(achievements->value->data);
                 user.logged_on = true;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac.: %u | achiev.: %u | loc.: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac.: %u | achiev.: %u | loc.: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
                 static char text_buffer[50];
                 snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
@@ -581,14 +585,14 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *name = dict_find(iter,BEACON_NAME);
             Tuple *coworkers = dict_find(iter,BEACON_COWORKERS);
             Beacon *new_beacon = (Beacon*)malloc(sizeof(Beacon));
-            if(new_beacon && coworkers /*&& proximity */&& name && id) {
+            if(new_beacon && coworkers && name && id) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
                 new_beacon->id = *(id->value->data);
                 new_beacon->name = new_name;
                 new_beacon->coworkers = *(coworkers->value->data);
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | coworkers: %u",new_beacon->name,new_beacon->coworkers);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | id: %i | coworkers: %u",new_beacon->name,new_beacon->id,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
@@ -605,7 +609,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     layer_set_hidden(bitmap_layer_get_layer(beacons_downloading_sign_layer),true);
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER && user.logged_on && current_beacon) {
+        else if(*(receiving_type->value->data)==RESPONSE_COWORKER && user.logged_on && current_beacon!=NULL) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
@@ -617,7 +621,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_coworker->id = *(id->value->data);
                 new_coworker->name = new_name;
                 new_coworker->beacon_id = *(beacon_id->value->data);
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s | beacon_id: %i",new_coworker->name,new_coworker->beacon_id);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s | beacon_id: %i",new_coworker->name,new_coworker->beacon_id);
                 if(update_coworkers_table(new_coworker)) {
                     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                     if(coworkers_menu_layer!=NULL)
@@ -653,7 +657,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_achievement->id = *(id->value->data);
                 new_achievement->name = new_name;
                 new_achievement->description = new_description;
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement: id: %i | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
                 if(update_achievements_table(new_achievement)) {
                     if(window_stack_get_top_window()==achievements_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading achievements_menu_layer");
@@ -677,7 +681,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Tuple *beacon_id = dict_find(iter,COWORKER_BEACON_ID);
             if(beacon_id && id) {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Popping coworker: id: %i | name: %s | from room id: %i",*(id->value->data),name->value->cstring,*(beacon_id->value->data));
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker to pop: id: %i | name: %s | from room id: %i",*(id->value->data),name->value->cstring,*(beacon_id->value->data));
                 if(*(beacon_id->value->data)==current_beacon->id && pop_coworker_from_table(*(id->value->data))) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
@@ -688,8 +692,10 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 if(coworkers_downloading_sign_layer!=NULL)
                     layer_set_hidden(bitmap_layer_get_layer(coworkers_downloading_sign_layer),true);
                 if(coworkers==NULL) {
-                    layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),true);
-                    layer_set_hidden(text_layer_get_layer(coworkers_text_layer),false);
+                    if(coworkers_menu_layer!=NULL)
+                        layer_set_hidden(menu_layer_get_layer(coworkers_menu_layer),true);
+                    if(coworkers_text_layer!=NULL)
+                        layer_set_hidden(text_layer_get_layer(coworkers_text_layer),false);
                 }
             }
             else {
@@ -1011,7 +1017,7 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
     if(coworkers!=NULL) {
         switch (cell_index->section) {
             case 0:
-                if(coworkers!=NULL)
+                if(coworkers!=NULL && coworkers[cell_index->row]->name!=NULL)
                     menu_cell_basic_draw(ctx, cell_layer, coworkers[cell_index->row]->name, NULL, NULL);
                 break;
         }
@@ -1233,7 +1239,7 @@ static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() end");
 }
 /////////////////////////////////////
-
+/*
 static char *memtest_memory;
 
 static void memtest() {
@@ -1251,7 +1257,7 @@ static void memtest() {
             free(memtest_memory);
     }
 }
-
+*/
 /////////////////////////////////////
 static WindowHandlers login_window_handlers = {
     .load = login_window_load,
