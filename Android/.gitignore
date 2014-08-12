@@ -1,7 +1,4 @@
-PEBBLE_KIT/build
-Pebble/build
 build
 *.iml
 .idea
-.DS_Store
 local.properties
