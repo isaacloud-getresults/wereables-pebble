@@ -19,7 +19,6 @@ public class PeopleCache {
 
     private int observedRoom = -1;
 
-    private SparseArray<Collection<ResponseItem>> oldResponses;
     private SparseArray<Collection<ResponseItem>> peopleResponses = new SparseArray<Collection<ResponseItem>>();
 
     private PeopleCache() {
@@ -43,10 +42,13 @@ public class PeopleCache {
     }
 
     public void reload() {
-        oldResponses = peopleResponses;
+        final SparseArray<Collection<ResponseItem>> oldResponses = peopleResponses;
+
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
         final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
         updatePeopleList(people);
+
+        findChanges(oldResponses);
     }
 
     private void updatePeopleList(final Iterable<PersonIC> people) {
@@ -64,11 +66,7 @@ public class PeopleCache {
         peopleResponses.get(roomId).add(person.toPersonInResponse(roomId));
     }
 
-    public void findChanges() {
-        if (oldResponses == null) {
-            return;
-        }
-
+    private void findChanges(final SparseArray<Collection<ResponseItem>> oldResponses) {
         Log.d(TAG, "Check: Changes in roomId: " + observedRoom);
         final Collection<ResponseItem> oldResponsesRoom = oldResponses.get(observedRoom, new LinkedList<ResponseItem>());
         final Collection<ResponseItem> newResponsesRoom = peopleResponses.get(observedRoom, new LinkedList<ResponseItem>());

@@ -39,7 +39,6 @@ public class CacheManager {
         AchievementsCache.INSTANCE.reload();
         PeopleCache.INSTANCE.reload();
         BeaconsCache.INSTANCE.reload();
-        PeopleCache.INSTANCE.findChanges();
         LoginCache.INSTANCE.reload();
         Log.i(TAG, "Event: Cache reloaded");
     }
