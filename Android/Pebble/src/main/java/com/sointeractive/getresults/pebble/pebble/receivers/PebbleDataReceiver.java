@@ -6,8 +6,12 @@ import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
 import com.sointeractive.android.kit.util.PebbleDictionary;
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
+import com.sointeractive.getresults.pebble.pebble.communication.Request;
 import com.sointeractive.getresults.pebble.pebble.communication.Responder;
+import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
+
+import java.util.Collection;
 
 public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private static final String TAG = PebbleDataReceiver.class.getSimpleName();
@@ -15,23 +19,29 @@ public class PebbleDataReceiver extends PebbleKit.PebbleDataReceiver {
     private final Handler handler = new Handler();
 
     public PebbleDataReceiver() {
-        super(Settings.PEBBLE_APP_UUID);
+        super(PebbleSettings.PEBBLE_APP_UUID);
     }
 
     @Override
     public void receiveData(final Context context, final int transactionId, final PebbleDictionary data) {
-        Log.d(TAG, "Event: Message received, value: " + data.toJsonString());
+        Log.i(TAG, "Event: Message received");
+        Log.d(TAG, "Received data: " + data.toJsonString());
         handler.post(new Runnable() {
             @Override
             public void run() {
                 sendAckToPebble(context, transactionId);
-                Responder.response(data);
+                response(data);
             }
         });
     }
 
     private void sendAckToPebble(final Context context, final int transactionId) {
-        Log.d(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
+        Log.i(TAG, "Action: Acknowledgement sent to Pebble, transactionId: " + transactionId);
         PebbleKit.sendAckToPebble(context, transactionId);
+    }
+
+    private void response(final PebbleDictionary data) {
+        final Collection<ResponseItem> response = Request.getResponse(data);
+        Responder.sendResponseItemsToPebble(response);
     }
 }

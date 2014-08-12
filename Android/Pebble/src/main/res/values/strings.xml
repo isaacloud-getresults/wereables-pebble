@@ -9,8 +9,13 @@
     <string name="notification_body_text_field_hint">Notification body</string>
     <string name="notification_title_text_field_hint">Notification title</string>
 
-    <!-- Info messages -->
+    <!-- Pebble messages form -->
     <string name="ok_connection_to_pebble">Connection to Pebble OK</string>
     <string name="app_messages_not_supported">Sorry, AppMessages are not supported</string>
     <string name="pebble_not_connected">Pebble not connected</string>
+
+    <!-- Login form -->
+    <string name="login_button_label">Log in</string>
+    <string name="login_email_hint">e-mail</string>
+    <string name="cache_clear_button_label">Clear cache</string>
 </resources>

@@ -4,17 +4,21 @@ import android.content.Context;
 import android.util.Log;
 
 import com.sointeractive.android.kit.PebbleKit;
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
+import com.sointeractive.getresults.pebble.utils.Application;
+import com.sointeractive.getresults.pebble.utils.PebbleConnector;
 
 public class PebbleNackReceiver extends PebbleKit.PebbleNackReceiver {
     private static final String TAG = PebbleNackReceiver.class.getSimpleName();
 
     public PebbleNackReceiver() {
-        super(Settings.PEBBLE_APP_UUID);
+        super(PebbleSettings.PEBBLE_APP_UUID);
     }
 
     @Override
     public void receiveNack(final Context context, final int transactionId) {
-        Log.d(TAG, "Event: Received Nack from Pebble");
+        Log.e(TAG, "Event: Received Nack from Pebble, transactionId=" + transactionId);
+        final PebbleConnector pebbleConnector = Application.getPebbleConnector();
+        pebbleConnector.sendNext();
     }
 }

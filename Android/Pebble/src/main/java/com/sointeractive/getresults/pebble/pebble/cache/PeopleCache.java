@@ -1,10 +1,11 @@
 package com.sointeractive.getresults.pebble.pebble.cache;
 
+import android.util.Log;
 import android.util.SparseArray;
 
+import com.sointeractive.getresults.pebble.isaacloud.checker.NewPeopleChecker;
 import com.sointeractive.getresults.pebble.isaacloud.data.PersonIC;
 import com.sointeractive.getresults.pebble.isaacloud.providers.PeopleProvider;
-import com.sointeractive.getresults.pebble.pebble.responses.PersonResponse;
 import com.sointeractive.getresults.pebble.pebble.responses.ResponseItem;
 
 import java.util.ArrayList;
@@ -14,45 +15,81 @@ import java.util.LinkedList;
 public class PeopleCache {
     public static final PeopleCache INSTANCE = new PeopleCache();
 
-    private SparseArray<Collection<ResponseItem>> peopleResponses;
+    private static final String TAG = PeopleCache.class.getSimpleName();
+
+    private int observedRoom = -1;
+
+    private SparseArray<Collection<ResponseItem>> oldResponses;
+    private SparseArray<Collection<ResponseItem>> peopleResponses = new SparseArray<Collection<ResponseItem>>();
 
     private PeopleCache() {
         // Exists only to defeat instantiation.
     }
 
+    public void setObservedRoom(final int observedRoom) {
+        Log.i(TAG, "Action: Set observed room to: " + observedRoom);
+        this.observedRoom = observedRoom;
+    }
+
+    public void clearObservedRoom() {
+        observedRoom = -1;
+    }
+
     public Collection<ResponseItem> getData(final int room) {
-        if (peopleResponses == null) {
+        if (peopleResponses.size() == 0) {
             reload();
         }
-        return peopleRoomResponse(room);
-    }
-
-    public Collection<ResponseItem> getUpToDateData(final int room) {
-        reload();
-        return peopleRoomResponse(room);
-    }
-
-    private Collection<ResponseItem> peopleRoomResponse(final int room) {
-        final Collection<ResponseItem> response = peopleResponses.get(room);
-
-        if (response == null) {
-            return new LinkedList<ResponseItem>();
-        } else {
-            return response;
-        }
+        return getPeopleRoomResponse(room);
     }
 
     public void reload() {
-        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
-
+        oldResponses = peopleResponses;
         peopleResponses = new SparseArray<Collection<ResponseItem>>();
-        int id;
+        final Collection<PersonIC> people = PeopleProvider.INSTANCE.getData();
+        updatePeopleList(people);
+    }
+
+    private void updatePeopleList(final Iterable<PersonIC> people) {
+        int room;
         for (final PersonIC person : people) {
-            id = person.beacon;
-            if (peopleResponses.get(id) == null) {
-                peopleResponses.put(id, new ArrayList<ResponseItem>());
-            }
-            peopleResponses.get(id).add(new PersonResponse(person.id, person.getFullName()));
+            room = person.getBeacon();
+            addPersonToRoom(room, person);
         }
+    }
+
+    private void addPersonToRoom(final int roomId, final PersonIC person) {
+        if (peopleResponses.get(roomId) == null) {
+            peopleResponses.put(roomId, new ArrayList<ResponseItem>());
+        }
+        peopleResponses.get(roomId).add(person.toPersonInResponse(roomId));
+    }
+
+    public void findChanges() {
+        if (oldResponses == null) {
+            return;
+        }
+
+        Log.d(TAG, "Check: Changes in roomId: " + observedRoom);
+        final Collection<ResponseItem> oldResponsesRoom = oldResponses.get(observedRoom, new LinkedList<ResponseItem>());
+        final Collection<ResponseItem> newResponsesRoom = peopleResponses.get(observedRoom, new LinkedList<ResponseItem>());
+        NewPeopleChecker.check(oldResponsesRoom, newResponsesRoom);
+    }
+
+    private Collection<ResponseItem> getPeopleRoomResponse(final int room) {
+        Collection<ResponseItem> response = peopleResponses.get(room);
+        if (response == null) {
+            response = new LinkedList<ResponseItem>();
+        }
+        return response;
+    }
+
+    public int getSize(final int room) {
+        return getData(room).size();
+    }
+
+    public void clear() {
+        PeopleProvider.INSTANCE.clear();
+        peopleResponses.clear();
+        clearObservedRoom();
     }
 }

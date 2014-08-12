@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import com.sointeractive.getresults.pebble.config.Settings;
+import com.sointeractive.getresults.pebble.config.PebbleSettings;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -18,6 +18,7 @@ public class NotificationSender {
     private final Context context;
 
     public NotificationSender(final Context context) {
+        Log.i(TAG, "Action: Initialize notification sender");
         this.context = context;
     }
 
@@ -43,7 +44,7 @@ public class NotificationSender {
     }
 
     private void sendData(final String data) {
-        Log.d(TAG, "Action: Sending notification: " + data);
+        Log.i(TAG, "Action: Sending notification: " + data);
         final Intent i = getIntent(data);
 
         context.sendBroadcast(i);
@@ -52,7 +53,7 @@ public class NotificationSender {
     private Intent getIntent(final String data) {
         final Intent i = new Intent("com.getpebble.action.SEND_NOTIFICATION");
         i.putExtra("messageType", "PEBBLE_ALERT");
-        i.putExtra("sender", Settings.APP_NAME);
+        i.putExtra("sender", PebbleSettings.APP_NAME);
         i.putExtra("notificationData", data);
 
         return i;

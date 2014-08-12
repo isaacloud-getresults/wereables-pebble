@@ -4,8 +4,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.sointeractive.getresults.pebble.isaacloud.data.UserIC;
+import com.sointeractive.getresults.pebble.utils.Application;
 
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -14,45 +14,56 @@ import java.io.IOException;
 import pl.sointeractive.isaacloud.connection.HttpResponse;
 import pl.sointeractive.isaacloud.exceptions.IsaaCloudConnectionException;
 
-public class GetUserTask extends AsyncTask<String, Integer, UserIC> {
+public class GetUserTask extends AsyncTask<Integer, Integer, UserIC> {
     private static final String TAG = GetUserTask.class.getSimpleName();
 
+    private static final String PATH = "/cache/users/%d";
+    private static final String[] FIELDS = new String[]{"id", "firstName", "lastName", "level", "counterValues", "leaderboards"};
+
     @Override
-    protected UserIC doInBackground(final String... emails) {
-        Log.d(TAG, "Action: Login in background");
+    protected UserIC doInBackground(final Integer... ids) {
+        Log.d(TAG, "Action: Get user in background");
+
+        if (ids.length != 1) {
+            throw new IllegalArgumentException("You have to use exactly one id to login");
+        }
 
         try {
-            return logIn(emails[0]);
+            return getUserData(ids[0]);
         } catch (final JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: JSON error");
         } catch (final IsaaCloudConnectionException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IsaaCloudConnection error");
         } catch (final IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error: IO error");
         }
+
         return null;
     }
 
-    private UserIC logIn(final String email) throws IOException, IsaaCloudConnectionException, JSONException {
-        final HttpResponse response = Query.USER.getResponse();
+    private UserIC getUserData(final int id) throws IOException, IsaaCloudConnectionException, JSONException {
+        final HttpResponse response = getHttpResponse(id);
+        final JSONObject userJSON = response.getJSONObject();
 
-        final JSONArray users = response.getJSONArray();
-        for (int i = 0; i < users.length(); i++) {
-            final JSONObject userJSON = (JSONObject) users.get(i);
+        return new UserIC(userJSON);
+    }
 
-            if (email.equals(userJSON.get("email"))) {
-                Log.d(TAG, "Event: User found: " + userJSON.toString());
-                return new UserIC(userJSON);
-            }
-        }
+    private HttpResponse getHttpResponse(final int id) throws IOException, IsaaCloudConnectionException {
+        Log.d(TAG, "Action: Query for user data");
 
-        return null;
+        final String path = String.format(PATH, id);
+
+        return Application
+                .getIsaacloudConnector()
+                .path(path)
+                .withFields(FIELDS)
+                .get();
     }
 
     @Override
     protected void onPostExecute(final UserIC result) {
-        if (result != null) {
-            Log.d(TAG, "Event: Success");
+        if (result == null) {
+            Log.e(TAG, "Error: User not found");
         }
     }
 }
