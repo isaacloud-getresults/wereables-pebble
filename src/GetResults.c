@@ -253,7 +253,10 @@ static bool update_achievements_table(Achievement *new_achievement) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() start id: %u | name: %s | description: %s",new_achievement->id,new_achievement->name,new_achievement->description);
     if(achievements==NULL) {
         //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table");
-        max_achievements = user.achievements;
+        if(user.achievements<=0)
+            max_achievements = 1;
+        else
+            max_achievements = user.achievements;
         achievements = (Achievement**)malloc(max_achievements*sizeof(Achievement*));
         char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
         strcpy(new_name,new_achievement->name);
@@ -569,6 +572,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
                 text_layer_set_text(login_lowertext_layer,text_buffer);
                 layer_set_hidden(simple_menu_layer_get_layer(login_menu_layer),false);
+                if(window_stack_get_top_window()==achievements_window && user.achievements>num_achievements)
+                    send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
             }
             else {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
@@ -851,7 +856,7 @@ static SimpleMenuItem user_menu_first_section_items[1];
 
 static void user_menu_achievements_callback(int index, void *ctx) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_menu_achievements_callback()");
-    if(!achievements_first_time) {
+    if(!achievements_first_time || user.achievements>num_achievements) {
         send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
         is_downloading = true;
         achievements_first_time = true;
