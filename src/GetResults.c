@@ -526,12 +526,12 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER) {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
             Tuple *points = dict_find(iter,USER_POINTS);
@@ -576,7 +576,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
             }
             else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_BEACON && user.logged_on) {
@@ -731,15 +731,23 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
     }
     else {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
+        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
     }
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
 }
 /////////////////////////////////////
+
+static int16_t get_header_height(MenuLayer *menu_layer, uint16_t section_index, void *data) {
+    return MENU_CELL_BASIC_HEADER_HEIGHT;
+}
+
+static int16_t get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+    return 22;
+}
 
 ///////////////////////////////////// LOGIN WINDOW
 static AppTimer *timer;
@@ -926,23 +934,17 @@ static uint16_t get_num_sections_beacons(MenuLayer *menu_layer, void *data) {
     return 1;
 }
 
-static int16_t get_header_height_beacons(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_header_height_beacons()");
-    return MENU_CELL_BASIC_HEADER_HEIGHT;
-}
-
-static int16_t get_cell_height_beacons(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_cell_height_beacons()");
-    return 26;
-}
-
 static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_header()");
     if(beacons) {
         switch (section_index) {
-            case 0:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Locations");
+            case 0: {
+                GRect header_layer_bounds = layer_get_bounds(cell_layer);
+                header_layer_bounds.origin.y -= 1;
+                graphics_context_set_text_color(ctx, GColorBlack);
+                graphics_draw_text(ctx, "Locations", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
                 break;
+            }
         }
     }
     else
@@ -951,12 +953,23 @@ static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t 
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_row()");
-    static char text_buffer[40];
     switch (cell_index->section) {
         case 0:
             if(beacons) {
-                snprintf(text_buffer,40,"(%i) %s",beacons[cell_index->row]->coworkers,beacons[cell_index->row]->name);
-                menu_cell_basic_draw(ctx, cell_layer, text_buffer, NULL, NULL);
+                GRect cell_layer_bounds = layer_get_bounds(cell_layer);
+                GRect beacon_name_bounds = cell_layer_bounds;
+                beacon_name_bounds.size.w -= 20;
+                beacon_name_bounds.origin.x += 5;
+                beacon_name_bounds.origin.y -= 2;
+                GRect beacon_coworkers_bounds = cell_layer_bounds;
+                beacon_coworkers_bounds.size.w = 25;
+                beacon_coworkers_bounds.origin.x = beacon_name_bounds.size.w;
+                beacon_coworkers_bounds.origin.y -= 2;
+                static char text_buffer1[4];
+                snprintf(text_buffer1,4,"%i",beacons[cell_index->row]->coworkers);
+                graphics_context_set_text_color(ctx, GColorBlack);
+                graphics_draw_text(ctx, beacons[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_name_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
+                graphics_draw_text(ctx, text_buffer1, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_coworkers_bounds, GTextOverflowModeWordWrap , GTextAlignmentCenter, NULL);
             }
             break;
     }
@@ -968,7 +981,7 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
         current_beacon = beacons[cell_index->row];
     }
     
-    if(current_beacon /*&& current_beacon->coworkers>0*/) {
+    if(current_beacon) {
         if(previous_beacon!=current_beacon) {
             clear_coworkers_table();
             send_query_request(REQUEST_COWORKERS,current_beacon->id);
@@ -982,8 +995,8 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
 MenuLayerCallbacks beacons_menu_callbacks = {
     .get_num_sections = get_num_sections_beacons,
     .get_num_rows = get_num_beacons,
-    .get_header_height = get_header_height_beacons,
-    .get_cell_height = get_cell_height_beacons,
+    .get_header_height = get_header_height,
+    .get_cell_height = get_cell_height,
     .draw_header = draw_beacon_header,
     .draw_row = draw_beacon_row,
     .select_click = beacon_select_click
@@ -1029,20 +1042,16 @@ static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
     return 1;
 }
 
-static int16_t get_header_height_coworkers(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-    return MENU_CELL_BASIC_HEADER_HEIGHT;
-}
-
-static int16_t get_cell_height_coworkers(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-    return 26;
-}
-
 static void draw_coworker_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     if(coworkers) {
         switch (section_index) {
-            case 0:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Coworkers in room");
+            case 0: {
+                GRect header_layer_bounds = layer_get_bounds(cell_layer);
+                header_layer_bounds.origin.y -= 1;
+                graphics_context_set_text_color(ctx, GColorBlack);
+                graphics_draw_text(ctx, "Coworkers in location", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
                 break;
+            }
         }
     }
     else
@@ -1053,8 +1062,14 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
     if(coworkers) {
         switch (cell_index->section) {
             case 0:
-                if(coworkers && coworkers[cell_index->row]->name)
-                    menu_cell_basic_draw(ctx, cell_layer, coworkers[cell_index->row]->name, NULL, NULL);
+                if(coworkers && coworkers[cell_index->row]->name) {
+                    GRect cell_layer_bounds = layer_get_bounds(cell_layer);
+                    cell_layer_bounds.size.w -= 10;
+                    cell_layer_bounds.origin.x += 5;
+                    cell_layer_bounds.origin.y -= 2;
+                    graphics_context_set_text_color(ctx, GColorBlack);
+                    graphics_draw_text(ctx, coworkers[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), cell_layer_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
+                }
                 break;
         }
     }
@@ -1080,8 +1095,8 @@ static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_
 MenuLayerCallbacks coworkers_menu_callbacks = {
     .get_num_sections = get_num_sections_coworkers,
     .get_num_rows = get_num_coworkers,
-    .get_header_height = get_header_height_coworkers,
-    .get_cell_height = get_cell_height_coworkers,
+    .get_header_height = get_header_height,
+    .get_cell_height = get_cell_height,
     .draw_header = draw_coworker_header,
     .draw_row = draw_coworker_row,
     .select_click = coworker_select_click
@@ -1106,7 +1121,7 @@ static void coworkers_window_load(Window *window) {
     
     coworkers_text_layer = text_layer_create(menu_bounds);
     text_layer_set_text(coworkers_text_layer,"This room is empty");
-    text_layer_set_font(coworkers_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_font(coworkers_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
     text_layer_set_text_alignment(coworkers_text_layer, GTextAlignmentCenter);
     
     if(current_beacon->coworkers!=0) {
@@ -1147,20 +1162,16 @@ static uint16_t get_num_sections_achievements(MenuLayer *menu_layer, void *data)
         return 0;
 }
 
-static int16_t get_header_height_achievements(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-    return MENU_CELL_BASIC_HEADER_HEIGHT;
-}
-
-static int16_t get_cell_height_achievements(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
-    return 26;
-}
-
 static void draw_achievement_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     if(achievements) {
         switch (section_index) {
-            case 0:
-                menu_cell_basic_header_draw(ctx, cell_layer, "Achievements");
+            case 0: {
+                GRect header_layer_bounds = layer_get_bounds(cell_layer);
+                header_layer_bounds.origin.y -= 1;
+                graphics_context_set_text_color(ctx, GColorBlack);
+                graphics_draw_text(ctx, "Achievements", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
                 break;
+            }
         }
     }
     else
@@ -1171,7 +1182,14 @@ static void draw_achievement_row(GContext *ctx, const Layer *cell_layer, MenuInd
     if(achievements) {
         switch (cell_index->section) {
             case 0:
-                menu_cell_basic_draw(ctx, cell_layer, achievements[cell_index->row]->name, NULL, NULL);
+                if(achievements[cell_index->row]->name) {
+                    GRect cell_layer_bounds = layer_get_bounds(cell_layer);
+                    cell_layer_bounds.size.w -= 10;
+                    cell_layer_bounds.origin.x += 5;
+                    cell_layer_bounds.origin.y -= 2;
+                    graphics_context_set_text_color(ctx, GColorBlack);
+                    graphics_draw_text(ctx, achievements[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), cell_layer_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
+                }
                 break;
         }
     }
@@ -1197,8 +1215,8 @@ static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *ce
 MenuLayerCallbacks achievements_menu_callbacks = {
     .get_num_sections = get_num_sections_achievements,
     .get_num_rows = get_num_achievements,
-    .get_header_height = get_header_height_achievements,
-    .get_cell_height = get_cell_height_achievements,
+    .get_header_height = get_header_height,
+    .get_cell_height = get_cell_height,
     .draw_header = draw_achievement_header,
     .draw_row = draw_achievement_row,
     .select_click = achievement_select_click
