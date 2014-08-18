@@ -13,7 +13,8 @@ static PropertyAnimation *login_property_animation;
 static Window *user_window;
 static SimpleMenuLayer *user_menu_layer;
 static TextLayer *user_textbar_layer;
-static TextLayer *user_text_layer;
+static TextLayer *user_left_text_layer;
+static TextLayer *user_right_text_layer;
 
 static Window *beacons_window;
 static MenuLayer *beacons_menu_layer;
@@ -90,7 +91,7 @@ uint8_t last_request;
 
 static bool is_downloading;
 static bool achievements_first_time;
-static bool animated = false;
+static bool animated = true;
 
 static char current_achievement_description[255];
 
@@ -180,7 +181,7 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             if(current_beacon->coworkers==0)
                 max_coworkers = 1;
             else
-                max_coworkers = current_beacon->coworkers;
+                max_coworkers = current_beacon->coworkers+1;
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table, size: %u",max_coworkers);
             coworkers = (Coworker**)malloc(max_coworkers*sizeof(Coworker*));
             char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
@@ -223,10 +224,6 @@ static bool update_coworkers_table(Coworker *new_coworker) {
                 max_coworkers += 2;
                 Coworker **new_table = (Coworker**)realloc(coworkers,max_coworkers*sizeof(Coworker*));
                 if(new_table) {
-                    /*for(i=0; i<size; ++i)
-                     new_table[i] = coworkers[i];
-                     if(coworkers)
-                     free(coworkers);*/
                     coworkers = new_table;
                     char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
                     strcpy(new_name,new_coworker->name);
@@ -295,13 +292,9 @@ static bool update_achievements_table(Achievement *new_achievement) {
         // reallocate table and increase its size twice if new element doesn't fit
         else {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, reallocating table and adding new");
-            max_achievements += 1;
-            Achievement **new_table = (Achievement**)malloc(max_achievements*sizeof(Achievement*));
+            max_achievements += 2;
+            Achievement **new_table = (Achievement**)realloc(achievements,max_achievements*sizeof(Achievement*));
             if(new_table) {
-                for(i=0; i<size; ++i)
-                    new_table[i] = achievements[i];
-                if(achievements)
-                    free(achievements);
                 achievements = new_table;
                 char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
                 strcpy(new_name,new_achievement->name);
@@ -569,8 +562,15 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
                 user.achievements = *(achievements->value->data);
+                vibes_short_pulse();
                 if(!user.logged_on)
                     fire_login_animation();
+                else {
+                    static char text_buffer[50];
+                    snprintf(text_buffer,50,"in %s",user.location);
+                    text_layer_set_text(login_lowertext_layer,text_buffer);
+                    text_layer_set_font(login_lowertext_layer,fonts_get_system_font(strlen(text_buffer)>13?FONT_KEY_GOTHIC_24:FONT_KEY_GOTHIC_28));
+                }
                 user.logged_on = true;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac.: %u | achiev.: %u | loc.: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
                 if(window_stack_get_top_window()==achievements_window && user.achievements>num_achievements)
@@ -751,7 +751,7 @@ static int16_t get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, voi
 }
 
 ///////////////////////////////////// LOGIN WINDOW
-static AppTimer *timer;
+static AppTimer *login_timer;
 static SimpleMenuSection login_menu_sections[1];
 static SimpleMenuItem login_menu_first_section_items[2];
 
@@ -760,13 +760,17 @@ void login_animation_started(Animation *animation, void *data) {
 }
 
 void login_animation_stopped(Animation *animation, void *data) {
-    static char text_buffer[50];
-    snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
-    text_layer_set_text(login_lowertext_layer,text_buffer);
     GRect lowertext_bounds = layer_get_frame(text_layer_get_layer(login_lowertext_layer));
-    lowertext_bounds.origin.y = 26;
+    lowertext_bounds.origin.y = 32;
+    static char text_buffer[50];
+    snprintf(text_buffer,50,"in %s",user.location);
+    text_layer_set_text(login_lowertext_layer,text_buffer);
+    text_layer_set_font(login_lowertext_layer,fonts_get_system_font(strlen(text_buffer)>13?FONT_KEY_GOTHIC_24:FONT_KEY_GOTHIC_28));
     layer_set_frame(text_layer_get_layer(login_lowertext_layer),lowertext_bounds);
     layer_set_hidden(text_layer_get_layer(login_lowertext_layer),false);
+    static char text_buffer2[30];
+    snprintf(text_buffer2,30,"%s",user.name);
+    login_menu_first_section_items[1].subtitle = text_buffer2;
     layer_set_hidden(simple_menu_layer_get_layer(login_menu_layer),false);
 }
 
@@ -784,9 +788,9 @@ static void fire_login_animation() {
 static void login_window_bt_handler(bool connected) {
     if(login_lowertext_layer) {
         if(connected)
-            text_layer_set_text(login_lowertext_layer,"connecting...");
+            text_layer_set_text(login_lowertext_layer,"sign in on your smartphone");
         else
-            text_layer_set_text(login_lowertext_layer,"connect to your smartphone");
+            text_layer_set_text(login_lowertext_layer,"connect your smartphone");
     }
 }
 
@@ -812,13 +816,13 @@ static void login_request_sending(void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_request_sending()");
     if(user.name==NULL) {
         send_simple_request(REQUEST_USER);
-        timer = app_timer_register(2000,login_request_sending,NULL);
+        login_timer = app_timer_register(2000,login_request_sending,NULL);
     }
 }
 
 static void login_window_load(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_window_load() start");
-    timer = app_timer_register(2000,login_request_sending,NULL);
+    login_timer = app_timer_register(2000,login_request_sending,NULL);
     send_simple_request(REQUEST_USER);
     
     Layer *window_layer = window_get_root_layer(window);
@@ -838,9 +842,9 @@ static void login_window_load(Window *window) {
     lowertext_bounds.origin.y += uppertext_height + 50;
     login_lowertext_layer = text_layer_create(lowertext_bounds);
     if(bluetooth_connection_service_peek())
-        text_layer_set_text(login_lowertext_layer,"connecting...");
+        text_layer_set_text(login_lowertext_layer,"sign in on your smartphone");
     else
-        text_layer_set_text(login_lowertext_layer,"connect to your smartphone");
+        text_layer_set_text(login_lowertext_layer,"connect your smartphone");
     text_layer_set_font(login_lowertext_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
     text_layer_set_text_alignment(login_lowertext_layer, GTextAlignmentCenter);
     
@@ -851,6 +855,7 @@ static void login_window_load(Window *window) {
     };
     login_menu_first_section_items[1] = (SimpleMenuItem) {
         .title = "User details",
+        .subtitle = "username",
         .callback = login_menu_user_callback,
         .icon = user_icon
     };
@@ -907,23 +912,38 @@ static void user_menu_achievements_callback(int index, void *ctx) {
 
 static void user_window_load(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() start");
-    
-    
     Layer *window_layer = window_get_root_layer(window);
     int text_layer_height = 100;
+    int left_text_layer_width = 114;
+    int right_text_layer_width = 45;
+    if(user.points>9999)
+        right_text_layer_width = 55;
+    else if(user.points>99999)
+        right_text_layer_width = 65;
     
     set_textbar_layer(window_layer,&user_textbar_layer);
     text_layer_set_text(user_textbar_layer,user.name);
     
-    GRect text_bounds = layer_get_bounds(window_layer);
-    text_bounds.size.h = text_layer_height;
-    text_bounds.origin.y += textbar_height;
-    user_text_layer = text_layer_create(text_bounds);
-    static char text_buffer[40];
-    snprintf(text_buffer,40," Points: %i\n Rank: %i",user.points,user.rank);
-    text_layer_set_text(user_text_layer,text_buffer);
-    text_layer_set_font(user_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(user_text_layer, GTextAlignmentLeft);
+    GRect left_text_bounds = layer_get_bounds(window_layer);
+    left_text_bounds.size.h = text_layer_height;
+    left_text_bounds.size.w = left_text_layer_width;
+    left_text_bounds.origin.y += textbar_height;
+    user_left_text_layer = text_layer_create(left_text_bounds);
+    static char text_buffer1[50];
+    snprintf(text_buffer1,50," Points:\n Rank:\n Achievements:");
+    text_layer_set_text(user_left_text_layer,text_buffer1);
+    text_layer_set_font(user_left_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(user_left_text_layer, GTextAlignmentLeft);
+    
+    GRect right_text_bounds = left_text_bounds;
+    right_text_bounds.size.w = right_text_layer_width;
+    right_text_bounds.origin.x = 144-right_text_layer_width;
+    user_right_text_layer = text_layer_create(right_text_bounds);
+    static char text_buffer2[20];
+    snprintf(text_buffer2,20,"%i \n%i \n%i ",user.points,user.rank,user.achievements);
+    text_layer_set_text(user_right_text_layer,text_buffer2);
+    text_layer_set_font(user_right_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(user_right_text_layer, GTextAlignmentRight);
     
     user_menu_first_section_items[0] = (SimpleMenuItem) {
         .title = "Achievements",
@@ -942,7 +962,8 @@ static void user_window_load(Window *window) {
     user_menu_layer = simple_menu_layer_create(menu_bounds,window,user_menu_sections,1,NULL);
     
     layer_add_child(window_layer, text_layer_get_layer(user_textbar_layer));
-    layer_add_child(window_layer, text_layer_get_layer(user_text_layer));
+    layer_add_child(window_layer, text_layer_get_layer(user_left_text_layer));
+    layer_add_child(window_layer, text_layer_get_layer(user_right_text_layer));
     layer_add_child(window_layer, simple_menu_layer_get_layer(user_menu_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_load() end");
 }
@@ -951,8 +972,10 @@ static void user_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "user_window_unload() start");
     simple_menu_layer_destroy(user_menu_layer);
     user_menu_layer = NULL;
-    text_layer_destroy(user_text_layer);
-    user_text_layer = NULL;
+    text_layer_destroy(user_right_text_layer);
+    user_right_text_layer = NULL;
+    text_layer_destroy(user_left_text_layer);
+    user_left_text_layer = NULL;
     text_layer_destroy(user_textbar_layer);
     user_textbar_layer = NULL;
     
