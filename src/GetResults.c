@@ -8,6 +8,7 @@ static Window *login_window;
 static SimpleMenuLayer *login_menu_layer;
 static TextLayer *login_uppertext_layer;
 static TextLayer *login_lowertext_layer;
+static PropertyAnimation *login_property_animation;
 
 static Window *user_window;
 static SimpleMenuLayer *user_menu_layer;
@@ -425,6 +426,8 @@ static void set_downloading_sign_layer(Layer *window_layer, BitmapLayer **downlo
     bitmap_layer_set_alignment(*downloading_sign_layer,GAlignCenter);
 }
 
+static void fire_login_animation();
+
 enum {
     // request keys
     REQUEST_TYPE = 1,
@@ -487,7 +490,7 @@ char * translate_result(AppMessageResult result) {
 }
 
 static void send_simple_request(int8_t request) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_simple_request() Request: %u start",request);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
@@ -501,7 +504,7 @@ static void send_simple_request(int8_t request) {
 }
 
 static void send_query_request(int8_t request, int query) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u start",request,query);
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "send_query_request() Request: %u Query: %u start",request,query);
     DictionaryIterator *iter;
     app_message_outbox_begin(&iter);
     
@@ -526,12 +529,12 @@ void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, voi
 }
 
 void in_received_handler(DictionaryIterator *iter, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
         if(*(receiving_type->value->data)==RESPONSE_USER) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
             Tuple *points = dict_find(iter,USER_POINTS);
@@ -566,17 +569,15 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
                 user.achievements = *(achievements->value->data);
+                if(!user.logged_on)
+                    fire_login_animation();
                 user.logged_on = true;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac.: %u | achiev.: %u | loc.: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
-                static char text_buffer[50];
-                snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
-                text_layer_set_text(login_lowertext_layer,text_buffer);
-                layer_set_hidden(simple_menu_layer_get_layer(login_menu_layer),false);
                 if(window_stack_get_top_window()==achievements_window && user.achievements>num_achievements)
                     send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
             }
             else {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
+                //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
             }
         }
         else if(*(receiving_type->value->data)==RESPONSE_BEACON && user.logged_on) {
@@ -731,13 +732,13 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         }
     }
     else {
-        APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving error, RESPONSE_TYPE tuple not found");
     }
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() end");
 }
 
 void in_dropped_handler(AppMessageResult reason, void *context) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving rejected. Reason: %s",translate_result(reason));
 }
 /////////////////////////////////////
 
@@ -753,6 +754,32 @@ static int16_t get_cell_height(MenuLayer *menu_layer, MenuIndex *cell_index, voi
 static AppTimer *timer;
 static SimpleMenuSection login_menu_sections[1];
 static SimpleMenuItem login_menu_first_section_items[2];
+
+void login_animation_started(Animation *animation, void *data) {
+    layer_set_hidden(text_layer_get_layer(login_lowertext_layer),true);
+}
+
+void login_animation_stopped(Animation *animation, void *data) {
+    static char text_buffer[50];
+    snprintf(text_buffer,50,"%s\n(%s)",user.name,user.location);
+    text_layer_set_text(login_lowertext_layer,text_buffer);
+    GRect lowertext_bounds = layer_get_frame(text_layer_get_layer(login_lowertext_layer));
+    lowertext_bounds.origin.y = 26;
+    layer_set_frame(text_layer_get_layer(login_lowertext_layer),lowertext_bounds);
+    layer_set_hidden(text_layer_get_layer(login_lowertext_layer),false);
+    layer_set_hidden(simple_menu_layer_get_layer(login_menu_layer),false);
+}
+
+static void fire_login_animation() {
+    GRect from_frame = layer_get_frame(text_layer_get_layer(login_uppertext_layer));
+    GRect to_frame = GRect(0,0,from_frame.size.w,from_frame.size.h);
+    login_property_animation = property_animation_create_layer_frame(text_layer_get_layer(login_uppertext_layer), &from_frame, &to_frame);
+    animation_set_handlers((Animation*)login_property_animation, (AnimationHandlers) {
+        .started = (AnimationStartedHandler)login_animation_started,
+        .stopped = (AnimationStoppedHandler)login_animation_stopped,
+      }, NULL);
+    animation_schedule((Animation*)login_property_animation);
+}
 
 static void login_window_bt_handler(bool connected) {
     if(login_lowertext_layer) {
@@ -799,6 +826,7 @@ static void login_window_load(Window *window) {
     int lowertext_height = 53;
     
     GRect uppertext_bounds = layer_get_bounds(window_layer);
+    uppertext_bounds.origin.y += 50;
     uppertext_bounds.size.h = uppertext_height;
     login_uppertext_layer = text_layer_create(uppertext_bounds);
     text_layer_set_text(login_uppertext_layer,"Get Results!");
@@ -807,7 +835,7 @@ static void login_window_load(Window *window) {
     
     GRect lowertext_bounds = layer_get_bounds(window_layer);
     lowertext_bounds.size.h = lowertext_height;
-    lowertext_bounds.origin.y += uppertext_height;
+    lowertext_bounds.origin.y += uppertext_height + 50;
     login_lowertext_layer = text_layer_create(lowertext_bounds);
     if(bluetooth_connection_service_peek())
         text_layer_set_text(login_lowertext_layer,"connecting...");
@@ -848,6 +876,11 @@ static void login_window_load(Window *window) {
 
 static void login_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "login_window_unload() start");
+    if(animation_is_scheduled((Animation*)login_property_animation))
+        animation_unschedule((Animation*)login_property_animation);
+    property_animation_destroy(login_property_animation);
+    login_property_animation = NULL;
+    
     simple_menu_layer_destroy(login_menu_layer);
     login_menu_layer = NULL;
     text_layer_destroy(login_lowertext_layer);
@@ -1230,7 +1263,7 @@ static void achievements_window_load(Window *window) {
     text_layer_set_text(achievements_textbar_layer,user.name);
     
     set_downloading_sign_layer(window_layer,&achievements_downloading_sign_layer);
-    layer_set_hidden(bitmap_layer_get_layer(achievements_downloading_sign_layer),(is_downloading && last_request==REQUEST_ACHIEVEMENT_HEADERS)?false:true);
+    layer_set_hidden(bitmap_layer_get_layer(achievements_downloading_sign_layer),(is_downloading && user.achievements!=num_achievements && last_request==REQUEST_ACHIEVEMENT_HEADERS)?false:true);
     
     GRect menu_bounds = layer_get_bounds(window_layer);
     menu_bounds.size.h -= textbar_height;
