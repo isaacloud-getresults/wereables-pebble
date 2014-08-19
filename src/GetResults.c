@@ -51,7 +51,6 @@ typedef struct {
     int rank;
     int beacons;
     int achievements;
-    int level;
     bool logged_on;
 } User;
 
@@ -443,7 +442,6 @@ enum {
     USER_RANK = 5,
     USER_BEACONS = 6,
     USER_ACHIEVEMENTS = 7,
-    USER_LEVEL = 8,
     BEACON_ID = 2,
     BEACON_NAME = 3,
     BEACON_COWORKERS = 4,
@@ -537,8 +535,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *rank = dict_find(iter,USER_RANK);
             Tuple *beacons = dict_find(iter,USER_BEACONS);
             Tuple *achievements = dict_find(iter,USER_ACHIEVEMENTS);
-            Tuple *level = dict_find(iter,USER_LEVEL);
-            if(level && achievements && beacons && rank && points && location && name) {
+            if(achievements && beacons && rank && points && location && name) {
                 if(user.name==NULL) {
                     char *new_name = (char*)malloc((strlen(name->value->cstring)+1)*sizeof(char));
                     strcpy(new_name,name->value->cstring);
@@ -566,7 +563,6 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
                 user.achievements = *(achievements->value->data);
-                user.level = *(level->value->data);
                 vibes_short_pulse();
                 if(!user.logged_on)
                     fire_login_animation();
@@ -580,7 +576,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     text_layer_set_font(login_lowertext_layer,fonts_get_system_font(strlen(text_buffer)>13?FONT_KEY_GOTHIC_24:FONT_KEY_GOTHIC_28));
                 }
                 user.logged_on = true;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac: %u | ach: %u | lev: %u | loc: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.level,user.location);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac: %u | ach: %u | loc: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
                 if(window_stack_get_top_window()==achievements_window && user.achievements>num_achievements)
                     send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
             }
@@ -938,7 +934,7 @@ static void user_window_load(Window *window) {
     left_text_bounds.origin.y += textbar_height;
     user_left_text_layer = text_layer_create(left_text_bounds);
     static char text_buffer1[40];
-    snprintf(text_buffer1,40," Level:\n Points:\n Rank:\n Achievements:");
+    snprintf(text_buffer1,40," Points:\n Rank:\n Achievements:");
     text_layer_set_text(user_left_text_layer,text_buffer1);
     text_layer_set_font(user_left_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
     text_layer_set_text_alignment(user_left_text_layer, GTextAlignmentLeft);
@@ -948,7 +944,7 @@ static void user_window_load(Window *window) {
     right_text_bounds.origin.x = 144-right_text_layer_width;
     user_right_text_layer = text_layer_create(right_text_bounds);
     static char text_buffer2[25];
-    snprintf(text_buffer2,25,"%i \n%i \n%i \n%i ",user.level,user.points,user.rank,user.achievements);
+    snprintf(text_buffer2,25,"%i \n%i \n%i ",user.points,user.rank,user.achievements);
     text_layer_set_text(user_right_text_layer,text_buffer2);
     text_layer_set_font(user_right_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(user_right_text_layer, GTextAlignmentRight);
