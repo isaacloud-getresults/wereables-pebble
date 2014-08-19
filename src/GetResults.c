@@ -34,7 +34,8 @@ static BitmapLayer *achievements_downloading_sign_layer;
 
 static Window *achievement_details_window;
 static TextLayer *achievement_details_textbar_layer;
-static TextLayer *achievement_details_text_layer;
+static TextLayer *achievement_details_title_text_layer;
+static TextLayer *achievement_details_content_text_layer;
 static ScrollLayer *achievement_details_scroll_layer;
 static BitmapLayer *achievement_details_downloading_sign_layer;
 
@@ -50,6 +51,7 @@ typedef struct {
     int rank;
     int beacons;
     int achievements;
+    int level;
     bool logged_on;
 } User;
 
@@ -441,6 +443,7 @@ enum {
     USER_RANK = 5,
     USER_BEACONS = 6,
     USER_ACHIEVEMENTS = 7,
+    USER_LEVEL = 8,
     BEACON_ID = 2,
     BEACON_NAME = 3,
     BEACON_COWORKERS = 4,
@@ -534,7 +537,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             Tuple *rank = dict_find(iter,USER_RANK);
             Tuple *beacons = dict_find(iter,USER_BEACONS);
             Tuple *achievements = dict_find(iter,USER_ACHIEVEMENTS);
-            if(achievements && beacons && rank && points && location && name) {
+            Tuple *level = dict_find(iter,USER_LEVEL);
+            if(level && achievements && beacons && rank && points && location && name) {
                 if(user.name==NULL) {
                     char *new_name = (char*)malloc((strlen(name->value->cstring)+1)*sizeof(char));
                     strcpy(new_name,name->value->cstring);
@@ -562,17 +566,21 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 user.rank = *(rank->value->data);
                 user.beacons = *(beacons->value->data);
                 user.achievements = *(achievements->value->data);
+                user.level = *(level->value->data);
                 vibes_short_pulse();
                 if(!user.logged_on)
                     fire_login_animation();
                 else {
-                    static char text_buffer[50];
-                    snprintf(text_buffer,50,"in %s",user.location);
+                    static char text_buffer[40];
+                    if(strlen(user.location)>1)
+                        snprintf(text_buffer,40,"in %s",user.location);
+                    else
+                        snprintf(text_buffer,40," ");
                     text_layer_set_text(login_lowertext_layer,text_buffer);
                     text_layer_set_font(login_lowertext_layer,fonts_get_system_font(strlen(text_buffer)>13?FONT_KEY_GOTHIC_24:FONT_KEY_GOTHIC_28));
                 }
                 user.logged_on = true;
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac.: %u | achiev.: %u | loc.: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.location);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved user: %s | pts: %u | rank: %u | beac: %u | ach: %u | lev: %u | loc: %s",user.name,user.points,user.rank,user.beacons,user.achievements,user.level,user.location);
                 if(window_stack_get_top_window()==achievements_window && user.achievements>num_achievements)
                     send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
             }
@@ -688,12 +696,12 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         strcat(current_achievement_description,text->value->cstring);
                 }
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement description: id: %i | part: %i | text: %s",*(id->value->data),*(part->value->data),text->value->cstring);
-                text_layer_set_text(achievement_details_text_layer,current_achievement_description);
-                GSize max_size = text_layer_get_content_size(achievement_details_text_layer);
-                max_size.w = 144;
-                max_size.h += 10;
-                text_layer_set_size(achievement_details_text_layer,max_size);
-                scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(144,max_size.h));
+                text_layer_set_text(achievement_details_content_text_layer,current_achievement_description);
+                GSize max_content_size = text_layer_get_content_size(achievement_details_content_text_layer);
+                max_content_size.w = 134;
+                max_content_size.h += 10;
+                text_layer_set_size(achievement_details_content_text_layer,max_content_size);
+                scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(144,max_content_size.h));
                 if(*(part->value->data)==current_achievement->parts-1)
                     is_downloading = false;
                 if(achievement_details_downloading_sign_layer)
@@ -929,8 +937,8 @@ static void user_window_load(Window *window) {
     left_text_bounds.size.w = left_text_layer_width;
     left_text_bounds.origin.y += textbar_height;
     user_left_text_layer = text_layer_create(left_text_bounds);
-    static char text_buffer1[50];
-    snprintf(text_buffer1,50," Points:\n Rank:\n Achievements:");
+    static char text_buffer1[40];
+    snprintf(text_buffer1,40," Level:\n Points:\n Rank:\n Achievements:");
     text_layer_set_text(user_left_text_layer,text_buffer1);
     text_layer_set_font(user_left_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
     text_layer_set_text_alignment(user_left_text_layer, GTextAlignmentLeft);
@@ -939,8 +947,8 @@ static void user_window_load(Window *window) {
     right_text_bounds.size.w = right_text_layer_width;
     right_text_bounds.origin.x = 144-right_text_layer_width;
     user_right_text_layer = text_layer_create(right_text_bounds);
-    static char text_buffer2[20];
-    snprintf(text_buffer2,20,"%i \n%i \n%i ",user.points,user.rank,user.achievements);
+    static char text_buffer2[25];
+    snprintf(text_buffer2,25,"%i \n%i \n%i \n%i ",user.level,user.points,user.rank,user.achievements);
     text_layer_set_text(user_right_text_layer,text_buffer2);
     text_layer_set_font(user_right_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(user_right_text_layer, GTextAlignmentRight);
@@ -1319,28 +1327,39 @@ static void achievement_details_window_load(Window *window) {
     Layer *window_layer = window_get_root_layer(window);
     
     set_textbar_layer(window_layer,&achievement_details_textbar_layer);
-    text_layer_set_text(achievement_details_textbar_layer,current_achievement->name);
+    text_layer_set_text(achievement_details_textbar_layer,user.name);
     
     set_downloading_sign_layer(window_layer,&achievement_details_downloading_sign_layer);
     layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),(is_downloading && last_request==REQUEST_ACHIEVEMENT_CONTENT)?false:true);
     
-    GRect max_text_bounds = GRect(0,0,layer_get_bounds(window_layer).size.w,500);
-    achievement_details_text_layer = text_layer_create(max_text_bounds);
-    text_layer_set_text(achievement_details_text_layer,current_achievement_description);
-    text_layer_set_font(achievement_details_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
-    text_layer_set_text_alignment(achievement_details_text_layer, GTextAlignmentCenter);
+    GRect max_text_bounds = GRect(5,0,layer_get_bounds(window_layer).size.w-10,500);    
+    achievement_details_title_text_layer = text_layer_create(max_text_bounds);
+    text_layer_set_text(achievement_details_title_text_layer,current_achievement->name);
+    text_layer_set_font(achievement_details_title_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
+    text_layer_set_text_alignment(achievement_details_title_text_layer, GTextAlignmentCenter);
+    GSize max_title_size = text_layer_get_content_size(achievement_details_title_text_layer);
+    max_title_size.w = max_text_bounds.size.w;
+    text_layer_set_size(achievement_details_title_text_layer,max_title_size);
+    
+    max_text_bounds.origin.y += max_title_size.h;
+    achievement_details_content_text_layer = text_layer_create(max_text_bounds);
+    text_layer_set_text(achievement_details_content_text_layer,current_achievement_description);
+    text_layer_set_font(achievement_details_content_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24));
+    text_layer_set_text_alignment(achievement_details_content_text_layer, GTextAlignmentCenter);
+    GSize max_content_size = text_layer_get_content_size(achievement_details_content_text_layer);
+    max_content_size.w = max_text_bounds.size.w;
+    max_content_size.h += 10;
+    text_layer_set_size(achievement_details_content_text_layer,max_content_size);
     
     GRect scroll_layer_bounds = layer_get_bounds(window_layer);
     scroll_layer_bounds.size.h -= textbar_height;
     scroll_layer_bounds.origin.y = textbar_height;
     achievement_details_scroll_layer = scroll_layer_create(scroll_layer_bounds);
     scroll_layer_set_click_config_onto_window(achievement_details_scroll_layer,achievement_details_window);
-    GSize max_size = text_layer_get_content_size(achievement_details_text_layer);
-    max_size.w = scroll_layer_bounds.size.w;
-    max_size.h += 10;
-    text_layer_set_size(achievement_details_text_layer,max_size);
-    scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_size.h));
-    scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_text_layer));
+    
+    scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_title_size.h+max_content_size.h));
+    scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_title_text_layer));
+    scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_content_text_layer));
     
     layer_add_child(window_layer, text_layer_get_layer(achievement_details_textbar_layer));
     layer_add_child(window_layer, bitmap_layer_get_layer(achievement_details_downloading_sign_layer));
@@ -1350,8 +1369,10 @@ static void achievement_details_window_load(Window *window) {
 
 static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() start");
-    text_layer_destroy(achievement_details_text_layer);
-    achievement_details_text_layer = NULL;
+    text_layer_destroy(achievement_details_content_text_layer);
+    achievement_details_content_text_layer = NULL;
+    text_layer_destroy(achievement_details_title_text_layer);
+    achievement_details_title_text_layer = NULL;
     scroll_layer_destroy(achievement_details_scroll_layer);
     achievement_details_scroll_layer = NULL;
     bitmap_layer_destroy(achievement_details_downloading_sign_layer);
@@ -1362,25 +1383,7 @@ static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() end");
 }
 /////////////////////////////////////
-/*
- static char *memtest_memory;
- 
- static void memtest() {
- uint16_t i = 1;
- 
- while(true) {
- memtest_memory = (char*)malloc(i++*sizeof(char));
- if(memtest_memory==NULL) {
- APP_LOG(APP_LOG_LEVEL_DEBUG, "memtest: maximum memory allocated %i",i);
- break;
- }
- if(i%1000==0)
- APP_LOG(APP_LOG_LEVEL_DEBUG, "memtest: %i...",i);
- if(memtest_memory)
- free(memtest_memory);
- }
- }
- */
+
 /////////////////////////////////////
 static WindowHandlers login_window_handlers = {
     .load = login_window_load,
@@ -1408,8 +1411,6 @@ static WindowHandlers achievement_details_window_handlers = {
 };
 
 static void init() {
-    //memtest();
-    
     num_beacons = 0;
     num_coworkers = 0;
     num_achievements = 0;
