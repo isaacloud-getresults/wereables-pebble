@@ -526,8 +526,8 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "in_received_handler() start dictionary size: %u",(uint16_t)dict_size(iter));
     Tuple *receiving_type = dict_find(iter,RESPONSE_TYPE);
     if(receiving_type) {
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",*(receiving_type->value->data));
-        if(*(receiving_type->value->data)==RESPONSE_USER) {
+        //APP_LOG(APP_LOG_LEVEL_DEBUG, "Receiving_type: %u",receiving_type->value->uint32);
+        if(receiving_type->value->uint32==RESPONSE_USER) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving user");
             Tuple *name = dict_find(iter,USER_NAME);
             Tuple *location = dict_find(iter,USER_LOCATION);
@@ -559,11 +559,11 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                         user.location = new_location;
                     }
                 }
-                user.points = *(points->value->data);
-                user.rank = *(rank->value->data);
-                user.beacons = *(beacons->value->data);
-                user.achievements = *(achievements->value->data);
-                vibes_short_pulse();
+                user.points = points->value->uint32;
+                user.rank = rank->value->uint32;
+                user.beacons = beacons->value->uint32;
+                user.achievements = achievements->value->uint32;
+                //vibes_short_pulse();
                 if(!user.logged_on)
                     fire_login_animation();
                 else {
@@ -584,7 +584,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect user dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_BEACON && user.logged_on) {
+        else if(receiving_type->value->uint32==RESPONSE_BEACON && user.logged_on) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving beacon");
             Tuple *id = dict_find(iter,BEACON_ID);
             Tuple *name = dict_find(iter,BEACON_NAME);
@@ -594,9 +594,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "strlen(name->value->cstring): %u",strlen(name->value->cstring));
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
-                new_beacon->id = *(id->value->data);
+                new_beacon->id = id->value->uint32;
                 new_beacon->name = new_name;
-                new_beacon->coworkers = *(coworkers->value->data);
+                new_beacon->coworkers = coworkers->value->uint32;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | id: %i | coworkers: %u",new_beacon->name,new_beacon->id,new_beacon->coworkers);
                 if(update_beacons_table(new_beacon)) {
                     if(window_stack_get_top_window()==beacons_window) {
@@ -614,7 +614,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     layer_set_hidden(bitmap_layer_get_layer(beacons_downloading_sign_layer),true);
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER && user.logged_on && current_beacon) {
+        else if(receiving_type->value->uint32==RESPONSE_COWORKER && user.logged_on && current_beacon) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
@@ -623,9 +623,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             if(new_coworker && beacon_id && name && id) {
                 char new_name[strlen(name->value->cstring)+1];
                 strncpy(new_name,name->value->cstring,sizeof(new_name));
-                new_coworker->id = *(id->value->data);
+                new_coworker->id = id->value->uint32;
                 new_coworker->name = new_name;
-                new_coworker->beacon_id = *(beacon_id->value->data);
+                new_coworker->beacon_id = beacon_id->value->uint32;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker: %s | beacon_id: %i",new_coworker->name,new_coworker->beacon_id);
                 if(update_coworkers_table(new_coworker)) {
                     //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
@@ -648,7 +648,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect coworker dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT_HEADER && user.logged_on) {
+        else if(receiving_type->value->uint32==RESPONSE_ACHIEVEMENT_HEADER && user.logged_on) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement header");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             Tuple *name = dict_find(iter,ACHIEVEMENT_NAME);
@@ -657,9 +657,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             if(new_achievement && parts && name && id) {
                 char new_name[strlen(name->value->cstring)+1];
                 strcpy(new_name,name->value->cstring);
-                new_achievement->id = *(id->value->data);
+                new_achievement->id = id->value->uint32;
                 new_achievement->name = new_name;
-                new_achievement->parts = *(parts->value->data);
+                new_achievement->parts = parts->value->uint32;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement header: id: %i | name: %s | parts: %i",new_achievement->id,new_achievement->name,new_achievement->parts);
                 if(update_achievements_table(new_achievement)) {
                     if(window_stack_get_top_window()==achievements_window) {
@@ -679,26 +679,26 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         
-        else if(*(receiving_type->value->data)==RESPONSE_ACHIEVEMENT_CONTENT && user.logged_on && current_achievement) {
+        else if(receiving_type->value->uint32==RESPONSE_ACHIEVEMENT_CONTENT && user.logged_on && current_achievement) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement content");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
             Tuple *text = dict_find(iter,ACHIEVEMENT_NAME);
             Tuple *part = dict_find(iter,ACHIEVEMENT_NUMBER);
             if(part && text && id) {
-                if(current_achievement->id==*(id->value->data)) {
-                    if(*(part->value->data)==0)
+                if(current_achievement->id==(int)id->value->uint32) {
+                    if((int)part->value->uint32==0)
                         strcpy(current_achievement_description,text->value->cstring);
                     else
                         strcat(current_achievement_description,text->value->cstring);
                 }
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement description: id: %i | part: %i | text: %s",*(id->value->data),*(part->value->data),text->value->cstring);
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved achievement description: id: %u | part: %u | text: %s",(int)id->value->uint32,(int)part->value->uint32,text->value->cstring);
                 text_layer_set_text(achievement_details_content_text_layer,current_achievement_description);
                 GSize max_content_size = text_layer_get_content_size(achievement_details_content_text_layer);
                 max_content_size.w = 134;
                 max_content_size.h += 10;
                 text_layer_set_size(achievement_details_content_text_layer,max_content_size);
                 scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(144,max_content_size.h));
-                if(*(part->value->data)==current_achievement->parts-1)
+                if((int)part->value->uint32==current_achievement->parts-1)
                     is_downloading = false;
                 if(achievement_details_downloading_sign_layer)
                     layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),true);
@@ -707,14 +707,14 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "Incorrect achievement content dictionary");
             }
         }
-        else if(*(receiving_type->value->data)==RESPONSE_COWORKER_POP && user.logged_on) {
+        else if(receiving_type->value->uint32==RESPONSE_COWORKER_POP && user.logged_on) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving coworker to pop");
             Tuple *id = dict_find(iter,COWORKER_ID);
             Tuple *name = dict_find(iter,COWORKER_NAME);
             Tuple *beacon_id = dict_find(iter,COWORKER_BEACON_ID);
             if(beacon_id && id) {
-                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker to pop: id: %i | name: %s | from room id: %i",*(id->value->data),name->value->cstring,*(beacon_id->value->data));
-                if(*(beacon_id->value->data)==current_beacon->id && pop_coworker_from_table(*(id->value->data))) {
+                APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieved coworker to pop: id: %u | name: %s | from room id: %u",(int)id->value->uint32,name->value->cstring,(int)beacon_id->value->uint32);
+                if((int)beacon_id->value->uint32==current_beacon->id && (int)pop_coworker_from_table(id->value->uint32)) {
                     if(window_stack_get_top_window()==coworkers_window) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading coworkers_menu_layer");
                         menu_layer_reload_data(coworkers_menu_layer);
@@ -785,7 +785,7 @@ static void fire_login_animation() {
     animation_set_handlers((Animation*)login_property_animation, (AnimationHandlers) {
         .started = (AnimationStartedHandler)login_animation_started,
         .stopped = (AnimationStoppedHandler)login_animation_stopped,
-      }, NULL);
+    }, NULL);
     animation_schedule((Animation*)login_property_animation);
 }
 
@@ -910,6 +910,11 @@ static void user_menu_achievements_callback(int index, void *ctx) {
         send_simple_request(REQUEST_ACHIEVEMENT_HEADERS);
         is_downloading = true;
         achievements_first_time = true;
+    }
+    if(coworkers!=NULL) {
+        clear_coworkers_table();
+        current_beacon = NULL;
+        previous_beacon = NULL;
     }
     window_stack_push(achievements_window,animated);
 }
@@ -1048,6 +1053,11 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
             is_downloading = true;
         }
         previous_beacon = current_beacon;
+        if(achievements!=NULL) {
+            clear_achievements_table();
+            current_achievement = NULL;
+            previous_achievement = NULL;
+        }
         window_stack_push(coworkers_window,animated);
     }
 }
@@ -1063,7 +1073,7 @@ MenuLayerCallbacks beacons_menu_callbacks = {
 };
 
 static void beacons_window_load(Window *window) {
-    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_load() start");
+    //APP_LOG(APP_LOG_LEVEL_DEBUG, "beacons_window_load() start");    
     Layer *window_layer = window_get_root_layer(window);
     
     set_textbar_layer(window_layer,&beacons_textbar_layer);
@@ -1328,13 +1338,14 @@ static void achievement_details_window_load(Window *window) {
     set_downloading_sign_layer(window_layer,&achievement_details_downloading_sign_layer);
     layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),(is_downloading && last_request==REQUEST_ACHIEVEMENT_CONTENT)?false:true);
     
-    GRect max_text_bounds = GRect(5,0,layer_get_bounds(window_layer).size.w-10,500);    
+    GRect max_text_bounds = GRect(5,0,layer_get_bounds(window_layer).size.w-10,500);
     achievement_details_title_text_layer = text_layer_create(max_text_bounds);
     text_layer_set_text(achievement_details_title_text_layer,current_achievement->name);
     text_layer_set_font(achievement_details_title_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD));
     text_layer_set_text_alignment(achievement_details_title_text_layer, GTextAlignmentCenter);
     GSize max_title_size = text_layer_get_content_size(achievement_details_title_text_layer);
     max_title_size.w = max_text_bounds.size.w;
+    max_title_size.h += 5;
     text_layer_set_size(achievement_details_title_text_layer,max_title_size);
     
     max_text_bounds.origin.y += max_title_size.h;
@@ -1375,7 +1386,6 @@ static void achievement_details_window_unload(Window *window) {
     achievement_details_downloading_sign_layer = NULL;
     text_layer_destroy(achievement_details_textbar_layer);
     achievement_details_textbar_layer = NULL;
-    //current_achievement = NULL;
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() end");
 }
 /////////////////////////////////////
