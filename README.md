@@ -9,3 +9,5 @@ Szacowane średnie rozmiary obiektów (wszystko zależy od długości stringów 
 
 Dla oszczędności pamięci przechowywane są jednocześnie lokacje oraz wymiennie albo pracownicy albo achievementy.
 Przykładowo w tych dostępnych 6kB powinno się zmieścić 40 lokacji + (90 pracowników albo 70 achievementów)
+
+Obecnie problem rozwiązany jest (częściowo) w ten sposób, że listy achievementów oraz pracowników w pomieszczeniach są dzielone na mniejsze podlisty (strony) po np 10 pozycji (lub mniej, jeśli dostępnej pamięci jest za mało). Użytkownik aplikacji może przemieszczać się pomiędzy wszystkimi stronami danej listy za pomocą pozycji previous page i next page dostępnych w danej liście.
