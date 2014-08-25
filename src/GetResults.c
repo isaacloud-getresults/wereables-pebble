@@ -220,7 +220,7 @@ static bool update_coworkers_table(Coworker *new_coworker) {
             if(current_beacon->coworkers==0)
                 max_coworkers = 1;
             else
-                max_coworkers = current_beacon->coworkers+1;
+                max_coworkers = 10;
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "    table empty, allocating new table, size: %u",max_coworkers);
             coworkers = (Coworker**)malloc(max_coworkers*sizeof(Coworker*));
             char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
@@ -293,7 +293,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
         if(user.achievements<=0)
             max_achievements = 1;
         else
-            max_achievements = user.achievements;
+            max_achievements = 10;
         achievements = (Achievement**)malloc(max_achievements*sizeof(Achievement*));
         char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
         strcpy(new_name,new_achievement->name);
@@ -675,7 +675,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                 new_beacon->coworkers_pages = dict_find(iter,BEACON_COWORKERS_PAGES)->value->uint16;
                 APP_LOG(APP_LOG_LEVEL_DEBUG, "Recieving beacon: %s | id: %i | cow: %i | cow pages: %i",new_beacon->name,new_beacon->id,new_beacon->coworkers,new_beacon->coworkers_pages);
                 if(update_beacons_table(new_beacon)) {
-                    if(window_stack_get_top_window()==beacons_window) {
+                    if(beacons_menu_layer) {
                         //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading beacons_menu_layer");
                         menu_layer_reload_data(beacons_menu_layer);
                     }
@@ -1078,48 +1078,40 @@ static void user_window_unload(Window *window) {
 ///////////////////////////////////// BEACONS WINDOW
 static uint16_t get_num_sections_beacons(MenuLayer *menu_layer, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "get_num_sections_beacons()");
-    //return 2;
     return 1;
 }
 
 static void draw_beacon_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_header()");
     if(beacons) {
-        switch (section_index) {
-            case 0: {
-                GRect header_layer_bounds = layer_get_bounds(cell_layer);
-                header_layer_bounds.origin.y -= 1;
-                graphics_context_set_text_color(ctx, GColorBlack);
-                graphics_draw_text(ctx, "Locations", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
-                break;
-            }
+        if(section_index==0) {
+            GRect header_layer_bounds = layer_get_bounds(cell_layer);
+            header_layer_bounds.origin.y -= 1;
+            graphics_context_set_text_color(ctx, GColorBlack);
+            graphics_draw_text(ctx, "Locations", fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
         }
     }
-    else
-        menu_cell_basic_header_draw(ctx, cell_layer, "Downloading locations...");
 }
 
 static void draw_beacon_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "draw_beacon_row()");
-    switch (cell_index->section) {
-        case 0:
-            if(beacons) {
-                GRect cell_layer_bounds = layer_get_bounds(cell_layer);
-                GRect beacon_name_bounds = cell_layer_bounds;
-                beacon_name_bounds.size.w -= 20;
-                beacon_name_bounds.origin.x += 5;
-                beacon_name_bounds.origin.y -= 2;
-                GRect beacon_coworkers_bounds = cell_layer_bounds;
-                beacon_coworkers_bounds.size.w = 25;
-                beacon_coworkers_bounds.origin.x = beacon_name_bounds.size.w;
-                beacon_coworkers_bounds.origin.y -= 2;
-                static char text_buffer1[4];
-                snprintf(text_buffer1,4,"%i",beacons[cell_index->row]->coworkers);
-                graphics_context_set_text_color(ctx, GColorBlack);
-                graphics_draw_text(ctx, beacons[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_name_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
-                graphics_draw_text(ctx, text_buffer1, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_coworkers_bounds, GTextOverflowModeWordWrap , GTextAlignmentCenter, NULL);
-            }
-            break;
+    if(cell_index->section==0) {
+        if(beacons) {
+            GRect cell_layer_bounds = layer_get_bounds(cell_layer);
+            GRect beacon_name_bounds = cell_layer_bounds;
+            beacon_name_bounds.size.w -= 20;
+            beacon_name_bounds.origin.x += 5;
+            beacon_name_bounds.origin.y -= 2;
+            GRect beacon_coworkers_bounds = cell_layer_bounds;
+            beacon_coworkers_bounds.size.w = 25;
+            beacon_coworkers_bounds.origin.x = beacon_name_bounds.size.w;
+            beacon_coworkers_bounds.origin.y -= 2;
+            static char text_buffer1[4];
+            snprintf(text_buffer1,4,"%i",beacons[cell_index->row]->coworkers);
+            graphics_context_set_text_color(ctx, GColorBlack);
+            graphics_draw_text(ctx, beacons[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_name_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
+            graphics_draw_text(ctx, text_buffer1, fonts_get_system_font(FONT_KEY_GOTHIC_18), beacon_coworkers_bounds, GTextOverflowModeWordWrap , GTextAlignmentCenter, NULL);
+        }
     }
 }
 
@@ -1196,24 +1188,17 @@ static uint16_t get_num_sections_coworkers(MenuLayer *menu_layer, void *data) {
 }
 
 static void draw_coworker_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-    if(coworkers) {
-        switch (section_index) {
-            case 0: {
-                GRect header_layer_bounds = layer_get_bounds(cell_layer);
-                header_layer_bounds.origin.y -= 1;
-                graphics_context_set_text_color(ctx, GColorBlack);
-                static char text_buffer[27];
-                if(current_beacon->coworkers_pages>0)
-                    snprintf(text_buffer,27,"People im room (%i/%i)",current_coworkers_page,current_beacon->coworkers_pages);
-                else
-                    snprintf(text_buffer,27,"People im room");
-                graphics_draw_text(ctx, text_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
-                break;
-            }
-        }
+    if(section_index==0) {
+        GRect header_layer_bounds = layer_get_bounds(cell_layer);
+        header_layer_bounds.origin.y -= 1;
+        graphics_context_set_text_color(ctx, GColorBlack);
+        static char text_buffer[27];
+        if(current_beacon->coworkers_pages>1)
+            snprintf(text_buffer,27,"People im room (%i/%i)",current_coworkers_page,current_beacon->coworkers_pages);
+        else
+            snprintf(text_buffer,27,"People im room");
+        graphics_draw_text(ctx, text_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
     }
-    /*else
-        menu_cell_basic_header_draw(ctx, cell_layer, "This room is empty");*/
 }
 
 static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex *cell_index, void *callback_context) {
@@ -1224,7 +1209,7 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
     graphics_context_set_text_color(ctx, GColorBlack);
     if(current_coworkers_page>1 && cell_index->row==0)
         graphics_draw_text(ctx, "...previous page...", fonts_get_system_font(FONT_KEY_GOTHIC_18), cell_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
-    else if(current_achievements_page<current_beacon->coworkers_pages && cell_index->row==num_coworkers+(current_coworkers_page==1?0:1))
+    else if(current_coworkers_page<current_beacon->coworkers_pages && cell_index->row==num_coworkers+(current_coworkers_page==1?0:1))
         graphics_draw_text(ctx, "...next page...", fonts_get_system_font(FONT_KEY_GOTHIC_18), cell_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
     else if(coworkers) {
         if(cell_index->section==0) {
@@ -1233,21 +1218,6 @@ static void draw_coworker_row(GContext *ctx, const Layer *cell_layer, MenuIndex 
             }
         }
     }
-/*
-    if(coworkers) {
-        switch (cell_index->section) {
-            case 0:
-                if(coworkers && coworkers[cell_index->row]->name) {
-                    GRect cell_layer_bounds = layer_get_bounds(cell_layer);
-                    cell_layer_bounds.size.w -= 10;
-                    cell_layer_bounds.origin.x += 5;
-                    cell_layer_bounds.origin.y -= 2;
-                    graphics_context_set_text_color(ctx, GColorBlack);
-                    graphics_draw_text(ctx, coworkers[cell_index->row]->name, fonts_get_system_font(FONT_KEY_GOTHIC_18), cell_layer_bounds, GTextOverflowModeFill , GTextAlignmentLeft, NULL);
-                }
-                break;
-        }
-    }*/
 }
 
 static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_index, void *callback_context) {
@@ -1277,15 +1247,6 @@ static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_
         menu_layer_reload_data(coworkers_menu_layer);
         layer_set_hidden(bitmap_layer_get_layer(coworkers_downloading_sign_layer),false);
     }
-    /*else if(current_achievement) {
-        if(previous_achievement_id!=current_achievement->id) {
-            current_achievement_description[0] = '\0';
-            send_query_request(REQUEST_ACHIEVEMENT_CONTENT,current_achievement->id);
-            is_downloading = true;
-        }
-        previous_achievement_id = current_achievement->id;
-        window_stack_push(achievement_details_window,animated);
-    }*/
 }
 
 MenuLayerCallbacks coworkers_menu_callbacks = {
@@ -1352,27 +1313,20 @@ static void coworkers_window_unload(Window *window) {
 
 ///////////////////////////////////// ACHIEVEMENTS WINDOW
 static uint16_t get_num_sections_achievements(MenuLayer *menu_layer, void *data) {
-    if(achievements)
-        return 1;
-    else
-        return 0;
+    return 1;
 }
 
 static void draw_achievement_header(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-    //if(achievements) {
-    switch (section_index) {
-        case 0: {
-            GRect header_layer_bounds = layer_get_bounds(cell_layer);
-            header_layer_bounds.origin.y -= 1;
-            graphics_context_set_text_color(ctx, GColorBlack);
-            static char text_buffer[25];
-            if(user.achievements_pages>0)
-                snprintf(text_buffer,25,"Achievements (%i/%i)",current_achievements_page,user.achievements_pages);
-            else
-                snprintf(text_buffer,25,"Achievements");
-            graphics_draw_text(ctx, text_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
-            break;
-        }
+    if(section_index==0) {
+        GRect header_layer_bounds = layer_get_bounds(cell_layer);
+        header_layer_bounds.origin.y -= 1;
+        graphics_context_set_text_color(ctx, GColorBlack);
+        static char text_buffer[25];
+        if(user.achievements_pages>1)
+            snprintf(text_buffer,25,"Achievements (%i/%i)",current_achievements_page,user.achievements_pages);
+        else
+            snprintf(text_buffer,25,"Achievements");
+        graphics_draw_text(ctx, text_buffer, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), header_layer_bounds, GTextOverflowModeFill , GTextAlignmentCenter, NULL);
     }
 }
 
