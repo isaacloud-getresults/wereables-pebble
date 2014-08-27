@@ -32,6 +32,7 @@ static BitmapLayer *coworkers_downloading_sign_layer;
 static Window *achievements_window;
 static MenuLayer *achievements_menu_layer;
 static TextLayer *achievements_textbar_layer;
+static TextLayer *achievements_text_layer;
 static BitmapLayer *achievements_downloading_sign_layer;
 
 static Window *achievement_details_window;
@@ -224,24 +225,7 @@ static bool update_beacons_table(Beacon *new_beacon) {
             qsort(beacons,num_beacons,sizeof(Beacon*),beacons_compare);
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
             return true;
-        }/*
-        // reallocate table and increase its size if new element doesn't fit
-        else {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    beacon not found, reallocating table and adding new");
-            max_beacons += 2;
-            Beacon **new_table = (Beacon**)realloc(beacons,max_beacons*sizeof(Beacon*));
-            if(new_table) {
-                beacons = new_table;
-                char *new_name = (char*)malloc((strlen(new_beacon->name)+1)*sizeof(char));
-                strcpy(new_name,new_beacon->name);
-                beacons[i] = new_beacon;
-                beacons[i]->name = new_name;
-                num_beacons++;
-                qsort(beacons,num_beacons,sizeof(Beacon*),beacons_compare);
-            }
         }
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_beacons_table() end");
-        return true;*/
     }
     return false;
 }
@@ -286,23 +270,7 @@ static bool update_coworkers_table(Coworker *new_coworker) {
                 num_coworkers++;
                 //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
                 return true;
-            }/*
-            // reallocate table and increase its size if new element doesn't fit
-            else {
-                //APP_LOG(APP_LOG_LEVEL_DEBUG, "    coworker not found, reallocating table and adding new");
-                max_coworkers += 2;
-                Coworker **new_table = (Coworker**)realloc(coworkers,max_coworkers*sizeof(Coworker*));
-                if(new_table) {
-                    coworkers = new_table;
-                    char *new_name = (char*)malloc((strlen(new_coworker->name)+1)*sizeof(char));
-                    strcpy(new_name,new_coworker->name);
-                    coworkers[i] = new_coworker;
-                    coworkers[i]->name = new_name;
-                    num_coworkers++;
-                }
             }
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_coworkers_table() end");
-            return true;*/
         }
     }
     else {
@@ -355,23 +323,7 @@ static bool update_achievements_table(Achievement *new_achievement) {
             achievements[i]->name = new_name;
             num_achievements++;
             return true;
-        }/*
-        // reallocate table and increase its size twice if new element doesn't fit
-        else {
-            //APP_LOG(APP_LOG_LEVEL_DEBUG, "    achievement not found, reallocating table and adding new");
-            max_achievements += 2;
-            Achievement **new_table = (Achievement**)realloc(achievements,max_achievements*sizeof(Achievement*));
-            if(new_table) {
-                achievements = new_table;
-                char *new_name = (char*)malloc((strlen(new_achievement->name)+1)*sizeof(char));
-                strcpy(new_name,new_achievement->name);
-                achievements[i] = new_achievement;
-                achievements[i]->name = new_name;
-                num_achievements++;
-            }
         }
-        //APP_LOG(APP_LOG_LEVEL_DEBUG, "update_achievements_table() end");
-        return true;*/
     }
     return false;
 }
@@ -767,6 +719,12 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Reloading achievements_menu_layer");
                             menu_layer_reload_data(achievements_menu_layer);
                         }
+                        if(achievements && window_stack_get_top_window()==achievements_window) {
+                            if(achievements_text_layer)
+                                layer_set_hidden(text_layer_get_layer(achievements_text_layer),true);
+                            if(achievements_menu_layer)
+                                layer_set_hidden(menu_layer_get_layer(achievements_menu_layer),false);
+                        }
                     }
                     if(!dict_find(iter,ACHIEVEMENT_MORE)->value->uint16) {
                         is_downloading = false;
@@ -809,7 +767,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
             }
         }
         else if(receiving_type->value->uint16==RESPONSE_ACHIEVEMENT_BADGE && user.logged_on && current_achievement) {
-            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement badge");
+            //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement badge");
             Tuple *offset = dict_find(iter,ACHIEVEMENT_BADGE_OFFSET);
             Tuple *data = dict_find(iter,ACHIEVEMENT_BADGE_DATA);
             if(data && offset) {
@@ -822,7 +780,9 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     }
                     else
                         part++;
-                    memcpy(&current_achievement_badge_data[offset->value->uint16],data->value->data,data->length);
+                    APP_LOG(APP_LOG_LEVEL_DEBUG, "Received badge part: %i | data length: %i",part,data->length);
+                    if(part<6)
+                        memcpy(&current_achievement_badge_data[offset->value->uint16],data->value->data,data->length);
                     if(part==5) {
                         badge_loaded = true;
                         if(achievement_details_badge_layer && achievement_details_scroll_layer) {
@@ -1204,7 +1164,7 @@ static void beacon_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_in
             new_beacons_page += 1;
         }
     }
-    if(new_beacons_page!=current_beacons_page) {
+    if(beacons && new_beacons_page!=current_beacons_page) {
         clear_beacons_table();
         current_beacons_page = new_beacons_page;
         send_query_request(REQUEST_BEACONS_PAGE,new_beacons_page,0);
@@ -1332,7 +1292,7 @@ static void coworker_select_click(struct MenuLayer *menu_layer, MenuIndex *cell_
             new_coworkers_page += 1;
         }
     }
-    if(new_coworkers_page!=current_coworkers_page) {
+    if(coworkers && new_coworkers_page!=current_coworkers_page) {
         clear_coworkers_table();
         current_coworkers_page = new_coworkers_page;
         send_query_request(REQUEST_COWORKERS_PAGE,current_beacon->id,new_coworkers_page);
@@ -1465,7 +1425,7 @@ static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *ce
             new_achievements_page += 1;
         }
     }
-    if(new_achievements_page!=current_achievements_page) {
+    if(achievements && new_achievements_page!=current_achievements_page) {
         clear_achievements_table();
         current_achievements_page = new_achievements_page;
         send_query_request(REQUEST_ACHIEVEMENTS_PAGE,new_achievements_page,0);
@@ -1512,14 +1472,31 @@ static void achievements_window_load(Window *window) {
     menu_layer_set_callbacks(achievements_menu_layer, NULL, achievements_menu_callbacks);
     menu_layer_set_click_config_onto_window(achievements_menu_layer, window);
     
+    achievements_text_layer = text_layer_create(menu_bounds);
+    text_layer_set_text(achievements_text_layer,"You have no achievements");
+    text_layer_set_font(achievements_text_layer,fonts_get_system_font(FONT_KEY_GOTHIC_18));
+    text_layer_set_text_alignment(achievements_text_layer, GTextAlignmentCenter);
+    
+    if(user.achievements!=0) {
+        layer_set_hidden(text_layer_get_layer(achievements_text_layer),true);
+        layer_set_hidden(menu_layer_get_layer(achievements_menu_layer),false);
+    }
+    else {
+        layer_set_hidden(menu_layer_get_layer(achievements_menu_layer),true);
+        layer_set_hidden(text_layer_get_layer(achievements_text_layer),false);
+    }
+    
     layer_add_child(window_layer, text_layer_get_layer(achievements_textbar_layer));
     layer_add_child(window_layer, bitmap_layer_get_layer(achievements_downloading_sign_layer));
     layer_add_child(window_layer, menu_layer_get_layer(achievements_menu_layer));
+    layer_add_child(window_layer, text_layer_get_layer(achievements_text_layer));
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_load() end");
 }
 
 static void achievements_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievements_window_unload() start");
+    text_layer_destroy(achievements_text_layer);
+    achievements_text_layer = NULL;
     menu_layer_destroy(achievements_menu_layer);
     achievements_menu_layer = NULL;
     bitmap_layer_destroy(achievements_downloading_sign_layer);
@@ -1564,7 +1541,7 @@ static void achievement_details_window_load(Window *window) {
     max_content_size.w = max_text_bounds.size.w;
     max_content_size.h += 10;
     text_layer_set_size(achievement_details_content_text_layer,max_content_size);
-
+    
     current_achievement_badge_bitmap = (GBitmap) {
         .addr = current_achievement_badge_data,
         .bounds = GRect(0,0,64,64),
