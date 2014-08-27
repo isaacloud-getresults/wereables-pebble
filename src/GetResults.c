@@ -39,6 +39,7 @@ static TextLayer *achievement_details_textbar_layer;
 static TextLayer *achievement_details_title_text_layer;
 static TextLayer *achievement_details_content_text_layer;
 static ScrollLayer *achievement_details_scroll_layer;
+static BitmapLayer *achievement_details_badge_layer;
 static BitmapLayer *achievement_details_downloading_sign_layer;
 
 static GBitmap *beacons_icon;
@@ -107,6 +108,9 @@ static bool is_downloading;
 static bool animated = false;
 
 static char current_achievement_description[255];
+static uint8_t current_achievement_badge_data[8*64];
+static GBitmap current_achievement_badge_bitmap;
+static bool badge_loaded;
 
 static int textbar_height = 24;
 
@@ -547,6 +551,8 @@ enum {
     ACHIEVEMENT_NUMBER = 4,
     ACHIEVEMENT_PAGE = 5,
     ACHIEVEMENT_MORE = 6,
+    ACHIEVEMENT_BADGE_OFFSET = 3,
+    ACHIEVEMENT_BADGE_DATA = 4,
     
     // response values
     RESPONSE_USER = 1,
@@ -554,8 +560,9 @@ enum {
     RESPONSE_COWORKER = 3,
     RESPONSE_ACHIEVEMENT_HEADER = 4,
     RESPONSE_ACHIEVEMENT_CONTENT = 5,
-    RESPONSE_COWORKER_POP = 6,
-    RESPONSE_ACHIEVEMENT_POP = 7
+    RESPONSE_ACHIEVEMENT_BADGE = 6,
+    RESPONSE_COWORKER_POP = 7,
+    RESPONSE_ACHIEVEMENT_POP = 8
 };
 
 ///////////////////////////////////// COMMUNICATION
@@ -777,7 +784,7 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
         else if(receiving_type->value->uint16==RESPONSE_ACHIEVEMENT_CONTENT && user.logged_on && current_achievement) {
             //APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement content");
             Tuple *id = dict_find(iter,ACHIEVEMENT_ID);
-            Tuple *text = dict_find(iter,ACHIEVEMENT_NAME);
+            Tuple *text = dict_find(iter,ACHIEVEMENT_DESCRIPTION);
             Tuple *part = dict_find(iter,ACHIEVEMENT_NUMBER);
             if(part && text && id) {
                 if(current_achievement->id==(int)id->value->uint16) {
@@ -799,6 +806,37 @@ void in_received_handler(DictionaryIterator *iter, void *context) {
                     is_downloading = false;
                 if(achievement_details_downloading_sign_layer)
                     layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),true);
+            }
+        }
+        else if(receiving_type->value->uint16==RESPONSE_ACHIEVEMENT_BADGE && user.logged_on && current_achievement) {
+            APP_LOG(APP_LOG_LEVEL_DEBUG, "Starting receiving achievement badge");
+            Tuple *offset = dict_find(iter,ACHIEVEMENT_BADGE_OFFSET);
+            Tuple *data = dict_find(iter,ACHIEVEMENT_BADGE_DATA);
+            if(data && offset) {
+                static int part;
+                if((int)dict_find(iter,ACHIEVEMENT_ID)->value->uint16==current_achievement->id) {
+                    if(offset->value->uint16==0) {
+                        part = 0;
+                        if(achievement_details_downloading_sign_layer)
+                            layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),false);
+                    }
+                    else
+                        part++;
+                    memcpy(&current_achievement_badge_data[offset->value->uint16],data->value->data,data->length);
+                    if(part==5) {
+                        badge_loaded = true;
+                        if(achievement_details_badge_layer && achievement_details_scroll_layer) {
+                            GRect upper_bounds = layer_get_frame(text_layer_get_layer(achievement_details_content_text_layer));
+                            layer_set_frame(bitmap_layer_get_layer(achievement_details_badge_layer),GRect(0,upper_bounds.size.h+upper_bounds.origin.y,144,64));
+                            layer_mark_dirty(bitmap_layer_get_layer(achievement_details_badge_layer));
+                            GSize scroll_layer_size = scroll_layer_get_content_size(achievement_details_scroll_layer);
+                            scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(scroll_layer_size.w,upper_bounds.size.h+upper_bounds.origin.y+74));
+                            scroll_layer_add_child(achievement_details_scroll_layer,bitmap_layer_get_layer(achievement_details_badge_layer));
+                        }
+                        if(achievement_details_downloading_sign_layer)
+                            layer_set_hidden(bitmap_layer_get_layer(achievement_details_downloading_sign_layer),true);
+                    }
+                }
             }
         }
         else if(receiving_type->value->uint16==RESPONSE_COWORKER_POP && user.logged_on) {
@@ -1440,6 +1478,7 @@ static void achievement_select_click(struct MenuLayer *menu_layer, MenuIndex *ce
             current_achievement_description[0] = '\0';
             send_query_request(REQUEST_ACHIEVEMENT_CONTENT,current_achievement->id,0);
             is_downloading = true;
+            badge_loaded = false;
         }
  		previous_achievement_id = current_achievement->id;
  		window_stack_push(achievement_details_window,animated);
@@ -1525,6 +1564,17 @@ static void achievement_details_window_load(Window *window) {
     max_content_size.w = max_text_bounds.size.w;
     max_content_size.h += 10;
     text_layer_set_size(achievement_details_content_text_layer,max_content_size);
+
+    current_achievement_badge_bitmap = (GBitmap) {
+        .addr = current_achievement_badge_data,
+        .bounds = GRect(0,0,64,64),
+        .info_flags = 1,
+        .row_size_bytes = 8
+    };
+    GRect badge_bounds = GRect(0,max_title_size.h+max_content_size.h,144,64+10);
+    achievement_details_badge_layer = bitmap_layer_create(badge_bounds);
+    bitmap_layer_set_alignment(achievement_details_badge_layer,GAlignCenter);
+    bitmap_layer_set_bitmap(achievement_details_badge_layer,&current_achievement_badge_bitmap);
     
     GRect scroll_layer_bounds = layer_get_bounds(window_layer);
     scroll_layer_bounds.size.h -= textbar_height;
@@ -1535,6 +1585,10 @@ static void achievement_details_window_load(Window *window) {
     scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_title_size.h+max_content_size.h));
     scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_title_text_layer));
     scroll_layer_add_child(achievement_details_scroll_layer,text_layer_get_layer(achievement_details_content_text_layer));
+    if(badge_loaded) {
+        scroll_layer_add_child(achievement_details_scroll_layer,bitmap_layer_get_layer(achievement_details_badge_layer));
+        scroll_layer_set_content_size(achievement_details_scroll_layer,GSize(max_text_bounds.size.w,max_title_size.h+max_content_size.h+74));
+    }
     
     layer_add_child(window_layer, text_layer_get_layer(achievement_details_textbar_layer));
     layer_add_child(window_layer, bitmap_layer_get_layer(achievement_details_downloading_sign_layer));
@@ -1544,6 +1598,8 @@ static void achievement_details_window_load(Window *window) {
 
 static void achievement_details_window_unload(Window *window) {
     //APP_LOG(APP_LOG_LEVEL_DEBUG, "achievement_details_window_unload() start");
+    bitmap_layer_destroy(achievement_details_badge_layer);
+    achievement_details_badge_layer = NULL;
     text_layer_destroy(achievement_details_content_text_layer);
     achievement_details_content_text_layer = NULL;
     text_layer_destroy(achievement_details_title_text_layer);
